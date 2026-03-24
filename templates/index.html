@@ -3,60 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AdaptMath - Iframe Demo</title>
+    <title>AdaptMath - Iframe Demo s OLM</title>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
 
     <style>
-        body { font-family: Arial, sans-serif; background-color: #ffffff; margin: 0; padding: 15px; }
-        .container { max-width: 100%; border: 1px solid #ddd; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .task-box { background-color: #f8f9fa; padding: 20px; border-left: 4px solid #f37021; margin-bottom: 20px; font-size: 18px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; font-weight: bold; margin-bottom: 5px; }
-        input[type="number"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #ffffff; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; border: 1px solid #e0e0e0; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .task-box { background-color: #f8f9fa; padding: 25px; border-left: 5px solid #f37021; margin-bottom: 25px; font-size: 20px; text-align: center; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-weight: 600; margin-bottom: 8px; color: #444; }
+        input[type="number"] { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
         input[type="range"] { width: 100%; }
-        .checkbox-group { display: flex; align-items: center; gap: 10px; }
-        button { background-color: #f37021; color: white; border: none; padding: 12px 20px; font-size: 16px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; }
+        .checkbox-group { display: flex; align-items: center; gap: 10px; background-color: #f1f1f1; padding: 10px; border-radius: 6px; }
+        button { background-color: #f37021; color: white; border: none; padding: 15px 20px; font-size: 16px; border-radius: 6px; cursor: pointer; width: 100%; font-weight: bold; transition: background-color 0.2s; }
         button:hover { background-color: #d95e16; }
-        #result-box { margin-top: 20px; padding: 15px; border-radius: 4px; display: none; }
+        #result-box { margin-top: 20px; padding: 15px; border-radius: 6px; display: none; font-size: 16px; }
         .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+
+        /* Styly pro Open Learner Model (20 kategorií) */
+        .olm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
+        .profile-item { background: #fdfdfd; padding: 10px; border: 1px solid #eee; border-radius: 5px; }
+        .profile-header { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 14px; }
+        progress { width: 100%; height: 12px; border-radius: 5px; }
+        progress::-webkit-progress-bar { background-color: #eee; border-radius: 5px; }
+        progress::-webkit-progress-value { background-color: #0056b3; border-radius: 5px; transition: width 0.5s ease-in-out; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2 style="margin-top: 0; color: #333;">Úloha: {{ task.task_id }}</h2>
+    <h2 style="margin-top: 0; color: #222; border-bottom: 2px solid #f37021; padding-bottom: 10px;">AdaptMath Engine - {{ task.task_id }}</h2>
 
     <div class="task-box" id="task-content">
         Zadání: $$ {{ task.content_latex }} $$
     </div>
 
     <div class="form-group">
-        <label for="student-answer">Tvoje odpověď:</label>
-        <input type="number" id="student-answer" step="0.01" placeholder="Zadej výsledek...">
+        <label for="student-answer">Tvoje odpověď (výsledek):</label>
+        <input type="number" id="student-answer" step="0.01" placeholder="Zadej číselný výsledek...">
     </div>
 
     <div class="form-group">
-        <label for="certainty">Jistota odpovědi (0 = tipuji, 1 = vím to jistě):</label>
+        <label for="certainty">Úroveň jistoty (0 = hádám, 1 = vím to s jistotou):</label>
         <input type="range" id="certainty" min="0" max="1" step="0.1" value="0.5" oninput="document.getElementById('certainty-val').innerText = this.value">
-        <span id="certainty-val">0.5</span>
+        <span id="certainty-val" style="font-weight: bold; color: #f37021;">0.5</span>
     </div>
 
     <div class="form-group checkbox-group">
         <input type="checkbox" id="used-hint">
-        <label for="used-hint" style="margin: 0;">Využil jsem AI nápovědu</label>
+        <label for="used-hint" style="margin: 0; cursor: pointer;">Využil jsem AI nápovědu (LLM Hint)</label>
     </div>
 
-    <button onclick="submitAnswer()">Zkontrolovat a poslat do BKT</button>
+    <button onclick="submitAnswer()">Odeslat a přepočítat BKT model</button>
 
     <div id="result-box"></div>
+
+    <hr style="margin: 40px 0 20px 0; border-top: 1px solid #ddd;">
+
+    <h3 style="color: #333; margin-bottom: 5px;">Kognitivní profil studenta (Open Learner Model)</h3>
+    <p style="color: #666; font-size: 14px; margin-top: 0;">Zobrazuje aktuální pravděpodobnost zvládnutí domény napříč 20 tématy.</p>
+
+    <div class="olm-grid" id="cognitive-profile-container">
+        {% for topic, mastery in student.cognitive_profile.items() %}
+            <div class="profile-item">
+                <div class="profile-header">
+                    <strong>{{ topic }}</strong>
+                    <span id="val-{{ topic }}">{{ (mastery * 100)|round }} %</span>
+                </div>
+                <progress id="bar-{{ topic }}" value="{{ mastery }}" max="1"></progress>
+            </div>
+        {% endfor %}
+    </div>
 </div>
 
 <script>
-    // Inicializace KaTeXu
+    // Inicializace KaTeXu pro renderování rovnic
     document.addEventListener("DOMContentLoaded", function() {
         renderMathInElement(document.body, {
             delimiters: [
@@ -73,16 +98,15 @@
         const resultBox = document.getElementById('result-box');
 
         if (answer === "") {
-            alert("Prosím, zadej odpověď.");
+            alert("Prosím, zadej nejprve odpověď.");
             return;
         }
 
         resultBox.style.display = "block";
         resultBox.className = "";
-        resultBox.innerHTML = "⏳ Vyhodnocuji a aktualizuji kognitivní profil...";
+        resultBox.innerHTML = "⏳ Odesílám data do BKT enginu a přepočítávám matici...";
 
         try {
-            // Odeslání do Flasku
             const response = await fetch('/evaluate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -97,18 +121,39 @@
 
             const data = await response.json();
 
+            // Vypsání hlášky o úspěšnosti
             if (data.is_correct) {
                 resultBox.className = "success";
-                resultBox.innerHTML = `<strong>✅ Správně!</strong><br>
-                                       <em>Tvůj kognitivní model (BKT) pro toto téma stoupl na: ${data.new_mastery} %</em>`;
+                resultBox.innerHTML = `<strong>✅ Správná odpověď!</strong><br>Behaviorální log byl zapsán do databáze a vektor znalostí byl aktualizován.`;
             } else {
                 resultBox.className = "error";
-                resultBox.innerHTML = `<strong>❌ Špatně!</strong> (Správná odpověď byla ${data.correct_answer})<br>
-                                       <em>Tvůj kognitivní model (BKT) klesl na: ${data.new_mastery} %</em>`;
+                resultBox.innerHTML = `<strong>❌ Špatná odpověď!</strong> (Očekáváno: ${data.correct_answer})<br>Behaviorální log byl zapsán do databáze a vektor znalostí byl snížen.`;
+            }
+
+            // Plynulá animovaná aktualizace všech 20 progress barů
+            for (const [topic, mastery] of Object.entries(data.new_profile)) {
+                const masteryPercent = Math.round(mastery * 100);
+
+                // Získání elementů bez mezer (ošetření pro ID v HTML)
+                const safeTopicId = topic.replace(/\s+/g, ' ');
+
+                const valElement = document.getElementById(`val-${safeTopicId}`);
+                const barElement = document.getElementById(`bar-${safeTopicId}`);
+
+                if (valElement && barElement) {
+                    valElement.innerText = `${masteryPercent} %`;
+                    barElement.value = mastery;
+
+                    // Zvýraznění změněného tématu (Limity funkcí)
+                    if (topic === "Limity funkcí") {
+                        barElement.parentElement.style.backgroundColor = "#fff3cd";
+                        barElement.parentElement.style.border = "1px solid #ffeeba";
+                    }
+                }
             }
         } catch (error) {
             resultBox.className = "error";
-            resultBox.innerHTML = "❌ Chyba spojení se serverem.";
+            resultBox.innerHTML = "❌ Chyba spojení s Flask serverem.";
         }
     }
 </script>
