@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  adaptmath_db:
+    image: postgres:15-alpine
+    container_name: adaptmath_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: adaptmath_user
+      POSTGRES_PASSWORD: supersecretpassword
+      POSTGRES_DB: adaptmath
+    ports:
+      - "5432:5432"
+    volumes:
+      - adaptmath_pgdata:/var/lib/postgresql/data
+
+volumes:
+  adaptmath_pgdata:
