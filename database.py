@@ -1,5 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from model import Base
 
 
 # Předpokládáme, že Base je již definován výše (Base = declarative_base())
