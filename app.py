@@ -134,6 +134,63 @@ def get_hint():
     return jsonify({"hint": response.text})
 
 
+@app.route("/reset-db", methods=["POST"])
+def reset_db():
+    """Hard-reset databáze: Smaže vše a nahraje výchozí seed data."""
+    session = SessionLocal()
+    try:
+        # Smazání dat v pořadí, které neporuší integritu (cizí klíče)
+        session.query(InteractionLog).delete()
+        session.query(Student).delete()
+        session.query(MathTask).delete()
+
+        # Znovunahrání výchozího studenta a úlohy
+        initial_profile = {
+            "Aritmetika": 0.85, "Zlomky": 0.60, "Mocniny": 0.45, "Algebra": 0.30,
+            "Lin_rovnice": 0.25, "Kvad_rovnice": 0.15, "Soustavy": 0.10,
+            "Planimetrie": 0.50, "Stereometrie": 0.20, "Goniometrie": 0.10,
+            "Analytika": 0.10, "Komplex_cisla": 0.10, "Posloupnosti": 0.10,
+            "Kombinatorika": 0.35, "Pravdepodobnost": 0.20, "Statistika": 0.40,
+            "Limity": 0.10, "Derivace": 0.10, "Integraly": 0.10, "Matice": 0.10
+        }
+        student = Student(
+            student_id="student_1", learning_style="vizuální",
+            motivation="vnitřní", cognitive_profile=initial_profile
+        )
+        task = MathTask(
+            task_id="task_calc_01", content_latex=r"\lim_{x \to 0} \frac{\sin(x)}{x}",
+            result_type="decimal", correct_answer=1.0, tolerance=0.01,
+            graph_vector=["Limity"]
+        )
+        session.add(student)
+        session.add(task)
+        session.commit()
+        return jsonify({"message": "Databáze byla úspěšně resetována."})
+    except Exception as e:
+        session.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        session.close()
+
+
+@app.route("/get-logs", methods=["GET"])
+def get_logs():
+    """Vrátí všechny interakce seřazené od nejnovější pro tabulku logů."""
+    session = SessionLocal()
+    try:
+        logs = session.query(InteractionLog).order_by(InteractionLog.timestamp.desc()).all()
+        return jsonify([{
+            "id": l.log_id,
+            "task": l.task_id,
+            "correct": l.is_correct,
+            "certainty": l.certainty_level,
+            "hint": l.used_llm_hint,
+            "time": l.time_spent
+        } for l in logs])
+    finally:
+        session.close()
+
+
 if __name__ == "__main__":
     print("🚀 AdaptMath Engine běží na http://127.0.0.1:5000")
     app.run(debug=True, port=5000)

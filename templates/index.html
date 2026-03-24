@@ -3,42 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AdaptMath - Iframe Demo s OLM</title>
+    <title>AdaptMath - Výzkumný Prototyp (Gemini 2.5)</title>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
 
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #ffffff; margin: 0; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; border: 1px solid #e0e0e0; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        .task-box { background-color: #f8f9fa; padding: 25px; border-left: 5px solid #f37021; margin-bottom: 25px; font-size: 20px; text-align: center; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f9; margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 900px; margin: 0 auto; border: 1px solid #e0e0e0; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); background: #ffffff; }
+
+        /* Box se zadáním úlohy */
+        .task-box { background-color: #f8f9fa; padding: 25px; border-left: 6px solid #f37021; margin-bottom: 25px; font-size: 22px; text-align: center; border-radius: 4px; }
+
         .form-group { margin-bottom: 20px; }
         label { display: block; font-weight: 600; margin-bottom: 8px; color: #444; }
-        input[type="number"] { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
-        input[type="range"] { width: 100%; }
+        input[type="number"] { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        input[type="range"] { width: 100%; cursor: pointer; }
 
-        /* Styl pro Checkbox sekci */
-        .checkbox-group { display: flex; align-items: center; gap: 10px; background-color: #f1f1f1; padding: 12px; border-radius: 6px; margin-top: 10px; }
-
-        /* Styly pro tlačítka */
-        button { border: none; padding: 15px 20px; font-size: 16px; border-radius: 6px; cursor: pointer; width: 100%; font-weight: bold; transition: 0.2s; }
-        .btn-main { background-color: #f37021; color: white; margin-top: 10px; }
-        .btn-main:hover { background-color: #d95e16; }
+        /* Tlačítka a interakce */
+        button { border: none; padding: 15px 20px; font-size: 16px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; transition: all 0.2s; }
+        .btn-main { background-color: #f37021; color: white; margin-top: 10px; box-shadow: 0 2px 4px rgba(243, 112, 33, 0.3); }
+        .btn-main:hover { background-color: #d95e16; transform: translateY(-1px); }
         .btn-hint { background-color: #6c757d; color: white; margin-bottom: 15px; }
         .btn-hint:hover { background-color: #5a6268; }
+        .btn-reset { background-color: #dc3545; color: white; width: auto; padding: 10px 20px; margin-top: 20px; }
+        .btn-reset:hover { background-color: #a71d2a; }
 
-        /* Styl pro nápovědu */
-        .hint-box { display: none; background: #e7f3ff; padding: 15px; border-radius: 6px; border: 1px solid #b3d7ff; margin-bottom: 15px; color: #004085; line-height: 1.5; }
+        /* Box pro AI nápovědu */
+        .hint-box { display: none; background: #e7f3ff; padding: 20px; border-radius: 8px; border: 1px solid #b3d7ff; margin-bottom: 20px; color: #004085; line-height: 1.6; font-style: italic; }
 
-        #result-box { margin-top: 20px; padding: 15px; border-radius: 6px; display: none; font-size: 16px; }
+        /* Výsledek a OLM Grid */
+        #result-box { margin-top: 20px; padding: 15px; border-radius: 8px; display: none; font-weight: 500; }
         .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
 
-        .olm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
-        .profile-item { background: #fdfdfd; padding: 10px; border: 1px solid #eee; border-radius: 5px; }
-        .profile-header { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 14px; }
-        progress { width: 100%; height: 12px; border-radius: 5px; }
+        .olm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-top: 20px; }
+        .profile-item { background: #fafafa; padding: 12px; border: 1px solid #eee; border-radius: 8px; }
+        .profile-header { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 13px; font-weight: 600; }
+        progress { width: 100%; height: 10px; border-radius: 5px; }
+        progress::-webkit-progress-bar { background-color: #eee; border-radius: 5px; }
+        progress::-webkit-progress-value { background-color: #007bff; border-radius: 5px; transition: width 0.4s ease; }
+
+        /* Tabulka výzkumných logů */
+        .log-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 13px; background: white; }
+        .log-table th, .log-table td { border: 1px solid #eee; padding: 12px; text-align: left; }
+        .log-table th { background-color: #f8f9fa; color: #666; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+        .badge-hint { background: #ffc107; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; }
+
+        .checkbox-group { display: flex; align-items: center; gap: 10px; background-color: #f8f9fa; padding: 12px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -58,7 +71,7 @@
     <div class="form-group">
         <label for="certainty">Úroveň jistoty (0 = hádám, 1 = vím to s jistotou):</label>
         <input type="range" id="certainty" min="0" max="1" step="0.1" value="0.5" oninput="document.getElementById('certainty-val').innerText = this.value">
-        <span id="certainty-val" style="font-weight: bold; color: #f37021;">0.5</span>
+        <div style="text-align: center; font-weight: bold; color: #f37021; margin-top: 5px;"><span id="certainty-val">0.5</span></div>
     </div>
 
     <div id="hint-display" class="hint-box"></div>
@@ -66,16 +79,18 @@
 
     <div class="checkbox-group">
         <input type="checkbox" id="used-hint">
-        <label for="used-hint" style="margin: 0; cursor: pointer;">Využil jsem AI nápovědu (Sníží odměnu BKT)</label>
+        <label for="used-hint" style="margin: 0; cursor: pointer;">Využil jsem AI nápovědu (Sníží odměnu v BKT modelu)</label>
     </div>
 
-    <button class="btn-main" onclick="submitAnswer()">Zkontrolovat a přepočítat BKT model</button>
+    <button class="btn-main" onclick="submitAnswer()">Odeslat a přepočítat BKT model</button>
 
     <div id="result-box"></div>
 
     <hr style="margin: 40px 0 20px 0; border-top: 1px solid #ddd;">
 
     <h3 style="color: #333; margin-bottom: 5px;">Kognitivní profil studenta (Open Learner Model)</h3>
+    <p style="color: #666; font-size: 14px; margin-top: 0;">Aktuální stav znalostí napříč 20 sledovanými doménami.</p>
+
     <div class="olm-grid">
         {% for topic, mastery in student.cognitive_profile.items() %}
             <div class="profile-item">
@@ -87,21 +102,44 @@
             </div>
         {% endfor %}
     </div>
+
+    <div style="text-align: right;">
+        <button class="btn-reset" onclick="resetDatabase()">⚠️ Resetovat data (Seed DB)</button>
+    </div>
+
+    <h3 style="margin-top: 40px; color: #333;">Historie interakcí (Research Logs)</h3>
+    <table class="log-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Úloha</th>
+                <th>Výsledek</th>
+                <th>Jistota</th>
+                <th>AI Nápověda</th>
+                <th>Čas řešení</th>
+            </tr>
+        </thead>
+        <tbody id="log-body">
+            </tbody>
+    </table>
 </div>
 
 <script>
+    // Inicializace KaTeXu při načtení
     document.addEventListener("DOMContentLoaded", function() {
         renderMathInElement(document.body, {
             delimiters: [{left: "$$", right: "$$", display: true}, {left: "$", right: "$", display: false}]
         });
+        refreshLogs(); // Načtení historie logů
     });
 
-    // FUNKCE PRO NÁPOVĚDU
+    // FUNKCE PRO ZÍSKÁNÍ NÁPOVĚDY OD GEMINI
     async function fetchHint() {
         const hintBtn = document.getElementById('hint-button');
         const hintDisplay = document.getElementById('hint-display');
 
-        hintBtn.innerText = "⌛ Generuji nápovědu...";
+        hintBtn.innerText = "⌛ Gemini generuje nápovědu...";
+        hintBtn.disabled = true;
 
         try {
             const res = await fetch('/get-hint', {
@@ -113,26 +151,28 @@
 
             hintDisplay.innerText = data.hint;
             hintDisplay.style.display = 'block';
-            hintBtn.innerText = "💡 Potřebuji poradit (Gemini 2.0 Flash)";
+            hintBtn.innerText = "💡 Nápověda zobrazena";
 
-            // AUTOMATICKY ZAŠKRTNE CHECKBOX (pro BKT penalizaci)
+            // Automatické zaškrtnutí pro BKT engine
             document.getElementById('used-hint').checked = true;
         } catch (e) {
-            hintBtn.innerText = "❌ Chyba AI";
+            hintBtn.innerText = "❌ Chyba AI spojení";
+            hintBtn.disabled = false;
         }
     }
 
-    // FUNKCE PRO EVALUACI
+    // FUNKCE PRO EVALUACI A UPDATE BKT
     async function submitAnswer() {
         const answer = document.getElementById('student-answer').value;
         const certainty = document.getElementById('certainty').value;
         const usedHint = document.getElementById('used-hint').checked;
         const resultBox = document.getElementById('result-box');
 
-        if (answer === "") { alert("Zadej odpověď."); return; }
+        if (answer === "") { alert("Zadej prosím číselný výsledek."); return; }
 
         resultBox.style.display = "block";
-        resultBox.innerHTML = "⏳ Vyhodnocuji...";
+        resultBox.className = "";
+        resultBox.innerHTML = "⏳ Vyhodnocuji a aktualizuji model...";
 
         try {
             const response = await fetch('/evaluate', {
@@ -151,22 +191,62 @@
 
             if (data.is_correct) {
                 resultBox.className = "success";
-                resultBox.innerHTML = `✅ <strong>Správně!</strong> BKT model aktualizován.`;
+                resultBox.innerHTML = `✅ <strong>Správně!</strong> Kognitivní profil byl aktualizován (Mastery stouplo).`;
             } else {
                 resultBox.className = "error";
-                resultBox.innerHTML = `❌ <strong>Chyba!</strong> Správně je ${data.correct_answer}.`;
+                resultBox.innerHTML = `❌ <strong>Chyba!</strong> Správná odpověď byla ${data.correct_answer}. Model zaznamenal mezeru ve znalostech.`;
             }
 
+            // Aktualizace Open Learner Modelu (Progress barů)
             for (const [topic, mastery] of Object.entries(data.new_profile)) {
                 const valElement = document.getElementById(`val-${topic}`);
                 const barElement = document.getElementById(`bar-${topic}`);
                 if (valElement) valElement.innerText = `${Math.round(mastery * 100)} %`;
                 if (barElement) barElement.value = mastery;
             }
+
+            await refreshLogs(); // Obnovení tabulky logů
+
         } catch (error) {
-            resultBox.innerHTML = "❌ Chyba spojení se serverem.";
+            resultBox.className = "error";
+            resultBox.innerHTML = "❌ Chyba serveru při vyhodnocování.";
+        }
+    }
+
+    // ADMIN FUNKCE: RESET DB
+    async function resetDatabase() {
+        if (!confirm("VAROVÁNÍ: Opravdu chcete smazat historii logů a nastavit profil na výchozí hodnoty?")) return;
+        try {
+            const res = await fetch('/reset-db', { method: 'POST' });
+            const data = await res.json();
+            alert(data.message);
+            location.reload();
+        } catch (e) {
+            alert("Reset se nezdařil.");
+        }
+    }
+
+    // FUNKCE PRO TABULKU LOGŮ
+    async function refreshLogs() {
+        try {
+            const res = await fetch('/get-logs');
+            const logs = await res.json();
+            const body = document.getElementById('log-body');
+            body.innerHTML = logs.map(l => `
+                <tr>
+                    <td>${l.id}</td>
+                    <td>${l.task}</td>
+                    <td>${l.correct ? '<span style="color:green">✅ Správně</span>' : '<span style="color:red">❌ Chyba</span>'}</td>
+                    <td>${Math.round(l.certainty * 100)} %</td>
+                    <td>${l.hint ? '<span class="badge-hint">POUŽITA</span>' : 'Ne'}</td>
+                    <td>${l.time} s</td>
+                </tr>
+            `).join('');
+        } catch (e) {
+            console.error("Nepodařilo se načíst logy.");
         }
     }
 </script>
+
 </body>
 </html>
