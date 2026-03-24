@@ -2,6 +2,14 @@ from flask import Flask, render_template, request, jsonify
 from sqlalchemy.orm.attributes import flag_modified  # Importováno správně nahoře
 from database import init_db
 from model import MathTask, Student, InteractionLog
+import os
+import google.generativeai as genai
+from dotenv import load_dotenv
+
+load_dotenv()
+
+genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+gemini_model = genai.GenerativeModel("gemini-2.5-flash")
 
 app = Flask(__name__)
 
@@ -114,6 +122,16 @@ def evaluate():
         return jsonify({"error": f"Chyba serveru: {str(e)}"}), 500
     finally:
         session.close()
+
+@app.route("/get-hint", methods=["POST"])
+def get_hint():
+    data = request.get_json()
+    prompt = (
+        f"Jsi asistent v systému AdaptMath. Student řeší úlohu: {data['latex']}. "
+        "Dej mu stručnou didaktickou nápovědu, jak postupovat, ale NEPROZRAZUJ výsledek."
+    )
+    response = gemini_model.generate_content(prompt)
+    return jsonify({"hint": response.text})
 
 
 if __name__ == "__main__":
