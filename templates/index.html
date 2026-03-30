@@ -57,7 +57,11 @@
 <body>
 
 <div class="container">
-    <h2 style="margin-top: 0; color: #222; border-bottom: 2px solid #f37021; padding-bottom: 10px;">AdaptMath Engine - {{ task.task_id }}</h2>
+    <h2 style="margin-top: 0; color: #222; border-bottom: 2px solid #f37021; padding-bottom: 10px;">
+        AdaptMath Engine - <span id="current-task-id">{{ task.task_id }}</span>
+    </h2>
+
+    <input type="hidden" id="raw-latex" value="{{ task.content_latex }}">
 
     <div class="task-box" id="task-content">
         Zadání: $$ {{ task.content_latex }} $$
@@ -82,7 +86,7 @@
         <label for="used-hint" style="margin: 0; cursor: pointer;">Využil jsem AI nápovědu (Sníží odměnu v BKT modelu)</label>
     </div>
 
-    <button class="btn-main" onclick="submitAnswer()">Odeslat a přepočítat BKT model</button>
+    <button class="btn-main" id="submit-btn" onclick="submitAnswer()">Odeslat a přepočítat BKT model</button>
 
     <div id="result-box"></div>
 
@@ -104,7 +108,7 @@
     </div>
 
     <div style="text-align: right;">
-        <button class="btn-reset" onclick="resetDatabase()">⚠️ Resetovat data (Seed DB)</button>
+        <button class="btn-reset" onclick="resetDatabase()">⚠️ Resetovat data (Seed DB s 3 úlohami)</button>
     </div>
 
     <h3 style="margin-top: 40px; color: #333;">Historie interakcí (Research Logs)</h3>
@@ -116,7 +120,8 @@
                 <th>Výsledek</th>
                 <th>Jistota</th>
                 <th>AI Nápověda</th>
-                <th>Posun ve znalostech (BKT)</th> <th>Čas řešení</th>
+                <th>Posun ve znalostech (BKT)</th>
+                <th>Čas řešení</th>
             </tr>
         </thead>
         <tbody id="log-body">
@@ -125,8 +130,13 @@
 </div>
 
 <script>
-    // Inicializace KaTeXu při načtení
+    // Globální proměnné pro udržení kontextu aktuální úlohy bez nutnosti reloadu
+    let currentTaskId = "{{ task.task_id }}";
+    let currentTaskLatex = "";
+
+    // Inicializace při načtení
     document.addEventListener("DOMContentLoaded", function() {
+        currentTaskLatex = document.getElementById('raw-latex').value;
         renderMathInElement(document.body, {
             delimiters: [{left: "$$", right: "$$", display: true}, {left: "$", right: "$", display: false}]
         });
@@ -145,7 +155,7 @@
             const res = await fetch('/get-hint', {
                 method: 'POST',
                 headers: {'Content-Type':'application/json'},
-                body: JSON.stringify({latex: "{{ task.content_latex }}"})
+                body: JSON.stringify({latex: currentTaskLatex}) // Posíláme latex aktuální úlohy
             });
             const data = await res.json();
 
@@ -161,18 +171,22 @@
         }
     }
 
-    // FUNKCE PRO EVALUACI A UPDATE BKT
+    // FUNKCE PRO EVALUACI, UPDATE BKT A ADAPTIVNÍ PŘECHOD
     async function submitAnswer() {
         const answer = document.getElementById('student-answer').value;
         const certainty = document.getElementById('certainty').value;
         const usedHint = document.getElementById('used-hint').checked;
         const resultBox = document.getElementById('result-box');
+        const submitBtn = document.getElementById('submit-btn');
 
         if (answer === "") { alert("Zadej prosím číselný výsledek."); return; }
 
+        // Zablokujeme tlačítko proti dvojkliku
+        submitBtn.disabled = true;
+
         resultBox.style.display = "block";
         resultBox.className = "";
-        resultBox.innerHTML = "⏳ Vyhodnocuji a aktualizuji model...";
+        resultBox.innerHTML = "⏳ Vyhodnocuji a vybírám další úlohu (IRT + BKT)...";
 
         try {
             const response = await fetch('/evaluate', {
@@ -180,7 +194,7 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     student_id: "{{ student.student_id }}",
-                    task_id: "{{ task.task_id }}",
+                    task_id: currentTaskId,
                     student_answer: parseFloat(answer),
                     certainty: parseFloat(certainty),
                     used_hint: usedHint
@@ -191,10 +205,10 @@
 
             if (data.is_correct) {
                 resultBox.className = "success";
-                resultBox.innerHTML = `✅ <strong>Správně!</strong> Kognitivní profil byl aktualizován (Mastery stouplo).`;
+                resultBox.innerHTML = `✅ <strong>Správně!</strong> Kognitivní profil aktualizován.<br><em>Načítám další adaptivní úlohu...</em>`;
             } else {
                 resultBox.className = "error";
-                resultBox.innerHTML = `❌ <strong>Chyba!</strong> Správná odpověď byla ${data.correct_answer}. Model zaznamenal mezeru ve znalostech.`;
+                resultBox.innerHTML = `❌ <strong>Chyba!</strong> Správná odpověď byla ${data.correct_answer}.<br><em>Načítám další adaptivní úlohu...</em>`;
             }
 
             // Aktualizace Open Learner Modelu (Progress barů)
@@ -207,15 +221,60 @@
 
             await refreshLogs(); // Obnovení tabulky logů
 
+            // --- ADAPTIVNÍ PŘECHOD NA DALŠÍ ÚLOHU ---
+            if (data.next_task) {
+                // Počkáme 3 vteřiny, aby si student přečetl výsledek, a pak překreslíme UI
+                setTimeout(() => {
+                    // Update proměnných
+                    currentTaskId = data.next_task.task_id;
+                    currentTaskLatex = data.next_task.content_latex;
+
+                    // Update UI textů a zadání
+                    document.getElementById('current-task-id').innerText = currentTaskId;
+                    const taskContent = document.getElementById('task-content');
+                    taskContent.innerHTML = "Zadání: $$ " + currentTaskLatex + " $$";
+
+                    // Znovu vyrenderujeme matematiku přes KaTeX
+                    renderMathInElement(taskContent, {
+                        delimiters: [{left: "$$", right: "$$", display: true}, {left: "$", right: "$", display: false}]
+                    });
+
+                    // Reset všech formulářů
+                    document.getElementById('student-answer').value = "";
+                    document.getElementById('certainty').value = 0.5;
+                    document.getElementById('certainty-val').innerText = "0.5";
+                    document.getElementById('used-hint').checked = false;
+
+                    // Skrytí feedback boxů
+                    const hintBtn = document.getElementById('hint-button');
+                    hintBtn.innerText = "💡 Potřebuji poradit (Gemini 2.5 Flash)";
+                    hintBtn.disabled = false;
+                    document.getElementById('hint-display').style.display = 'none';
+                    resultBox.style.display = 'none';
+
+                    submitBtn.disabled = false;
+                }, 3000);
+            } else {
+                // Pokud už nejsou žádné nevyřešené úlohy
+                setTimeout(() => {
+                    document.getElementById('task-content').innerHTML = "<strong>🎉 Všechny dostupné úlohy v této doméně byly vyřešeny!</strong>";
+                    document.getElementById('current-task-id').innerText = "Konec";
+                    document.getElementById('student-answer').disabled = true;
+                    submitBtn.style.display = 'none';
+                    resultBox.style.display = 'none';
+                }, 3000);
+            }
+
         } catch (error) {
             resultBox.className = "error";
             resultBox.innerHTML = "❌ Chyba serveru při vyhodnocování.";
+            submitBtn.disabled = false;
         }
     }
 
     // ADMIN FUNKCE: RESET DB
     async function resetDatabase() {
-        if (!confirm("VAROVÁNÍ: Opravdu chcete smazat historii logů a nastavit profil na výchozí hodnoty?")) return;
+        if (!confirm("VAROVÁNÍ: Opravdu chcete smazat historii logů a vygenerovat sadu adaptivních úloh?")) return;
         try {
             const res = await fetch('/reset-db', { method: 'POST' });
             const data = await res.json();
@@ -250,7 +309,8 @@
                     <td>${l.correct ? '<span style="color:green">✅ Správně</span>' : '<span style="color:red">❌ Chyba</span>'}</td>
                     <td>${Math.round(l.certainty * 100)} %</td>
                     <td>${l.hint ? '<span class="badge-hint">POUŽITA</span>' : 'Ne'}</td>
-                    <td>${deltaHtml}</td> <td>${l.time} s</td>
+                    <td>${deltaHtml}</td>
+                    <td>${l.time} s</td>
                 </tr>
                 `;
             }).join('');
