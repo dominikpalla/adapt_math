@@ -1,0 +1,1 @@
+Zatímco BKT (o kterém jsme se bavili doteď) řeší profil studenta (jak moc dobře student danou látku umí), IRT řeší profil samotné úlohy (jak těžká a kvalitní ta úloha objektivně je).
