@@ -170,67 +170,19 @@ def get_hint():
 
 @app.route("/reset-db", methods=["POST"])
 def reset_db():
-    """Hard-reset databáze pro demo účely (vytvoří 3 úlohy a plný OLM profil)."""
-    session = SessionLocal()
+    """Hard-reset databáze pro demo účely (spustí logiku ze seed_db.py)."""
     try:
-        session.query(InteractionLog).delete()
-        session.query(Student).delete()
-        session.query(MathTask).delete()
+        # Naimportujeme tvou existující funkci z vedlejšího souboru
+        from seed_db import seed_database
 
-        initial_profile = {
-            "Základní aritmetické operace": 0.85,
-            "Zlomky a desetinná čísla": 0.60,
-            "Mocniny a odmocniny": 0.45,
-            "Základní algebraické výrazy": 0.30,
-            "Lineární rovnice": 0.25,
-            "Kvadratické rovnice": 0.15,
-            "Soustavy rovnic": 0.10,
-            "Planimetrie": 0.50,
-            "Stereometrie": 0.20,
-            "Goniometrie": 0.10,
-            "Analytická geometrie": 0.10,
-            "Komplexní čísla": 0.10,
-            "Posloupnosti a řady": 0.10,
-            "Kombinatorika": 0.35,
-            "Pravděpodobnost": 0.20,
-            "Statistika": 0.40,
-            "Limity funkcí": 0.10,
-            "Derivace": 0.10,
-            "Integrály": 0.10,
-            "Matice a determinanty": 0.10
-        }
+        # Spustíme ji (provede výmaz DB, vytvoří studenta a nahraje všechny úlohy)
+        seed_database()
 
-        student = Student(
-            student_id="student_1", learning_style="visual",
-            motivation="intrinsic", cognitive_profile=initial_profile
-        )
-        session.add(student)
-
-        task_easy = MathTask(
-            task_id="task_lim_easy_01", content_latex=r"\lim_{x \to 3} (2x - 1)",
-            result_type="decimal", correct_answer=5.0, tolerance=0.01,
-            graph_vector=["Limity funkcí"], irt_difficulty=-1.5, irt_discrimination=0.8
-        )
-        task_medium = MathTask(
-            task_id="task_lim_med_01", content_latex=r"\lim_{x \to 0} \frac{\sin(x)}{x}",
-            result_type="decimal", correct_answer=1.0, tolerance=0.01,
-            graph_vector=["Limity funkcí"], irt_difficulty=0.5, irt_discrimination=1.2
-        )
-        task_hard = MathTask(
-            task_id="task_lim_hard_01", content_latex=r"\lim_{x \to 2} \frac{x^2 - 4}{x - 2}",
-            result_type="decimal", correct_answer=4.0, tolerance=0.01,
-            graph_vector=["Limity funkcí"], irt_difficulty=2.0, irt_discrimination=1.5
-        )
-
-        session.add_all([task_easy, task_medium, task_hard])
-        session.commit()
-        return jsonify(
-            {"message": "Databáze byla úspěšně resetována (Nahrány 3 adaptivní úlohy a obnoven plný profil studenta)."})
+        return jsonify({"message": "Databáze byla úspěšně resetována přímo ze skriptu seed_db.py."})
     except Exception as e:
-        session.rollback()
-        return jsonify({"error": str(e)}), 500
-    finally:
-        session.close()
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": f"Chyba při resetu: {str(e)}"}), 500
 
 
 @app.route("/get-logs", methods=["GET"])
