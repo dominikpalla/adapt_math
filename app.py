@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, jsonify
-from sqlalchemy.orm.attributes import flag_modified  # Importováno správně nahoře
+from sqlalchemy.orm.attributes import flag_modified
 from database import init_db
 from model import MathTask, Student, InteractionLog
 import os
@@ -45,9 +45,10 @@ def evaluate():
     """
     API endpoint pro vyhodnocení odpovědi:
     1. Ověří výsledek proti databázi.
-    2. Zapíše behaviorální log (InteractionLog).
-    3. Aktualizuje kognitivní profil studenta pomocí BKT logiky.
-    4. Vrací nový stav profilu pro Open Learner Model (OLM).
+    2. Vypočítá BKT update kognitivního profilu.
+    3. Zapíše behaviorální log (InteractionLog) včetně výzkumného JSON snapshotu a delty.
+    4. Aktualizuje profil studenta v databázi.
+    5. Vrací nový stav profilu pro Open Learner Model (OLM).
     """
     data = request.get_json()
     session = SessionLocal()
@@ -64,19 +65,7 @@ def evaluate():
         student_val = float(data['student_answer'])
         is_correct = abs(student_val - task.correct_answer) <= task.tolerance
 
-        # 2. Záznam interakce (Behaviorální data pro budoucí IRT kalibraci)
-        log = InteractionLog(
-            student_id=student.student_id,
-            task_id=task.task_id,
-            session_id="research_demo_session",
-            time_spent=15.0,  # Simulovaný čas řešení
-            is_correct=is_correct,
-            certainty_level=float(data['certainty']),
-            used_llm_hint=data['used_hint']
-        )
-        session.add(log)
-
-        # 3. Adaptivní logika: Bayesian Knowledge Tracing (BKT) Update
+        # 2. Adaptivní logika: Bayesian Knowledge Tracing (BKT) Update
         # Určíme téma, kterého se úloha týká (z grafu znalostí)
         topic = task.graph_vector[0]
         current_p = student.cognitive_profile.get(topic, 0.1)
@@ -98,10 +87,30 @@ def evaluate():
         # Saturace (hranice 1% až 99%)
         new_p = max(0.01, min(0.99, new_p))
 
-        # 4. Aktualizace kognitivního profilu (JSON pole)
+        # Výpočet změny pro frontend a uložení do logu
+        delta = new_p - current_p
+
+        # Vytvoření zaktualizovaného kognitivního profilu (JSON pole)
         # Vytvoříme kopii, abychom neměnili originál před commitem
         updated_profile = dict(student.cognitive_profile)
         updated_profile[topic] = new_p
+
+        # 3. Záznam interakce (Behaviorální data pro budoucí IRT kalibraci a výzkum)
+        log = InteractionLog(
+            student_id=student.student_id,
+            task_id=task.task_id,
+            session_id="research_demo_session",
+            time_spent=15.0,  # Simulovaný čas řešení
+            is_correct=is_correct,
+            certainty_level=float(data['certainty']),
+            used_llm_hint=data['used_hint'],
+            cognitive_profile_snapshot=updated_profile,  # Uložení celého JSONu po interakci
+            changed_topic=topic,  # Uložení zasaženého tématu
+            mastery_delta=delta  # Uložení změny v procentních bodech
+        )
+        session.add(log)
+
+        # 4. Aktualizace kognitivního profilu studenta v DB
         student.cognitive_profile = updated_profile
 
         # Oznámíme SQLAlchemy změnu v JSON struktuře
@@ -109,7 +118,7 @@ def evaluate():
 
         session.commit()
 
-        # Odeslání výsledků zpět na frontend
+        # 5. Odeslání výsledků zpět na frontend
         return jsonify({
             "is_correct": is_correct,
             "correct_answer": task.correct_answer,
@@ -122,6 +131,7 @@ def evaluate():
         return jsonify({"error": f"Chyba serveru: {str(e)}"}), 500
     finally:
         session.close()
+
 
 @app.route("/get-hint", methods=["POST"])
 def get_hint():
@@ -185,7 +195,9 @@ def get_logs():
             "correct": l.is_correct,
             "certainty": l.certainty_level,
             "hint": l.used_llm_hint,
-            "time": l.time_spent
+            "time": l.time_spent,
+            "changed_topic": l.changed_topic,  # Nově odesíláme na frontend zasažené téma
+            "mastery_delta": l.mastery_delta  # Nově odesíláme na frontend změnu
         } for l in logs])
     finally:
         session.close()

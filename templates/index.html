@@ -116,11 +116,11 @@
                 <th>Výsledek</th>
                 <th>Jistota</th>
                 <th>AI Nápověda</th>
-                <th>Čas řešení</th>
+                <th>Posun ve znalostech (BKT)</th> <th>Čas řešení</th>
             </tr>
         </thead>
         <tbody id="log-body">
-            </tbody>
+        </tbody>
     </table>
 </div>
 
@@ -232,16 +232,28 @@
             const res = await fetch('/get-logs');
             const logs = await res.json();
             const body = document.getElementById('log-body');
-            body.innerHTML = logs.map(l => `
+            body.innerHTML = logs.map(l => {
+
+                // Formátování změny BKT pro výpis
+                let deltaHtml = "-";
+                if (l.changed_topic && l.mastery_delta !== null && l.mastery_delta !== undefined) {
+                    const deltaPct = Math.round(l.mastery_delta * 100);
+                    const color = deltaPct > 0 ? 'green' : (deltaPct < 0 ? 'red' : 'gray');
+                    const sign = deltaPct > 0 ? '+' : '';
+                    deltaHtml = `<strong>${l.changed_topic}</strong>: <span style="color:${color}">${sign}${deltaPct} %</span>`;
+                }
+
+                return `
                 <tr>
                     <td>${l.id}</td>
                     <td>${l.task}</td>
                     <td>${l.correct ? '<span style="color:green">✅ Správně</span>' : '<span style="color:red">❌ Chyba</span>'}</td>
                     <td>${Math.round(l.certainty * 100)} %</td>
                     <td>${l.hint ? '<span class="badge-hint">POUŽITA</span>' : 'Ne'}</td>
-                    <td>${l.time} s</td>
+                    <td>${deltaHtml}</td> <td>${l.time} s</td>
                 </tr>
-            `).join('');
+                `;
+            }).join('');
         } catch (e) {
             console.error("Nepodařilo se načíst logy.");
         }

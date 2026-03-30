@@ -98,6 +98,14 @@ class InteractionLog(Base):
     # (pokud ano, budeme v BKT snižovat parametr učení alfa)
     used_llm_hint = Column(Boolean, default=False)
 
+    # --- NOVÉ SLOUPCE PRO VÝZKUM A VIZUALIZACI ---
+    # Uložení celého stavu profilu PO této interakci (výzkumný snapshot)
+    cognitive_profile_snapshot = Column(JSON)
+
+    # Rychlá data pro frontendovou tabulku (co se změnilo a o kolik)
+    changed_topic = Column(String)
+    mastery_delta = Column(Float)
+
     # Zpětné relace pro pohodlné dotazování
     student = relationship("Student", back_populates="interactions")
     task = relationship("MathTask", back_populates="interactions")
