@@ -57,8 +57,9 @@
 <body>
 
 <div class="container">
-    <h2 style="margin-top: 0; color: #222; border-bottom: 2px solid #f37021; padding-bottom: 10px;">
-        AdaptMath Engine - <span id="current-task-id">{{ task.task_id }}</span>
+    <h2 style="margin-top: 0; color: #222; border-bottom: 2px solid #f37021; padding-bottom: 10px; display:flex; justify-content:space-between; align-items:center;">
+        <span>AdaptMath Engine - <span id="current-task-id">{{ task.task_id }}</span></span>
+        <a href="/inspector" style="font-size:13px; color:#f37021; text-decoration:none; font-weight:normal;">🔬 Inspector úloh →</a>
     </h2>
 
     <input type="hidden" id="raw-latex" value="{{ task.content_latex }}">

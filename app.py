@@ -168,6 +168,119 @@ def get_hint():
     return jsonify({"hint": response.text})
 
 
+def _task_to_dict(task):
+    """Serializace MathTask pro předání do template / JS."""
+    return {
+        "task_id": task.task_id,
+        "content_latex": task.content_latex,
+        "has_image": task.has_image,
+        "result_type": task.result_type,
+        "correct_answer": task.correct_answer,
+        "tolerance": task.tolerance,
+        "cognitive_load": task.cognitive_load,
+        "graph_vector": task.graph_vector,
+        "irt_difficulty": task.irt_difficulty,
+        "irt_discrimination": task.irt_discrimination,
+    }
+
+
+@app.route("/inspector")
+def inspector_list():
+    """Seznam všech úloh v DB pro výzkumný tým (tagování, kontrola)."""
+    session = SessionLocal()
+    try:
+        tasks = session.query(MathTask).order_by(MathTask.task_id).all()
+        return render_template(
+            "inspector_list.html",
+            tasks=[_task_to_dict(t) for t in tasks],
+        )
+    finally:
+        session.close()
+
+
+@app.route("/inspector/<task_id>")
+def inspector_detail(task_id):
+    """Detail úlohy: vlastnosti, živý KaTeX náhled, MathLive vstup a Compute Engine eval."""
+    session = SessionLocal()
+    try:
+        task = session.query(MathTask).filter_by(task_id=task_id).first()
+        if not task:
+            return f"Úloha {task_id} nenalezena.", 404
+        return render_template("inspector_detail.html", task=_task_to_dict(task))
+    finally:
+        session.close()
+
+
+def _neighbor_task_ids(session, task_id):
+    """Vrátí (prev_id, next_id, index, total) v abecedním pořadí podle task_id."""
+    ids = [row[0] for row in session.query(MathTask.task_id).order_by(MathTask.task_id).all()]
+    if task_id not in ids:
+        return None, None, None, len(ids)
+    i = ids.index(task_id)
+    prev_id = ids[i - 1] if i > 0 else None
+    next_id = ids[i + 1] if i + 1 < len(ids) else None
+    return prev_id, next_id, i + 1, len(ids)
+
+
+@app.route("/admin/task/<task_id>", methods=["GET"])
+def admin_task_get(task_id):
+    """Admin editor jedné úlohy. V hlavičce navigace prev/next mezi úlohami."""
+    session = SessionLocal()
+    try:
+        task = session.query(MathTask).filter_by(task_id=task_id).first()
+        if not task:
+            return f"Úloha {task_id} nenalezena.", 404
+        prev_id, next_id, idx, total = _neighbor_task_ids(session, task_id)
+        return render_template(
+            "admin_edit.html",
+            task=_task_to_dict(task),
+            prev_id=prev_id,
+            next_id=next_id,
+            position=idx,
+            total=total,
+        )
+    finally:
+        session.close()
+
+
+_EDITABLE_FIELDS = {
+    "content_latex", "has_image", "result_type", "correct_answer", "tolerance",
+    "cognitive_load", "graph_vector", "irt_difficulty", "irt_discrimination",
+}
+
+
+@app.route("/admin/task/<task_id>", methods=["POST"])
+def admin_task_save(task_id):
+    """Uloží editovaná pole úlohy. Tělo: JSON s libovolnou podmnožinou polí."""
+    session = SessionLocal()
+    try:
+        task = session.query(MathTask).filter_by(task_id=task_id).first()
+        if not task:
+            return jsonify({"error": f"Úloha {task_id} nenalezena."}), 404
+
+        payload = request.get_json(silent=True) or {}
+        unknown = set(payload) - _EDITABLE_FIELDS
+        if unknown:
+            return jsonify({"error": f"Neznámá pole: {sorted(unknown)}"}), 400
+
+        for k, v in payload.items():
+            setattr(task, k, v)
+        # JSON sloupce SQLAlchemy potřebují explicitní flag, jinak by se update mohl ztratit
+        for k in ("correct_answer", "graph_vector"):
+            if k in payload:
+                flag_modified(task, k)
+
+        session.commit()
+        return jsonify({"ok": True, "task": _task_to_dict(task)})
+    except Exception as e:
+        session.rollback()
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": f"Chyba serveru: {str(e)}"}), 500
+    finally:
+        session.close()
+
+
 @app.route("/reset-db", methods=["POST"])
 def reset_db():
     """Hard-reset databáze pro demo účely (spustí logiku ze seed_db.py)."""
