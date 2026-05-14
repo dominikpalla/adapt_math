@@ -228,6 +228,13 @@ function preprocessTextLatex(s) {
         .replace(/\\textbf\{([^}]*)\}/g, '<strong>$1</strong>');
 }
 
+// Renderování CELÉHO zadání úlohy: pokud nemá žádné $-delimitery,
+// považujeme to za pure math a obalíme do $$...$$.
+function renderTaskContent(raw) {
+    if (!raw) return '';
+    return /\$/.test(raw) ? preprocessTextLatex(raw) : '$$' + raw + '$$';
+}
+
 function renderKaTeXIn(el) {
     if (!window.renderMathInElement) return;
     renderMathInElement(el, {
@@ -253,7 +260,7 @@ function getComputeEngine() {
 
 document.addEventListener('DOMContentLoaded', () => {
     const preview = document.getElementById('task-preview');
-    preview.innerHTML = preprocessTextLatex(TASK.content_latex);
+    preview.innerHTML = renderTaskContent(TASK.content_latex);
 
     document.getElementById('raw-latex').textContent = TASK.content_latex;
 

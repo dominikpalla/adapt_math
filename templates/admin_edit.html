@@ -283,6 +283,12 @@ function preprocessTextLatex(s) {
         .replace(/\\textbf\{([^}]*)\}/g, '<strong>$1</strong>');
 }
 
+// Pure-math content (bez $-delimiterů) wrapneme do $$...$$, aby KaTeX renderoval.
+function renderTaskContent(raw) {
+    if (!raw) return '';
+    return /\$/.test(raw) ? preprocessTextLatex(raw) : '$$' + raw + '$$';
+}
+
 function renderKaTeXIn(el) {
     if (!window.renderMathInElement) return;
     renderMathInElement(el, {
@@ -629,7 +635,7 @@ function refreshContentPreview() {
     const c = state.content_latex || '';
     if (!c.trim()) { box.className = 'preview-box empty'; box.textContent = '(prázdné zadání)'; return; }
     box.className = 'preview-box';
-    box.innerHTML = preprocessTextLatex(c);
+    box.innerHTML = renderTaskContent(c);
     renderKaTeXIn(box);
 }
 

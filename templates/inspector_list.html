@@ -123,7 +123,7 @@
     function renderPreviews() {
         document.querySelectorAll('td.preview').forEach(td => {
             const raw = td.dataset.latex || '';
-            td.innerHTML = preprocessTextLatex(raw);
+            td.innerHTML = renderTaskContent(raw);
         });
         renderMathInElement(document.body, {
             delimiters: [
@@ -136,10 +136,17 @@
 
     // Náhrada textových LaTeX maker za HTML (mimo math mód KaTeX neumí \textit, \emph apod.)
     function preprocessTextLatex(s) {
-        return s
+        return (s || '')
             .replace(/\\textit\{([^}]*)\}/g, '<em>$1</em>')
             .replace(/\\emph\{([^}]*)\}/g, '<em>$1</em>')
             .replace(/\\textbf\{([^}]*)\}/g, '<strong>$1</strong>');
+    }
+
+    // Renderování CELÉHO zadání úlohy: pokud nemá žádné $-delimitery,
+    // považujeme to za pure math a obalíme do $$...$$ aby to KaTeX zachytil.
+    function renderTaskContent(raw) {
+        if (!raw) return '';
+        return /\$/.test(raw) ? preprocessTextLatex(raw) : '$$' + raw + '$$';
     }
 
     function applyFilter() {
