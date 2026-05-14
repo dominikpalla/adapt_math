@@ -205,6 +205,54 @@ def get_logs():
         session.close()
 
 
+import uuid
+
+
+@app.route("/admin/add-task", methods=["GET"])
+def add_task_page():
+    """Zobrazí administrátorský formulář pro přidávání nových úloh."""
+    return render_template("add_task.html")
+
+
+@app.route("/admin/add-task", methods=["POST"])
+def api_add_task():
+    """Zpracuje odeslaný formulář a uloží úlohu do databáze."""
+    data = request.get_json()
+    session = SessionLocal()
+
+    try:
+        # Zpracování správné odpovědi podle typu
+        correct_ans = data['correct_answer']
+        if data['result_type'] == 'decimal':
+            correct_ans = float(correct_ans.replace(',', '.'))  # Pojistka na české čárky
+
+        # Vygenerování unikátního ID úlohy (nebo použití zadaného)
+        new_task_id = data.get('task_id')
+        if not new_task_id:
+            new_task_id = f"task_{str(uuid.uuid4())[:8]}"
+
+        new_task = MathTask(
+            task_id=new_task_id,
+            content_latex=data['content_latex'],
+            result_type=data['result_type'],
+            correct_answer=correct_ans,
+            tolerance=float(data['tolerance']),
+            cognitive_load=data['cognitive_load'],
+            graph_vector=[data['graph_vector']],  # Uložíme jako pole o 1 prvku
+            irt_difficulty=float(data['irt_difficulty']),
+            irt_discrimination=float(data['irt_discrimination'])
+        )
+        session.add(new_task)
+        session.commit()
+        return jsonify({"message": f"✅ Úloha {new_task_id} úspěšně přidána do databáze!"})
+
+    except Exception as e:
+        session.rollback()
+        return jsonify({"error": f"Chyba při ukládání: {str(e)}"}), 500
+    finally:
+        session.close()
+
+
 if __name__ == "__main__":
     print("🚀 AdaptMath Engine běží na http://127.0.0.1:5000")
     app.run(debug=True, port=5000)
