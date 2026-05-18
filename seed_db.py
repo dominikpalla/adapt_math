@@ -180,7 +180,7 @@ TASKS = [
         "task_id": "cv04_14",
         "content_latex": r"\lim_{x \to 0} \frac{x^4 + 5x - 3}{2 - \sqrt{x^2 + 4}}",
         "results": [{"key": "lim", "label_latex": "", "type": "latex_expr",
-                     "expected": r"+\infty"}],
+                     "expected": r"\infty"}],
         "cognitive_load": "D", "graph_vector": ["Limity funkcí"],
     },
     {
@@ -218,7 +218,7 @@ TASKS = [
         "task_id": "cv04_18",
         "content_latex": r"\lim_{x \to -\infty} \frac{(1 - 2x)^2 (3 - x)}{x^2 - 7x + 10}",
         "results": [{"key": "lim", "label_latex": "", "type": "latex_expr",
-                     "expected": r"+\infty"}],
+                     "expected": r"\infty"}],
         "cognitive_load": "C", "graph_vector": ["Limity funkcí"],
     },
 ]
