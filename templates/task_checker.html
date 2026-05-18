@@ -109,7 +109,7 @@
         .result-card-head .key { font-family: 'SF Mono', monospace; font-size: 13px; flex: 1; }
         .badge { padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
         .b-decimal{background:#e3f2fd;color:#0d47a1;}
-        .b-latex_expr{background:#fff3e0;color:#bf360c;}
+        .b-mathlive{background:#fff3e0;color:#bf360c;}
         .b-multiple_choice{background:#f3e5f5;color:#4a148c;}
         .b-open_text{background:#fce4ec;color:#880e4f;}
 
@@ -461,7 +461,7 @@ function refreshExpectedPreview() {
         let body;
         if (r.type === 'decimal') {
             body = `<code>${escapeHtml(r.expected)}</code>` + (r.tolerance ? ` <small>(±${r.tolerance})</small>` : '');
-        } else if (r.type === 'latex_expr') {
+        } else if (r.type === 'mathlive') {
             body = `$${r.expected}$ <code class="live-code">${escapeHtml(r.expected || '')}</code>`;
         } else if (r.type === 'multiple_choice') {
             body = (r.options || []).map(o => {
@@ -485,7 +485,7 @@ function refreshExpectedPreview() {
 function defaultResultOfType(type) {
     switch (type) {
         case 'decimal': return { key: 'r' + ((state.results||[]).length+1), label_latex: '', type, expected: 0, tolerance: 0.001 };
-        case 'latex_expr': return { key: 'r' + ((state.results||[]).length+1), label_latex: '', type, expected: '' };
+        case 'mathlive': return { key: 'r' + ((state.results||[]).length+1), label_latex: '', type, expected: '' };
         case 'multiple_choice': return { key: 'r' + ((state.results||[]).length+1), label_latex: '',
             type, options: [{key:'a', label_latex:''}, {key:'b', label_latex:''}], expected: 'a' };
         case 'open_text': return { key: 'r' + ((state.results||[]).length+1), label_latex: '', type, expected: '' };
@@ -493,7 +493,7 @@ function defaultResultOfType(type) {
 }
 
 function addResult() {
-    state.results = [...(state.results || []), defaultResultOfType('latex_expr')];
+    state.results = [...(state.results || []), defaultResultOfType('mathlive')];
     buildResultsEditor(); refreshExpectedPreview(); buildSandbox(); setDirty();
 }
 
@@ -530,7 +530,7 @@ function buildResultsEditor() {
                     <label>Typ</label>
                     <select data-r="type" data-idx="${i}">
                         <option value="decimal" ${r.type==='decimal'?'selected':''}>decimal</option>
-                        <option value="latex_expr" ${r.type==='latex_expr'?'selected':''}>latex_expr</option>
+                        <option value="mathlive" ${r.type==='mathlive'?'selected':''}>mathlive</option>
                         <option value="multiple_choice" ${r.type==='multiple_choice'?'selected':''}>multiple_choice</option>
                         <option value="open_text" ${r.type==='open_text'?'selected':''}>open_text</option>
                     </select>
@@ -566,7 +566,7 @@ function buildResultsEditor() {
         b.onclick = () => removeResult(parseInt(b.dataset.idx, 10));
     });
 
-    // MathLive inputs (pro latex_expr expected)
+    // MathLive inputs (pro mathlive expected)
     root.querySelectorAll('math-field[data-mf-role="expected"]').forEach(mf => {
         const i = parseInt(mf.dataset.idx, 10);
         const init = () => {
@@ -646,7 +646,7 @@ function renderResultExpectedEditor(r, i) {
                 <input type="number" step="any" data-rd="tolerance" data-idx="${i}" value="${r.tolerance ?? 0}"></div>
         </div>`;
     }
-    if (r.type === 'latex_expr') {
+    if (r.type === 'mathlive') {
         return `<div class="row">
             <label>Správná odpověď (LaTeX)</label>
             <math-field data-mf-role="expected" data-idx="${i}"></math-field>
@@ -720,7 +720,7 @@ function buildSandbox() {
                 ${lblHtml}
                 <textarea data-role="input" placeholder="Tvoje odpověď…"></textarea>`;
         } else {
-            // decimal nebo latex_expr → MathLive
+            // decimal nebo mathlive → MathLive
             wrap.innerHTML = `
                 <label><small style="color:#888;">${i+1}. <code>${escapeHtml(r.key)}</code></small></label>
                 <div class="labeled-input">
@@ -787,7 +787,7 @@ async function evaluateResult(r, studentInput, idx) {
         const ok = Math.abs(n - Number(r.expected)) <= (r.tolerance || 0);
         return { ok, fieldLabel: baseLabel, mode: ok ? 'numeric' : 'mismatch', studentValue: n, correctValue: Number(r.expected), tolerance: r.tolerance || 0 };
     }
-    if (r.type === 'latex_expr') {
+    if (r.type === 'mathlive') {
         const ce = getComputeEngine();
         if (!ce) return { ok: false, fieldLabel: baseLabel, detail: 'Compute Engine nenačten' };
         let s, c;

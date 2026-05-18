@@ -17,16 +17,16 @@ class MathTask(Base):
           {
             "key": "Df",
             "label_latex": "D(f) = ",
-            "type": "latex_expr",
+            "type": "mathlive",
             "expected": "(-\\infty, 0) \\cup (2, 3)"
           }
         ]
 
     Příklad pro úlohu „Najděte intervaly monotonie a extrémy":
         results = [
-          { "key": "roste", "label_latex": "Roste na ", "type": "latex_expr",
+          { "key": "roste", "label_latex": "Roste na ", "type": "mathlive",
             "expected": "(-\\infty, -1) \\cup (3, \\infty)" },
-          { "key": "klesa", "label_latex": "Klesá na ", "type": "latex_expr",
+          { "key": "klesa", "label_latex": "Klesá na ", "type": "mathlive",
             "expected": "(-1, 3)" },
           { "key": "lokmax", "label_latex": "Lokální max v ", "type": "decimal",
             "expected": -1, "tolerance": 0.001 },
@@ -38,10 +38,10 @@ class MathTask(Base):
       key:           interní identifikátor (pro logging / vyhodnocení)
       label_latex:   prefix zobrazený před vstupním polem (LaTeX),
                      např. "D(f) = " nebo "Inflexní bod x_1 = " (může být prázdný)
-      type:          decimal | latex_expr | multiple_choice | open_text
+      type:          decimal | mathlive | multiple_choice | open_text
       expected:      podle typu:
                        decimal:         float
-                       latex_expr:      string (LaTeX, porovnán přes Compute Engine)
+                       mathlive:      string (LaTeX, porovnán přes Compute Engine)
                        multiple_choice: klíč správné možnosti (string)
                        open_text:       vzorové řešení (string, vyhodnocuje LLM/expert)
       tolerance:     pro decimal numerická tolerance (default 0)
