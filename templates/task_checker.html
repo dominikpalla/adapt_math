@@ -52,6 +52,7 @@
 
         /* Layout */
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+        .grid > * { min-width: 0; }   /* aby grid track sám neexpanduoval s obsahem */
         @media (max-width: 1100px) { .grid { grid-template-columns: 1fr; } }
 
         section.card {
@@ -101,6 +102,7 @@
         .result-card {
             background: #fafbfc; border: 1px solid var(--border); border-radius: 8px;
             padding: 14px; margin-bottom: 10px; position: relative;
+            min-width: 0; overflow: hidden;
         }
         .result-card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
         .result-card-head .idx { background: var(--orange); color: #fff; width: 24px; height: 24px;
@@ -130,8 +132,9 @@
 
         /* Multiple choice editor */
         .mc-options { margin-top: 6px; }
-        .mc-row { display: flex; gap: 6px; align-items: center; margin-bottom: 5px; }
-        .mc-row input[type="radio"] { margin: 0; }
+        /* width:100% + min-width:0 nutné, aby flex children mohli shrinkout pod min-content */
+        .mc-row { display: flex; gap: 6px; align-items: center; margin-bottom: 5px; width: 100%; min-width: 0; }
+        .mc-row input[type="radio"] { margin: 0; flex: 0 0 auto; }
 
         /* Sandbox MC option (test "vyzkoušej řešení") */
         .sb-mc-option {
@@ -144,11 +147,17 @@
         .sb-mc-option > input[type="radio"] { margin-top: 5px; flex: 0 0 auto; }
         /* min-width:0 je kritický — bez něj flex child text overflowuje rodičovský sloupec */
         .sb-mc-option > .sb-mc-text { flex: 1 1 0; min-width: 0; word-break: normal; overflow-wrap: anywhere; }
-        .sb-mc-option .katex { white-space: normal; }
+        /* KaTeX defaultně používá white-space:nowrap — to pro inline math v dlouhých
+           labelů znamená že math segment se chová jako jedno atomické slovo a může
+           rozšířit rodičovský kontejner. Dovolíme zalamování všude, kde renderujeme
+           "delší" obsah (sandbox, náhledy, multi_field). */
+        .sb-mc-option .katex,
+        .preview-box .katex,
+        .result-card .katex { white-space: normal; }
 
-        .mc-row input[name="mc-key"] { width: 100px; }
-        .mc-row input[name="mc-label"] { flex: 1; }
-        .mc-row .btn-x { background: var(--red); color: #fff; border: none; border-radius: 4px;
+        .mc-row input[name="mc-key"] { flex: 0 0 90px; width: 90px; }
+        .mc-row input[name="mc-label"] { flex: 1 1 0; min-width: 0; }
+        .mc-row .btn-x { flex: 0 0 auto; background: var(--red); color: #fff; border: none; border-radius: 4px;
             padding: 4px 8px; cursor: pointer; font-size: 12px; }
 
         /* Buttons */
