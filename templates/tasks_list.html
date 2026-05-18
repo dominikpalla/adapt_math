@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <title>AdaptMath — Seznam úloh</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+    <style>
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f4f7f9; margin: 0; padding: 24px; }
+        .wrap { max-width: 1300px; margin: 0 auto; }
+        header { display:flex; align-items:center; gap:16px; border-bottom:2px solid #f37021; padding-bottom:10px; margin-bottom: 18px; }
+        h1 { margin: 0; font-size: 22px; color: #222; }
+        .counter { color: #888; font-size: 13px; }
+        .filters { display:flex; gap:10px; margin-bottom: 14px; align-items: center; flex-wrap: wrap; }
+        .filters input, .filters select { padding:8px 10px; border:1px solid #ccc; border-radius:6px; font-size: 13px; }
+        .filters input { min-width: 250px; }
+
+        table { width:100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        th, td { padding: 10px 12px; border-bottom: 1px solid #eee; font-size: 13px; vertical-align: top; text-align: left; }
+        th { background: #f8f9fa; color: #666; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+        tr:hover td { background: #fafafa; }
+        a.task-link { color: #f37021; text-decoration: none; font-weight: 600; font-family: 'SF Mono', Menlo, monospace; }
+        a.task-link:hover { text-decoration: underline; }
+        .preview { max-width: 480px; font-size: 14px; }
+        .badge { display:inline-block; padding:2px 7px; border-radius:10px; font-size: 11px; font-weight: 600; margin-right: 3px; }
+        .b-decimal{background:#e3f2fd;color:#0d47a1;}
+        .b-latex_expr{background:#fff3e0;color:#bf360c;}
+        .b-multiple_choice{background:#f3e5f5;color:#4a148c;}
+        .b-open_text{background:#fce4ec;color:#880e4f;}
+        .tags span { display:inline-block; background:#eef; color:#225; padding:1px 6px; border-radius:8px; font-size:11px; margin-right:3px; }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <header>
+        <h1>Seznam úloh <span class="counter" id="counter">({{ tasks|length }})</span></h1>
+    </header>
+
+    <div class="filters">
+        <input type="text" id="q" placeholder="Hledat (task_id, téma, LaTeX)…" oninput="applyFilter()">
+        <select id="topic-filter" onchange="applyFilter()">
+            <option value="">Všechna témata</option>
+        </select>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Task ID</th>
+                <th>Náhled zadání</th>
+                <th>Typy výsledků</th>
+                <th>Témata</th>
+                <th>Zátěž</th>
+            </tr>
+        </thead>
+        <tbody id="tbody">
+            {% for t in tasks %}
+            <tr data-id="{{ t.task_id }}"
+                data-topics="{{ (t.graph_vector or []) | tojson | e }}"
+                data-types="{{ (t.results | map(attribute='type') | list) | tojson | e }}">
+                <td><a href="{{ url_for('task_checker', task_id=t.task_id) }}" class="task-link">{{ t.task_id }}</a></td>
+                <td class="preview" data-latex="{{ t.content_latex }}"></td>
+                <td>
+                    {% for r in t.results %}
+                        <span class="badge b-{{ r.type }}" title="{{ r.key }}">{{ r.type }}</span>
+                    {% endfor %}
+                </td>
+                <td class="tags">{% for topic in (t.graph_vector or []) %}<span>{{ topic }}</span>{% endfor %}</td>
+                <td>{{ t.cognitive_load or '—' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+    function preprocessTextLatex(s) {
+        return (s || '')
+            .replace(/\\textit\{([^}]*)\}/g, '<em>$1</em>')
+            .replace(/\\emph\{([^}]*)\}/g, '<em>$1</em>')
+            .replace(/\\textbf\{([^}]*)\}/g, '<strong>$1</strong>');
+    }
+    function renderTaskContent(raw) {
+        if (!raw) return '';
+        return /\$/.test(raw) ? preprocessTextLatex(raw) : '$' + raw + '$';
+    }
+
+    function renderPreviews() {
+        document.querySelectorAll('td.preview').forEach(td => {
+            td.innerHTML = renderTaskContent(td.dataset.latex || '');
+        });
+        renderMathInElement(document.body, {
+            delimiters: [{left: "$$", right: "$$", display: false},{left: "$", right: "$", display: false}],
+            throwOnError: false
+        });
+    }
+
+    function collectTopics() {
+        const set = new Set();
+        document.querySelectorAll('tr[data-topics]').forEach(tr => {
+            try { JSON.parse(tr.dataset.topics).forEach(t => set.add(t)); } catch(e){}
+        });
+        const sel = document.getElementById('topic-filter');
+        [...set].sort().forEach(t => {
+            const o = document.createElement('option');
+            o.value = t; o.textContent = t; sel.appendChild(o);
+        });
+    }
+
+    function applyFilter() {
+        const q = (document.getElementById('q').value || '').toLowerCase().trim();
+        const topic = document.getElementById('topic-filter').value;
+        let visible = 0;
+        document.querySelectorAll('#tbody tr').forEach(tr => {
+            const id = tr.dataset.id.toLowerCase();
+            const topics = tr.dataset.topics.toLowerCase();
+            const latex = (tr.querySelector('.preview').dataset.latex || '').toLowerCase();
+            const matchQ = !q || id.includes(q) || topics.includes(q) || latex.includes(q);
+            const matchTopic = !topic || topics.includes(topic.toLowerCase());
+            const show = matchQ && matchTopic;
+            tr.style.display = show ? '' : 'none';
+            if (show) visible++;
+        });
+        document.getElementById('counter').textContent = `(${visible})`;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        collectTopics();
+        renderPreviews();
+    });
+</script>
+</body>
+</html>

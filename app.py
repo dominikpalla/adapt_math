@@ -1,182 +1,44 @@
-import math
-from flask import Flask, render_template, request, jsonify
+"""
+AdaptMath — Task Checker.
+
+Minimální Flask aplikace pro kontrolu importovaných úloh:
+  GET  /                        → přesměruje na první úlohu
+  GET  /tasks                   → seznam všech úloh
+  GET  /tasks/<task_id>         → task checker (editor + sandbox)
+  POST /api/tasks/<task_id>     → uložit změny v úloze
+  DELETE /api/tasks/<task_id>   → smazat úlohu
+
+Demo s IRT/BKT engine je zatím odloženo (viz historie commitů pro starší verzi).
+"""
+
+from flask import Flask, render_template, request, jsonify, redirect, url_for
 from sqlalchemy.orm.attributes import flag_modified
 from database import init_db
-from model import MathTask, Student, InteractionLog
-import os
-import google.generativeai as genai
-from dotenv import load_dotenv
+from model import MathTask
 
-load_dotenv()
-
-genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
-gemini_model = genai.GenerativeModel("gemini-2.5-flash")
+DB_URL = "postgresql://adaptmath_user:supersecretpassword@localhost:5432/adaptmath"
 
 app = Flask(__name__)
-
-# Konfigurace připojení k Docker PostgreSQL databázi
-DB_URL = "postgresql://adaptmath_user:supersecretpassword@localhost:5432/adaptmath"
 SessionLocal = init_db(DB_URL)
 
 
-@app.route("/")
-def index():
-    """
-    Úvodní stránka: Načte data studenta a adaptivně vybere první nevyřešenou úlohu.
-    """
-    session = SessionLocal()
-    try:
-        student = session.query(Student).filter_by(student_id="student_1").first()
+# --------------------------------------------------------------------------
+# Helpers
+# --------------------------------------------------------------------------
 
-        if not student:
-            return "❌ Databáze není naplněna! Spusť nejprve skript seed_db.py."
-
-        # Zjistíme, co už student řešil
-        solved_logs = session.query(InteractionLog.task_id).filter_by(student_id=student.student_id).all()
-        solved_task_ids = [log.task_id for log in solved_logs]
-
-        # Vybereme libovolnou první nevyřešenou úlohu pro začátek dema (bezpečný dotaz na prázdné pole)
-        query = session.query(MathTask)
-        if solved_task_ids:
-            query = query.filter(~MathTask.task_id.in_(solved_task_ids))
-        task = query.first()
-
-        # Pokud už vyřešil vše, ukážeme mu pro jistotu první úlohu v DB, ať není stránka prázdná
-        if not task:
-            task = session.query(MathTask).first()
-
-        return render_template("index.html", task=task, student=student)
-    except Exception as e:
-        return f"❌ Chyba při načítání dat: {str(e)}"
-    finally:
-        session.close()
+EDITABLE_FIELDS = {
+    "task_id", "content_latex", "results",
+    "cognitive_load", "graph_vector",
+    "irt_difficulty", "irt_discrimination",
+}
 
 
-@app.route("/evaluate", methods=["POST"])
-def evaluate():
-    """
-    API endpoint pro vyhodnocení odpovědi a ADAPTIVNÍ VÝBĚR DALŠÍ ÚLOHY.
-    """
-    data = request.get_json()
-    session = SessionLocal()
-
-    try:
-        task = session.query(MathTask).filter_by(task_id=data['task_id']).first()
-        student = session.query(Student).filter_by(student_id=data['student_id']).first()
-
-        if not task or not student:
-            return jsonify({"error": "Úloha nebo student nebyl nalezen"}), 404
-
-        # 1. Vyhodnocení správnosti
-        student_val = float(data['student_answer'])
-        correct_val = float(task.correct_answer)
-        is_correct = abs(student_val - correct_val) <= task.tolerance
-
-        # 2. BKT Update
-        topic = task.graph_vector[0] if task.graph_vector else "Neznámé téma"
-        current_p = student.cognitive_profile.get(topic, 0.1)
-
-        alpha = 0.2 + (0.2 * float(data['certainty']))
-        if data['used_hint']:
-            alpha *= 0.5
-
-        beta = 0.03 + (0.02 * float(data['certainty']))
-
-        if is_correct:
-            new_p = current_p + alpha * (1.0 - current_p)
-        else:
-            new_p = current_p - beta * current_p
-
-        new_p = max(0.01, min(0.99, new_p))
-        delta = new_p - current_p
-
-        updated_profile = dict(student.cognitive_profile)
-        updated_profile[topic] = new_p
-
-        # 3. Uložení behaviorálního logu
-        log = InteractionLog(
-            student_id=student.student_id,
-            task_id=task.task_id,
-            session_id="research_demo_session",
-            time_spent=15.0,
-            is_correct=is_correct,
-            certainty_level=float(data['certainty']),
-            used_llm_hint=data['used_hint'],
-            cognitive_profile_snapshot=updated_profile,
-            changed_topic=topic,
-            mastery_delta=delta
-        )
-        session.add(log)
-
-        # 4. Aktualizace studenta v DB a Commit
-        student.cognitive_profile = updated_profile
-        flag_modified(student, "cognitive_profile")
-        session.commit()
-
-        # --- 5. ADAPTIVNÍ SELEKCE DALŠÍ ÚLOHY (IRT + BKT) ---
-        theta = math.log(new_p / (1.0 - new_p))
-
-        solved_logs = session.query(InteractionLog.task_id).filter_by(student_id=student.student_id).all()
-        solved_task_ids = [l.task_id for l in solved_logs]
-
-        # Nejprve vyřadíme vyřešené úlohy pomocí databáze (bezpečně)
-        query = session.query(MathTask)
-        if solved_task_ids:
-            query = query.filter(~MathTask.task_id.in_(solved_task_ids))
-        candidate_tasks = query.all()
-
-        # Filtrování podle JSON pole (tématu) a hledání nejlepší úlohy provedeme bezpečně v Pythonu
-        valid_tasks = [t for t in candidate_tasks if t.graph_vector and topic in t.graph_vector]
-
-        # Seřadíme úlohy podle toho, jak moc se jejich IRT obtížnost blíží schopnosti studenta (theta)
-        valid_tasks.sort(key=lambda t: abs((t.irt_difficulty or 0.0) - theta))
-
-        next_task_data = None
-        if valid_tasks:
-            next_task = valid_tasks[0]
-            next_task_data = {
-                "task_id": next_task.task_id,
-                "content_latex": next_task.content_latex
-            }
-
-        # 6. Odeslání všech dat zpět na frontend
-        return jsonify({
-            "is_correct": is_correct,
-            "correct_answer": task.correct_answer,
-            "new_profile": updated_profile,
-            "next_task": next_task_data
-        })
-
-    except Exception as e:
-        session.rollback()
-        # Vypsání chyby do konzole pro snazší případný debugging
-        import traceback
-        traceback.print_exc()
-        return jsonify({"error": f"Chyba serveru: {str(e)}"}), 500
-    finally:
-        session.close()
-
-
-@app.route("/get-hint", methods=["POST"])
-def get_hint():
-    data = request.get_json()
-    prompt = (
-        f"Jsi asistent v systému AdaptMath. Student řeší úlohu: {data['latex']}. "
-        "Dej mu stručnou didaktickou nápovědu, jak postupovat, ale NEPROZRAZUJ výsledek."
-    )
-    response = gemini_model.generate_content(prompt)
-    return jsonify({"hint": response.text})
-
-
-def _task_to_dict(task):
-    """Serializace MathTask pro předání do template / JS."""
+def task_to_dict(task):
+    """Serializace MathTask pro template / JSON odpověď."""
     return {
         "task_id": task.task_id,
         "content_latex": task.content_latex,
-        "has_image": task.has_image,
-        "result_type": task.result_type,
-        "correct_answer": task.correct_answer,
-        "tolerance": task.tolerance,
+        "results": task.results,
         "cognitive_load": task.cognitive_load,
         "graph_vector": task.graph_vector,
         "irt_difficulty": task.irt_difficulty,
@@ -184,34 +46,7 @@ def _task_to_dict(task):
     }
 
 
-@app.route("/inspector")
-def inspector_list():
-    """Seznam všech úloh v DB pro výzkumný tým (tagování, kontrola)."""
-    session = SessionLocal()
-    try:
-        tasks = session.query(MathTask).order_by(MathTask.task_id).all()
-        return render_template(
-            "inspector_list.html",
-            tasks=[_task_to_dict(t) for t in tasks],
-        )
-    finally:
-        session.close()
-
-
-@app.route("/inspector/<task_id>")
-def inspector_detail(task_id):
-    """Detail úlohy: vlastnosti, živý KaTeX náhled, MathLive vstup a Compute Engine eval."""
-    session = SessionLocal()
-    try:
-        task = session.query(MathTask).filter_by(task_id=task_id).first()
-        if not task:
-            return f"Úloha {task_id} nenalezena.", 404
-        return render_template("inspector_detail.html", task=_task_to_dict(task))
-    finally:
-        session.close()
-
-
-def _neighbor_task_ids(session, task_id):
+def neighbor_task_ids(session, task_id):
     """Vrátí (prev_id, next_id, index, total) v abecedním pořadí podle task_id."""
     ids = [row[0] for row in session.query(MathTask.task_id).order_by(MathTask.task_id).all()]
     if task_id not in ids:
@@ -222,18 +57,53 @@ def _neighbor_task_ids(session, task_id):
     return prev_id, next_id, i + 1, len(ids)
 
 
-@app.route("/admin/task/<task_id>", methods=["GET"])
-def admin_task_get(task_id):
-    """Admin editor jedné úlohy. V hlavičce navigace prev/next mezi úlohami."""
+# --------------------------------------------------------------------------
+# Routes
+# --------------------------------------------------------------------------
+
+@app.route("/")
+def index():
+    """Default — přesměruje na první úlohu v DB (nebo prompt na seed)."""
+    session = SessionLocal()
+    try:
+        first = session.query(MathTask.task_id).order_by(MathTask.task_id).first()
+        if first is None:
+            return (
+                "<h1>Databáze je prázdná.</h1>"
+                "<p>Spusť <code>python seed_db.py</code> a obnov tuto stránku.</p>",
+                200,
+            )
+        return redirect(url_for("task_checker", task_id=first[0]))
+    finally:
+        session.close()
+
+
+@app.route("/tasks")
+def tasks_list():
+    """Tabulka všech úloh — odkaz na detail pro každou."""
+    session = SessionLocal()
+    try:
+        tasks = session.query(MathTask).order_by(MathTask.task_id).all()
+        return render_template(
+            "tasks_list.html",
+            tasks=[task_to_dict(t) for t in tasks],
+        )
+    finally:
+        session.close()
+
+
+@app.route("/tasks/<task_id>")
+def task_checker(task_id):
+    """Task checker: zadání, parametry, výsledky, MathLive sandbox."""
     session = SessionLocal()
     try:
         task = session.query(MathTask).filter_by(task_id=task_id).first()
         if not task:
-            return f"Úloha {task_id} nenalezena.", 404
-        prev_id, next_id, idx, total = _neighbor_task_ids(session, task_id)
+            return f"Úloha <code>{task_id}</code> nenalezena. <a href='/tasks'>Zpět na seznam</a>.", 404
+        prev_id, next_id, idx, total = neighbor_task_ids(session, task_id)
         return render_template(
-            "admin_edit.html",
-            task=_task_to_dict(task),
+            "task_checker.html",
+            task=task_to_dict(task),
             prev_id=prev_id,
             next_id=next_id,
             position=idx,
@@ -243,15 +113,10 @@ def admin_task_get(task_id):
         session.close()
 
 
-_EDITABLE_FIELDS = {
-    "content_latex", "has_image", "result_type", "correct_answer", "tolerance",
-    "cognitive_load", "graph_vector", "irt_difficulty", "irt_discrimination",
-}
-
-
-@app.route("/admin/task/<task_id>", methods=["POST"])
-def admin_task_save(task_id):
-    """Uloží editovaná pole úlohy. Tělo: JSON s libovolnou podmnožinou polí."""
+@app.route("/api/tasks/<task_id>", methods=["POST"])
+def api_task_save(task_id):
+    """Uloží editovaná pole úlohy. Tělo: JSON s libovolnou podmnožinou polí.
+    Pokud se mění task_id, vrátí nové URL pro redirect na frontendu."""
     session = SessionLocal()
     try:
         task = session.query(MathTask).filter_by(task_id=task_id).first()
@@ -259,113 +124,56 @@ def admin_task_save(task_id):
             return jsonify({"error": f"Úloha {task_id} nenalezena."}), 404
 
         payload = request.get_json(silent=True) or {}
-        unknown = set(payload) - _EDITABLE_FIELDS
+        unknown = set(payload) - EDITABLE_FIELDS
         if unknown:
             return jsonify({"error": f"Neznámá pole: {sorted(unknown)}"}), 400
 
+        new_id = payload.get("task_id")
+        renamed = new_id and new_id != task.task_id
+        if renamed:
+            # Kolize?
+            if session.query(MathTask).filter_by(task_id=new_id).first():
+                return jsonify({"error": f"task_id '{new_id}' už existuje."}), 409
+
         for k, v in payload.items():
             setattr(task, k, v)
-        # JSON sloupce SQLAlchemy potřebují explicitní flag, jinak by se update mohl ztratit
-        for k in ("correct_answer", "graph_vector"):
+        for k in ("results", "graph_vector"):
             if k in payload:
                 flag_modified(task, k)
 
         session.commit()
-        return jsonify({"ok": True, "task": _task_to_dict(task)})
+        return jsonify({
+            "ok": True,
+            "task": task_to_dict(task),
+            "renamed_to": new_id if renamed else None,
+        })
     except Exception as e:
         session.rollback()
         import traceback
         traceback.print_exc()
-        return jsonify({"error": f"Chyba serveru: {str(e)}"}), 500
+        return jsonify({"error": f"Chyba serveru: {e}"}), 500
     finally:
         session.close()
 
 
-@app.route("/reset-db", methods=["POST"])
-def reset_db():
-    """Hard-reset databáze pro demo účely (spustí logiku ze seed_db.py)."""
-    try:
-        # Naimportujeme tvou existující funkci z vedlejšího souboru
-        from seed_db import seed_database
-
-        # Spustíme ji (provede výmaz DB, vytvoří studenta a nahraje všechny úlohy)
-        seed_database()
-
-        return jsonify({"message": "Databáze byla úspěšně resetována přímo ze skriptu seed_db.py."})
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        return jsonify({"error": f"Chyba při resetu: {str(e)}"}), 500
-
-
-@app.route("/get-logs", methods=["GET"])
-def get_logs():
-    """Vrátí všechny interakce seřazené od nejnovější pro tabulku logů."""
+@app.route("/api/tasks/<task_id>", methods=["DELETE"])
+def api_task_delete(task_id):
+    """Smaže úlohu."""
     session = SessionLocal()
     try:
-        logs = session.query(InteractionLog).order_by(InteractionLog.timestamp.desc()).all()
-        return jsonify([{
-            "id": l.log_id,
-            "task": l.task_id,
-            "correct": l.is_correct,
-            "certainty": l.certainty_level,
-            "hint": l.used_llm_hint,
-            "time": l.time_spent,
-            "changed_topic": l.changed_topic,
-            "mastery_delta": l.mastery_delta
-        } for l in logs])
-    finally:
-        session.close()
-
-
-import uuid
-
-
-@app.route("/admin/add-task", methods=["GET"])
-def add_task_page():
-    """Zobrazí administrátorský formulář pro přidávání nových úloh."""
-    return render_template("add_task.html")
-
-
-@app.route("/admin/add-task", methods=["POST"])
-def api_add_task():
-    """Zpracuje odeslaný formulář a uloží úlohu do databáze."""
-    data = request.get_json()
-    session = SessionLocal()
-
-    try:
-        # Zpracování správné odpovědi podle typu
-        correct_ans = data['correct_answer']
-        if data['result_type'] == 'decimal':
-            correct_ans = float(correct_ans.replace(',', '.'))  # Pojistka na české čárky
-
-        # Vygenerování unikátního ID úlohy (nebo použití zadaného)
-        new_task_id = data.get('task_id')
-        if not new_task_id:
-            new_task_id = f"task_{str(uuid.uuid4())[:8]}"
-
-        new_task = MathTask(
-            task_id=new_task_id,
-            content_latex=data['content_latex'],
-            result_type=data['result_type'],
-            correct_answer=correct_ans,
-            tolerance=float(data['tolerance']),
-            cognitive_load=data['cognitive_load'],
-            graph_vector=[data['graph_vector']],  # Uložíme jako pole o 1 prvku
-            irt_difficulty=float(data['irt_difficulty']),
-            irt_discrimination=float(data['irt_discrimination'])
-        )
-        session.add(new_task)
+        task = session.query(MathTask).filter_by(task_id=task_id).first()
+        if not task:
+            return jsonify({"error": f"Úloha {task_id} nenalezena."}), 404
+        session.delete(task)
         session.commit()
-        return jsonify({"message": f"✅ Úloha {new_task_id} úspěšně přidána do databáze!"})
-
+        return jsonify({"ok": True})
     except Exception as e:
         session.rollback()
-        return jsonify({"error": f"Chyba při ukládání: {str(e)}"}), 500
+        return jsonify({"error": str(e)}), 500
     finally:
         session.close()
 
 
 if __name__ == "__main__":
-    print("🚀 AdaptMath Engine běží na http://127.0.0.1:5000")
+    print("🚀 AdaptMath Task Checker běží na http://127.0.0.1:5000")
     app.run(debug=True, port=5000)

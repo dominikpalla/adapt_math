@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ task.task_id }} — Task Checker</title>
+
+    <!-- KaTeX -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+    <!-- MathLive -->
+    <script src="https://unpkg.com/mathlive"></script>
+    <script src="https://unpkg.com/@cortex-js/compute-engine"></script>
+
+    <style>
+        :root {
+            --orange: #f37021;
+            --orange-dark: #d95e16;
+            --green: #28a745;
+            --red: #dc3545;
+            --bg: #f4f7f9;
+            --card: #fff;
+            --text: #333;
+            --muted: #777;
+            --border: #e3e6e8;
+        }
+
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
+        .wrap { max-width: 1280px; margin: 0 auto; }
+        a { color: var(--orange); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        /* Header s navigací */
+        header {
+            background: var(--card); padding: 14px 20px; border-radius: 10px;
+            display: flex; align-items: center; gap: 14px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 18px;
+        }
+        header h1 { margin: 0; font-size: 22px; font-family: 'SF Mono', Menlo, monospace; }
+        header .position { color: var(--muted); font-size: 13px; font-family: monospace; }
+        header .spacer { flex: 1; }
+        header .links { font-size: 13px; }
+        .nav-btn {
+            background: #f8f9fa; border: 1px solid #d0d5d9; padding: 8px 14px; border-radius: 6px;
+            color: #333; font-weight: 600; font-size: 14px; cursor: pointer; text-decoration: none;
+        }
+        .nav-btn:hover { background: #eef1f3; text-decoration: none; }
+        .nav-btn.disabled { opacity: 0.35; pointer-events: none; }
+
+        /* Layout */
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+        @media (max-width: 1100px) { .grid { grid-template-columns: 1fr; } }
+
+        section.card {
+            background: var(--card); padding: 18px 20px; border-radius: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 18px;
+        }
+        section.card > h2 {
+            font-size: 13px; color: var(--muted); text-transform: uppercase;
+            letter-spacing: 0.6px; margin: 0 0 14px 0; border-bottom: 1px solid var(--border);
+            padding-bottom: 6px; display: flex; justify-content: space-between; align-items: center;
+        }
+        section.card > h2 .hint { font-size: 11px; color: #aaa; text-transform: none; letter-spacing: normal; font-weight: normal; }
+
+        /* Form bits */
+        .row { margin-bottom: 12px; }
+        .row > label { display: block; font-weight: 600; font-size: 12px; color: #555;
+            margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.4px; }
+        .row input, .row select, .row textarea {
+            width: 100%; padding: 8px 11px; border: 1px solid #c8ced3; border-radius: 6px;
+            font-size: 14px; font-family: inherit; background: #fff;
+        }
+        .row input:focus, .row select:focus, .row textarea:focus { outline: none; border-color: var(--orange); }
+        .row textarea { font-family: 'SF Mono', Menlo, monospace; font-size: 13px; min-height: 70px; resize: vertical; }
+        .row .hint-text { font-size: 11px; color: #999; margin-top: 4px; }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+        /* Preview */
+        .preview-box {
+            padding: 18px; background: #fdfdfd; border-left: 4px solid var(--orange);
+            border-radius: 6px; min-height: 50px; font-size: 17px; line-height: 1.55;
+        }
+        .preview-box em { font-style: italic; color: #555; }
+        .preview-box.empty { color: #bbb; font-style: italic; }
+
+        /* Tag editor (graph_vector) */
+        .tags { display: flex; flex-wrap: wrap; gap: 6px; padding: 6px;
+            border: 1px solid #c8ced3; border-radius: 6px; background: #fff; align-items: center; min-height: 40px; }
+        .tags input { border: none; outline: none; flex: 1; min-width: 120px; padding: 4px; font-size: 14px; }
+        .chip { background: #fff3e0; color: var(--orange-dark); padding: 3px 9px; border-radius: 12px;
+            font-size: 13px; display: inline-flex; align-items: center; gap: 5px; }
+        .chip.primary { background: var(--orange); color: #fff; }
+        .chip .x { cursor: pointer; opacity: 0.7; font-weight: bold; }
+        .chip .x:hover { opacity: 1; }
+
+        /* Result cards (každý výsledek úlohy) */
+        .result-card {
+            background: #fafbfc; border: 1px solid var(--border); border-radius: 8px;
+            padding: 14px; margin-bottom: 10px; position: relative;
+        }
+        .result-card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .result-card-head .idx { background: var(--orange); color: #fff; width: 24px; height: 24px;
+            border-radius: 12px; display: flex; align-items: center; justify-content: center;
+            font-weight: bold; font-size: 12px; }
+        .result-card-head .key { font-family: 'SF Mono', monospace; font-size: 13px; flex: 1; }
+        .badge { padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+        .b-decimal{background:#e3f2fd;color:#0d47a1;}
+        .b-latex_expr{background:#fff3e0;color:#bf360c;}
+        .b-multiple_choice{background:#f3e5f5;color:#4a148c;}
+        .b-open_text{background:#fce4ec;color:#880e4f;}
+
+        /* MathLive */
+        math-field {
+            width: 100%; padding: 8px; border: 2px solid #c8ced3; border-radius: 6px;
+            font-size: 17px; background: #fff;
+        }
+        math-field:focus { border-color: var(--orange); outline: none; }
+
+        /* Inline label_latex před math-fieldem (vypadá jak D(f) = [mathlive]) */
+        .labeled-input { display: flex; align-items: center; gap: 8px; }
+        .labeled-input .lbl-rendered { white-space: nowrap; font-size: 16px; color: #333; flex: 0 0 auto; }
+        .labeled-input .field-wrap { flex: 1; }
+
+        .live-code { display: inline-block; background: #f0f1f3; padding: 1px 6px; border-radius: 3px;
+            font-family: 'SF Mono', Menlo, monospace; font-size: 11px; color: #555; word-break: break-word; }
+
+        /* Multiple choice editor */
+        .mc-options { margin-top: 6px; }
+        .mc-row { display: flex; gap: 6px; align-items: center; margin-bottom: 5px; }
+        .mc-row input[type="radio"] { margin: 0; }
+        .mc-row input[name="mc-key"] { width: 100px; }
+        .mc-row input[name="mc-label"] { flex: 1; }
+        .mc-row .btn-x { background: var(--red); color: #fff; border: none; border-radius: 4px;
+            padding: 4px 8px; cursor: pointer; font-size: 12px; }
+
+        /* Buttons */
+        button.btn { border: none; padding: 9px 16px; font-size: 14px; border-radius: 6px;
+            cursor: pointer; font-weight: 600; }
+        button.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-add { background: #e8f5e9; color: #1b5e20; padding: 6px 12px; font-size: 13px;
+            border: 1px dashed #66bb6a; border-radius: 6px; cursor: pointer; margin-top: 4px; }
+        .btn-add:hover { background: #dcedc8; }
+        .btn-save { background: var(--green); color: #fff; }
+        .btn-save:hover { background: #1e7e34; }
+        .btn-test { background: var(--orange); color: #fff; }
+        .btn-test:hover { background: var(--orange-dark); }
+        .btn-sec { background: #6c757d; color: #fff; }
+        .btn-sec:hover { background: #5a6268; }
+        .btn-danger { background: var(--red); color: #fff; }
+        .btn-danger:hover { background: #a71d2a; }
+        .btn-remove-result { position: absolute; top: 8px; right: 8px; background: transparent;
+            border: 1px solid #d0d5d9; color: #777; padding: 3px 9px; font-size: 12px;
+            border-radius: 4px; cursor: pointer; }
+        .btn-remove-result:hover { background: #ffe5e5; color: var(--red); border-color: var(--red); }
+
+        /* Sandbox result */
+        .sb-result {
+            margin-top: 14px; padding: 12px 16px; border-radius: 8px;
+            font-size: 14px; display: none;
+        }
+        .sb-result.ok { background: #d4edda; color: #155724; border-left: 4px solid var(--green); }
+        .sb-result.no { background: #f8d7da; color: #721c24; border-left: 4px solid var(--red); }
+        .sb-result.partial { background: #fff3cd; color: #856404; border-left: 4px solid #ffc107; }
+        .sb-result ul { margin: 6px 0 0 18px; padding: 0; }
+        .sb-result .mode { font-family: monospace; font-size: 11px; opacity: 0.7; margin-left: 6px; }
+
+        /* Save bar */
+        .save-bar {
+            position: sticky; bottom: 0; background: rgba(255,255,255,0.97);
+            padding: 12px 0; border-top: 1px solid var(--border); margin-top: 20px;
+            backdrop-filter: blur(6px); display: flex; align-items: center; gap: 12px;
+        }
+        .save-status { font-size: 13px; }
+        .save-status.dirty { color: var(--orange-dark); font-weight: 600; }
+        .save-status.saving { color: #0066cc; }
+        .save-status.saved { color: #1e7e34; }
+        .save-status.error { color: var(--red); }
+    </style>
+</head>
+<body>
+<div class="wrap">
+
+    <header>
+        <h1>{{ task.task_id }}</h1>
+        <span class="position">{{ position }} / {{ total }}</span>
+        <a href="{{ url_for('task_checker', task_id=prev_id) if prev_id else '#' }}"
+           class="nav-btn {{ 'disabled' if not prev_id else '' }}">← Předchozí</a>
+        <a href="{{ url_for('task_checker', task_id=next_id) if next_id else '#' }}"
+           class="nav-btn {{ 'disabled' if not next_id else '' }}">Další →</a>
+        <span class="spacer"></span>
+        <div class="links">
+            <a href="/tasks">📋 Seznam úloh</a>
+        </div>
+    </header>
+
+    <div class="grid">
+
+        <!-- LEVÁ STRANA: živý náhled + sandbox -->
+        <div>
+            <section class="card">
+                <h2>Zadání úlohy <span class="hint">živý KaTeX náhled</span></h2>
+                <div class="preview-box" id="content-preview"></div>
+            </section>
+
+            <section class="card">
+                <h2>Vyzkoušej řešení <span class="hint">testuje proti aktuální (i neuložené) odpovědi</span></h2>
+                <div id="sandbox-area"></div>
+                <div style="margin-top: 12px; display: flex; gap: 8px;">
+                    <button class="btn btn-test" onclick="runSandbox()">▶ Otestovat</button>
+                    <button class="btn btn-sec" onclick="buildSandbox()">↶ Reset</button>
+                </div>
+                <div id="sandbox-result" class="sb-result"></div>
+            </section>
+
+            <section class="card">
+                <h2>Vzorové odpovědi <span class="hint">co se ověřuje</span></h2>
+                <div id="expected-preview"></div>
+            </section>
+        </div>
+
+        <!-- PRAVÁ STRANA: editor -->
+        <div>
+            <section class="card">
+                <h2>Identifikace & klasifikace</h2>
+                <div class="grid-2">
+                    <div class="row">
+                        <label>Task ID</label>
+                        <input type="text" id="f-task_id" data-bind="task_id">
+                        <p class="hint-text">Konvence: <code>cvNN_i</code> (např. <code>cv04_5</code>)</p>
+                    </div>
+                    <div class="row">
+                        <label>Kognitivní zátěž</label>
+                        <select id="f-cognitive_load" data-bind="cognitive_load">
+                            <option value="">—</option>
+                            <option>A</option><option>B</option><option>C</option>
+                            <option>D</option><option>E</option><option>F</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <label>Znalostní graf (první chip je primární téma)</label>
+                    <div class="tags" id="tag-editor">
+                        <input type="text" id="tag-input" placeholder="Přidat téma a Enter…">
+                    </div>
+                </div>
+            </section>
+
+            <section class="card">
+                <h2>Zadání úlohy (LaTeX)</h2>
+                <div class="row">
+                    <textarea id="f-content_latex" data-bind="content_latex" rows="4"></textarea>
+                    <p class="hint-text">Pure math (bez <code>$</code>) se automaticky obalí do <code>$$…$$</code>. Pro mixed (text + matematika) ohraničuj math pomocí <code>$…$</code>.</p>
+                </div>
+            </section>
+
+            <section class="card">
+                <h2>Výsledky úlohy <span class="hint">kolekce pojmenovaných výsledků</span></h2>
+                <div id="results-editor"></div>
+                <button class="btn-add" onclick="addResult()">+ Přidat další výsledek</button>
+            </section>
+        </div>
+
+    </div>
+
+    <div class="save-bar">
+        <button class="btn btn-save" id="btn-save" onclick="saveTask()">💾 Uložit změny</button>
+        <button class="btn btn-sec" onclick="revertChanges()">↶ Vrátit</button>
+        <button class="btn btn-danger" onclick="deleteTask()" style="margin-left:auto;">🗑 Smazat úlohu</button>
+        <span class="save-status" id="save-status"></span>
+    </div>
+</div>
+
+<script id="task-data" type="application/json">{{ task | tojson | safe }}</script>
+<script>
+/* =============================================================================
+ *  Task Checker — JS
+ *  - Stav úlohy v `state`, poslední uložený v `savedState`
+ *  - Dvojcestné binding s formulářem; každá změna → setDirty()
+ *  - Renderování pure-math zadání: pokud content nemá $, obalíme $$...$$
+ *  - MathLive sandbox testuje proti aktuálnímu (i neuloženému) `state.results`
+ * ============================================================================= */
+
+const INITIAL = JSON.parse(document.getElementById('task-data').textContent);
+let state = clone(INITIAL);
+let savedState = clone(INITIAL);
+
+function clone(o) { return JSON.parse(JSON.stringify(o)); }
+function escapeHtml(s) {
+    return (s == null ? '' : String(s)).replace(/[&<>"']/g, c => ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    })[c]);
+}
+
+/* -------- KaTeX rendering ------------------------------------------------ */
+
+function renderKaTeXIn(el) {
+    if (!window.renderMathInElement || !el) return;
+    renderMathInElement(el, {
+        delimiters: [
+            {left: "$$", right: "$$", display: true},
+            {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false,
+        errorColor: "#cc0000"
+    });
+}
+function preprocessTextLatex(s) {
+    return (s || '')
+        .replace(/\\textit\{([^}]*)\}/g, '<em>$1</em>')
+        .replace(/\\emph\{([^}]*)\}/g, '<em>$1</em>')
+        .replace(/\\textbf\{([^}]*)\}/g, '<strong>$1</strong>');
+}
+/** Pure-math content (žádný $) obalíme do $$…$$, jinak ponecháme. */
+function renderTaskContent(raw) {
+    if (!raw) return '';
+    return /\$/.test(raw) ? preprocessTextLatex(raw) : '$$' + raw + '$$';
+}
+/** Render label_latex jako inline math (`D(f) = ` → vyrendrováno). */
+function renderInlineLatex(rawLatex) {
+    if (!rawLatex) return '';
+    // label_latex je samostatný kus LaTeXu — obalíme do $...$
+    return /\$/.test(rawLatex) ? preprocessTextLatex(rawLatex) : '$' + rawLatex + '$';
+}
+
+/* -------- Compute Engine (MathLive) -------------------------------------- */
+
+function getComputeEngine() {
+    if (window.MathfieldElement && window.MathfieldElement.computeEngine) return window.MathfieldElement.computeEngine;
+    if (window.ComputeEngine) return new window.ComputeEngine();
+    return null;
+}
+
+/* -------- Dirty tracking / Save ------------------------------------------ */
+
+function setDirty() {
+    const equal = JSON.stringify(state) === JSON.stringify(savedState);
+    const st = document.getElementById('save-status');
+    if (equal) { st.className = 'save-status'; st.textContent = ''; }
+    else       { st.className = 'save-status dirty'; st.textContent = '● neuložené změny'; }
+}
+
+async function saveTask() {
+    const st = document.getElementById('save-status');
+    st.className = 'save-status saving'; st.textContent = '⏳ Ukládám…';
+    document.getElementById('btn-save').disabled = true;
+    try {
+        const res = await fetch('/api/tasks/' + encodeURIComponent(INITIAL.task_id), {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify(state),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Neznámá chyba');
+        savedState = clone(state);
+        st.className = 'save-status saved'; st.textContent = '✓ Uloženo';
+        if (data.renamed_to) {
+            // task_id se změnilo — přesměrujeme na novou URL
+            setTimeout(() => location.href = '/tasks/' + encodeURIComponent(data.renamed_to), 600);
+            return;
+        }
+        setTimeout(setDirty, 1200);
+    } catch (e) {
+        st.className = 'save-status error'; st.textContent = '✗ ' + e.message;
+    } finally {
+        document.getElementById('btn-save').disabled = false;
+    }
+}
+
+function revertChanges() {
+    if (!confirm('Vrátit poslední uložený stav? Neuložené změny se ztratí.')) return;
+    state = clone(savedState);
+    loadStateToForm();
+}
+
+async function deleteTask() {
+    if (!confirm(`Opravdu smazat úlohu ${state.task_id}? Akce je nevratná.`)) return;
+    try {
+        const res = await fetch('/api/tasks/' + encodeURIComponent(INITIAL.task_id), { method: 'DELETE' });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        alert('Úloha smazána.');
+        location.href = '/tasks';
+    } catch (e) { alert('Chyba: ' + e.message); }
+}
+
+/* -------- Two-way binding ------------------------------------------------- */
+
+function loadStateToForm() {
+    document.getElementById('f-task_id').value = state.task_id || '';
+    document.getElementById('f-content_latex').value = state.content_latex || '';
+    document.getElementById('f-cognitive_load').value = state.cognitive_load || '';
+    renderTags();
+    buildResultsEditor();
+    refreshContentPreview();
+    refreshExpectedPreview();
+    buildSandbox();
+    setDirty();
+}
+
+function attachBindings() {
+    document.getElementById('f-task_id').addEventListener('input', e => {
+        state.task_id = e.target.value; setDirty();
+    });
+    document.getElementById('f-content_latex').addEventListener('input', e => {
+        state.content_latex = e.target.value;
+        refreshContentPreview(); setDirty();
+    });
+    document.getElementById('f-cognitive_load').addEventListener('change', e => {
+        state.cognitive_load = e.target.value || null; setDirty();
+    });
+    document.getElementById('tag-input').addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const v = (e.target.value || '').trim();
+            if (v && !(state.graph_vector || []).includes(v)) {
+                state.graph_vector = [...(state.graph_vector || []), v];
+                renderTags(); setDirty();
+            }
+            e.target.value = '';
+        }
+    });
+}
+
+/* -------- Tags (graph_vector) -------------------------------------------- */
+
+function renderTags() {
+    const ed = document.getElementById('tag-editor');
+    [...ed.querySelectorAll('.chip')].forEach(t => t.remove());
+    const input = ed.querySelector('input');
+    (state.graph_vector || []).forEach((topic, i) => {
+        const chip = document.createElement('span');
+        chip.className = 'chip' + (i === 0 ? ' primary' : '');
+        chip.innerHTML = `${escapeHtml(topic)} <span class="x" title="odebrat">×</span>`;
+        chip.querySelector('.x').onclick = () => {
+            state.graph_vector = state.graph_vector.filter((_, j) => j !== i);
+            renderTags(); setDirty();
+        };
+        ed.insertBefore(chip, input);
+    });
+}
+
+/* -------- Content + expected preview ------------------------------------- */
+
+function refreshContentPreview() {
+    const box = document.getElementById('content-preview');
+    const c = state.content_latex || '';
+    if (!c.trim()) { box.className = 'preview-box empty'; box.textContent = '(prázdné zadání)'; return; }
+    box.className = 'preview-box';
+    box.innerHTML = renderTaskContent(c);
+    renderKaTeXIn(box);
+}
+
+function refreshExpectedPreview() {
+    const box = document.getElementById('expected-preview');
+    const results = state.results || [];
+    if (!results.length) { box.innerHTML = '<em style="color:#bbb;">(žádný výsledek)</em>'; return; }
+    box.innerHTML = results.map((r, i) => {
+        let body;
+        if (r.type === 'decimal') {
+            body = `<code>${escapeHtml(r.expected)}</code>` + (r.tolerance ? ` <small>(±${r.tolerance})</small>` : '');
+        } else if (r.type === 'latex_expr') {
+            body = `$${r.expected}$ <code class="live-code">${escapeHtml(r.expected || '')}</code>`;
+        } else if (r.type === 'multiple_choice') {
+            body = (r.options || []).map(o => {
+                const ok = o.key === r.expected;
+                return `<div>${ok ? '✅' : '·'} <code>${escapeHtml(o.key)}</code> — $${o.label_latex || ''}$</div>`;
+            }).join('');
+        } else if (r.type === 'open_text') {
+            body = `<em>${preprocessTextLatex(r.expected || '')}</em>`;
+        } else { body = '(?)'; }
+        const lblHtml = r.label_latex ? `${renderInlineLatex(r.label_latex)} ` : '';
+        return `<div style="padding:6px 0; border-bottom:1px solid #eee;">
+                  <small style="color:#888;">${i+1}. <code>${escapeHtml(r.key || '')}</code> &middot; <span class="badge b-${r.type}">${r.type}</span></small><br>
+                  ${lblHtml}${body}
+                </div>`;
+    }).join('');
+    renderKaTeXIn(box);
+}
+
+/* -------- Results editor -------------------------------------------------- */
+
+function defaultResultOfType(type) {
+    switch (type) {
+        case 'decimal': return { key: 'r' + ((state.results||[]).length+1), label_latex: '', type, expected: 0, tolerance: 0.001 };
+        case 'latex_expr': return { key: 'r' + ((state.results||[]).length+1), label_latex: '', type, expected: '' };
+        case 'multiple_choice': return { key: 'r' + ((state.results||[]).length+1), label_latex: '',
+            type, options: [{key:'a', label_latex:''}, {key:'b', label_latex:''}], expected: 'a' };
+        case 'open_text': return { key: 'r' + ((state.results||[]).length+1), label_latex: '', type, expected: '' };
+    }
+}
+
+function addResult() {
+    state.results = [...(state.results || []), defaultResultOfType('latex_expr')];
+    buildResultsEditor(); refreshExpectedPreview(); buildSandbox(); setDirty();
+}
+
+function removeResult(i) {
+    state.results = state.results.filter((_, j) => j !== i);
+    buildResultsEditor(); refreshExpectedPreview(); buildSandbox(); setDirty();
+}
+
+function changeResultType(i, newType) {
+    const old = state.results[i];
+    const fresh = defaultResultOfType(newType);
+    state.results[i] = { ...fresh, key: old.key, label_latex: old.label_latex };
+    buildResultsEditor(); refreshExpectedPreview(); buildSandbox(); setDirty();
+}
+
+function buildResultsEditor() {
+    const root = document.getElementById('results-editor');
+    root.innerHTML = '';
+    (state.results || []).forEach((r, i) => {
+        const card = document.createElement('div');
+        card.className = 'result-card';
+        card.innerHTML = `
+            <button class="btn-remove-result" data-idx="${i}">× odebrat</button>
+            <div class="result-card-head">
+                <span class="idx">${i+1}</span>
+                <span class="key">${escapeHtml(r.key || '')}</span>
+                <span class="badge b-${r.type}">${r.type}</span>
+            </div>
+            <div class="grid-2">
+                <div class="row">
+                    <label>Klíč (key)</label>
+                    <input type="text" data-r="key" data-idx="${i}" value="${escapeHtml(r.key || '')}">
+                </div>
+                <div class="row">
+                    <label>Typ</label>
+                    <select data-r="type" data-idx="${i}">
+                        <option value="decimal" ${r.type==='decimal'?'selected':''}>decimal</option>
+                        <option value="latex_expr" ${r.type==='latex_expr'?'selected':''}>latex_expr</option>
+                        <option value="multiple_choice" ${r.type==='multiple_choice'?'selected':''}>multiple_choice</option>
+                        <option value="open_text" ${r.type==='open_text'?'selected':''}>open_text</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <label>Popisek před vstupem (LaTeX)</label>
+                <input type="text" data-r="label_latex" data-idx="${i}" value="${escapeHtml(r.label_latex || '')}" placeholder='např. "D(f) = " nebo "x_1 = "'>
+                <p class="hint-text">Renderuje se před vstupním polem. Student nepíše ten prefix — píše jen výraz za ním.</p>
+            </div>
+            ${renderResultExpectedEditor(r, i)}
+        `;
+        root.appendChild(card);
+    });
+
+    // Bindings — type, key, label_latex
+    root.querySelectorAll('[data-r]').forEach(el => {
+        const i = parseInt(el.dataset.idx, 10);
+        const field = el.dataset.r;
+        const handler = ev => {
+            const v = ev.target.value;
+            if (field === 'type') return changeResultType(i, v);
+            state.results[i][field] = v;
+            refreshExpectedPreview(); buildSandbox(); setDirty();
+            // re-render karty pokud měníme key (kvůli badge a karta head)
+            if (field === 'key') {
+                document.querySelector(`.result-card:nth-child(${i+1}) .key`).textContent = v;
+            }
+        };
+        el.addEventListener('input', handler);
+        el.addEventListener('change', handler);
+    });
+    root.querySelectorAll('.btn-remove-result').forEach(b => {
+        b.onclick = () => removeResult(parseInt(b.dataset.idx, 10));
+    });
+
+    // MathLive inputs (pro latex_expr expected)
+    root.querySelectorAll('math-field[data-mf-role="expected"]').forEach(mf => {
+        const i = parseInt(mf.dataset.idx, 10);
+        const init = () => {
+            if (!customElements.get('math-field')) return setTimeout(init, 50);
+            mf.value = state.results[i].expected || '';
+            mf.addEventListener('input', () => {
+                state.results[i].expected = mf.value;
+                refreshExpectedPreview(); buildSandbox(); setDirty();
+            });
+        };
+        init();
+    });
+
+    // Decimal expected/tolerance
+    root.querySelectorAll('input[data-rd]').forEach(el => {
+        const i = parseInt(el.dataset.idx, 10);
+        const f = el.dataset.rd;
+        el.addEventListener('input', ev => {
+            const v = ev.target.value === '' ? null : parseFloat(ev.target.value);
+            state.results[i][f] = v;
+            refreshExpectedPreview(); buildSandbox(); setDirty();
+        });
+    });
+
+    // open_text expected
+    root.querySelectorAll('textarea[data-ot]').forEach(el => {
+        const i = parseInt(el.dataset.idx, 10);
+        el.addEventListener('input', ev => {
+            state.results[i].expected = ev.target.value;
+            refreshExpectedPreview(); buildSandbox(); setDirty();
+        });
+    });
+
+    // multiple_choice bindings
+    root.querySelectorAll('[data-mc]').forEach(el => {
+        const i = parseInt(el.dataset.idx, 10);
+        const j = parseInt(el.dataset.optidx, 10);
+        const f = el.dataset.mc;
+        el.addEventListener('input', ev => {
+            if (f === 'expected') {
+                state.results[i].expected = state.results[i].options[j].key;
+            } else if (f === 'key') {
+                const oldKey = state.results[i].options[j].key;
+                state.results[i].options[j].key = ev.target.value;
+                if (state.results[i].expected === oldKey) state.results[i].expected = ev.target.value;
+            } else if (f === 'label_latex') {
+                state.results[i].options[j].label_latex = ev.target.value;
+            }
+            refreshExpectedPreview(); buildSandbox(); setDirty();
+        });
+        if (el.type === 'radio') el.addEventListener('change', el.oninput);
+    });
+    root.querySelectorAll('.btn-add-mc').forEach(b => {
+        b.onclick = () => {
+            const i = parseInt(b.dataset.idx, 10);
+            const nextKey = String.fromCharCode(97 + state.results[i].options.length);
+            state.results[i].options.push({key: nextKey, label_latex: ''});
+            buildResultsEditor(); refreshExpectedPreview(); buildSandbox(); setDirty();
+        };
+    });
+    root.querySelectorAll('.btn-x-mc').forEach(b => {
+        b.onclick = () => {
+            const i = parseInt(b.dataset.idx, 10);
+            const j = parseInt(b.dataset.optidx, 10);
+            state.results[i].options = state.results[i].options.filter((_, k) => k !== j);
+            buildResultsEditor(); refreshExpectedPreview(); buildSandbox(); setDirty();
+        };
+    });
+}
+
+function renderResultExpectedEditor(r, i) {
+    if (r.type === 'decimal') {
+        return `<div class="grid-2">
+            <div class="row"><label>Správná hodnota</label>
+                <input type="number" step="any" data-rd="expected" data-idx="${i}" value="${r.expected ?? ''}"></div>
+            <div class="row"><label>Tolerance</label>
+                <input type="number" step="any" data-rd="tolerance" data-idx="${i}" value="${r.tolerance ?? 0}"></div>
+        </div>`;
+    }
+    if (r.type === 'latex_expr') {
+        return `<div class="row">
+            <label>Správná odpověď (LaTeX)</label>
+            <math-field data-mf-role="expected" data-idx="${i}"></math-field>
+            <p class="hint-text">Porovnáno přes MathLive Compute Engine (symbolicky + numericky).</p>
+        </div>`;
+    }
+    if (r.type === 'multiple_choice') {
+        const rows = (r.options || []).map((o, j) => `
+            <div class="mc-row">
+                <input type="radio" name="mc-${i}" ${o.key === r.expected ? 'checked' : ''}
+                       data-mc="expected" data-idx="${i}" data-optidx="${j}">
+                <input type="text" name="mc-key" placeholder="key" value="${escapeHtml(o.key)}"
+                       data-mc="key" data-idx="${i}" data-optidx="${j}">
+                <input type="text" name="mc-label" placeholder="label (LaTeX, např. +\\infty)" value="${escapeHtml(o.label_latex || '')}"
+                       data-mc="label_latex" data-idx="${i}" data-optidx="${j}">
+                <button class="btn-x-mc" data-idx="${i}" data-optidx="${j}">×</button>
+            </div>`).join('');
+        return `<div class="row">
+            <label>Možnosti — radio = správná</label>
+            <div class="mc-options">${rows}</div>
+            <button class="btn-add" data-idx="${i}" style="margin-top:6px;" class="btn-add-mc"
+                    onclick="(function(b){var ev=new Event('click');b.dispatchEvent(ev);})(this)"
+                    type="button">+ Přidat možnost</button>
+        </div>`;
+    }
+    if (r.type === 'open_text') {
+        return `<div class="row">
+            <label>Vzorové řešení (LaTeX + text)</label>
+            <textarea data-ot="expected" data-idx="${i}" rows="3">${escapeHtml(r.expected || '')}</textarea>
+            <p class="hint-text">Otevřená odpověď, vyhodnocuje LLM nebo expert.</p>
+        </div>`;
+    }
+    return '';
+}
+
+// Fix: btn-add pro MC potřebuje class, ne inline onclick (přepíšu po renderu).
+// Workaround: hledáme všechna add-MC tlačítka přímo přes data-idx s textem "+ Přidat možnost"
+// → necháno na bindings v buildResultsEditor (querySelector '.btn-add-mc')
+// Ošetříme přidání class atributu po renderingu níže.
+
+/* -------- Sandbox -------------------------------------------------------- */
+
+function buildSandbox() {
+    const root = document.getElementById('sandbox-area');
+    root.innerHTML = '';
+    const results = state.results || [];
+    if (!results.length) { root.innerHTML = '<em style="color:#bbb;">(úloha nemá žádný výsledek k testování)</em>'; return; }
+
+    results.forEach((r, i) => {
+        const wrap = document.createElement('div');
+        wrap.className = 'row';
+        wrap.dataset.idx = i;
+        wrap.dataset.type = r.type;
+
+        const lblId = `sb-lbl-${i}`;
+        const lblHtml = r.label_latex ? `<span class="lbl-rendered" id="${lblId}">${renderInlineLatex(r.label_latex)}</span>` : '';
+
+        if (r.type === 'multiple_choice') {
+            const opts = (r.options || []).map((o, j) => `
+                <label style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:#fafafa;border:1px solid #eee;border-radius:6px;margin-bottom:4px;cursor:pointer;">
+                    <input type="radio" name="sb-mc-${i}" value="${escapeHtml(o.key)}">
+                    <span>$${o.label_latex || ''}$</span>
+                </label>`).join('');
+            wrap.innerHTML = `
+                <label style="display:flex;align-items:center;gap:8px;"><small style="color:#888;">${i+1}. <code>${escapeHtml(r.key)}</code></small></label>
+                ${lblHtml}
+                <div style="margin-top:6px;">${opts}</div>`;
+        } else if (r.type === 'open_text') {
+            wrap.innerHTML = `
+                <label><small style="color:#888;">${i+1}. <code>${escapeHtml(r.key)}</code></small></label>
+                ${lblHtml}
+                <textarea data-role="input" placeholder="Tvoje odpověď…"></textarea>`;
+        } else {
+            // decimal nebo latex_expr → MathLive
+            wrap.innerHTML = `
+                <label><small style="color:#888;">${i+1}. <code>${escapeHtml(r.key)}</code></small></label>
+                <div class="labeled-input">
+                    ${lblHtml}
+                    <div class="field-wrap">
+                        <math-field data-role="input"></math-field>
+                        <div style="margin-top:4px;">Live: <code class="live-code">—</code></div>
+                    </div>
+                </div>`;
+        }
+        root.appendChild(wrap);
+
+        // MathLive listener pro live-code
+        const mf = wrap.querySelector('math-field[data-role="input"]');
+        if (mf) {
+            const initMf = () => {
+                if (!customElements.get('math-field')) return setTimeout(initMf, 50);
+                mf.addEventListener('input', () => {
+                    const lc = wrap.querySelector('code.live-code');
+                    if (lc) lc.textContent = mf.value || '—';
+                });
+            };
+            initMf();
+        }
+    });
+
+    renderKaTeXIn(root);
+    document.getElementById('sandbox-result').style.display = 'none';
+}
+
+async function runSandbox() {
+    const results = state.results || [];
+    if (!results.length) return;
+    const box = document.getElementById('sandbox-result');
+    box.style.display = 'block';
+    box.className = 'sb-result'; box.textContent = 'Vyhodnocuji…';
+
+    const evaluations = await Promise.all(results.map(async (r, i) => {
+        const wrap = document.querySelector(`#sandbox-area > [data-idx="${i}"]`);
+        let val;
+        if (r.type === 'multiple_choice') {
+            const sel = wrap.querySelector(`input[name="sb-mc-${i}"]:checked`);
+            val = sel ? sel.value : '';
+        } else {
+            const el = wrap.querySelector('[data-role="input"]');
+            val = el ? (el.value || '') : '';
+        }
+        return await evaluateResult(r, val, i);
+    }));
+
+    renderSandboxResult(evaluations);
+}
+
+async function evaluateResult(r, studentInput, idx) {
+    const baseLabel = `${idx+1}. ${r.key}`;
+    if (!studentInput) return { ok: false, fieldLabel: baseLabel, detail: 'Prázdný vstup' };
+
+    if (r.type === 'decimal') {
+        const ce = getComputeEngine();
+        let n = NaN;
+        if (ce) { try { n = ce.parse(studentInput).N().valueOf(); } catch(e){} }
+        if (!Number.isFinite(n)) n = parseFloat(studentInput);
+        if (!Number.isFinite(n)) return { ok: false, fieldLabel: baseLabel, detail: 'Nelze interpretovat jako číslo', studentValue: studentInput };
+        const ok = Math.abs(n - Number(r.expected)) <= (r.tolerance || 0);
+        return { ok, fieldLabel: baseLabel, mode: ok ? 'numeric' : 'mismatch', studentValue: n, correctValue: Number(r.expected), tolerance: r.tolerance || 0 };
+    }
+    if (r.type === 'latex_expr') {
+        const ce = getComputeEngine();
+        if (!ce) return { ok: false, fieldLabel: baseLabel, detail: 'Compute Engine nenačten' };
+        let s, c;
+        try { s = ce.parse(studentInput); c = ce.parse(r.expected); }
+        catch(e) { return { ok: false, fieldLabel: baseLabel, detail: 'Parse error: ' + e.message }; }
+        try { if (s.canonical && c.canonical && s.canonical.isSame(c.canonical))
+            return { ok: true, fieldLabel: baseLabel, mode: 'symbolic', studentLatex: studentInput, correctLatex: r.expected }; } catch(e){}
+        try { if (s.simplify().isSame(c.simplify()))
+            return { ok: true, fieldLabel: baseLabel, mode: 'simplified', studentLatex: studentInput, correctLatex: r.expected }; } catch(e){}
+        try {
+            const sN = s.N().valueOf(), cN = c.N().valueOf();
+            if (sN === cN) return { ok: true, fieldLabel: baseLabel, mode: 'numeric', studentLatex: studentInput, correctLatex: r.expected, studentValue: sN, correctValue: cN };
+            if (Number.isFinite(sN) && Number.isFinite(cN)) {
+                const tol = Math.max(r.tolerance || 0, 1e-9);
+                const ok = Math.abs(sN - cN) <= tol;
+                return { ok, fieldLabel: baseLabel, mode: ok ? 'numeric' : 'mismatch', studentLatex: studentInput, correctLatex: r.expected, studentValue: sN, correctValue: cN };
+            }
+            return { ok: false, fieldLabel: baseLabel, mode: 'mismatch', studentLatex: studentInput, correctLatex: r.expected, studentValue: sN, correctValue: cN };
+        } catch(e) { return { ok: false, fieldLabel: baseLabel, detail: 'Eval chyba: ' + e.message }; }
+    }
+    if (r.type === 'multiple_choice') {
+        const ok = studentInput === r.expected;
+        return { ok, fieldLabel: baseLabel, mode: 'mc', studentValue: studentInput, correctValue: r.expected };
+    }
+    if (r.type === 'open_text') {
+        return { ok: null, fieldLabel: baseLabel, mode: 'open_text', studentValue: studentInput, note: 'Otevřená odpověď — vyhodnotí LLM / expert.' };
+    }
+    return { ok: false, fieldLabel: baseLabel, detail: 'Neznámý typ ' + r.type };
+}
+
+function renderSandboxResult(results) {
+    const box = document.getElementById('sandbox-result');
+    const total = results.length;
+    const ok = results.filter(r => r.ok === true).length;
+    const pending = results.filter(r => r.ok === null).length;
+    let cls = 'no';
+    if (ok === total) cls = 'ok';
+    else if (ok > 0) cls = 'partial';
+    else if (pending === total) cls = 'partial';
+    box.className = 'sb-result ' + cls;
+
+    let header;
+    if (ok === total) header = `<strong>✅ Vše správně</strong> (${ok}/${total})`;
+    else if (ok > 0) header = `<strong>⚠ Částečně správně</strong> (${ok}/${total})`;
+    else if (pending === total) header = `<strong>🟡 Vyžaduje ruční kontrolu</strong> (${pending}/${total})`;
+    else header = `<strong>❌ Nesprávně</strong> (${ok}/${total})`;
+
+    box.innerHTML = header + '<ul>' + results.map(r => {
+        const icon = r.ok === true ? '✅' : (r.ok === null ? '🟡' : '❌');
+        const det = [];
+        if (r.studentLatex !== undefined || r.studentValue !== undefined)
+            det.push(`<code>${escapeHtml(r.studentLatex ?? r.studentValue)}</code>`);
+        if (r.mode) det.push(`<span class="mode">[${r.mode}]</span>`);
+        if (r.detail) det.push(`<em>${escapeHtml(r.detail)}</em>`);
+        if (r.note) det.push(`<em>${escapeHtml(r.note)}</em>`);
+        if (r.correctValue !== undefined && r.ok === false) det.push(`<small>správně: <code>${escapeHtml(r.correctValue)}</code></small>`);
+        return `<li>${icon} <strong>${escapeHtml(r.fieldLabel)}:</strong> ${det.join(' ')}</li>`;
+    }).join('') + '</ul>';
+
+    renderKaTeXIn(box);
+}
+
+/* -------- Bootstrap ------------------------------------------------------- */
+
+document.addEventListener('DOMContentLoaded', () => {
+    attachBindings();
+    loadStateToForm();
+});
+
+/* Keyboard shortcuts: ← / → pro navigaci, Ctrl+S pro uložit */
+document.addEventListener('keydown', e => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'MATH-FIELD') return;
+    if (e.key === 'ArrowLeft' && {{ prev_id | tojson | safe }}) {
+        location.href = '/tasks/' + {{ prev_id | tojson | safe }};
+    } else if (e.key === 'ArrowRight' && {{ next_id | tojson | safe }}) {
+        location.href = '/tasks/' + {{ next_id | tojson | safe }};
+    } else if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        saveTask();
+    }
+});
+</script>
+</body>
+</html>
