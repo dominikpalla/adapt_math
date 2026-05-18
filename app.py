@@ -22,6 +22,17 @@ app = Flask(__name__)
 SessionLocal = init_db(DB_URL)
 
 
+@app.after_request
+def disable_cache(response):
+    """V dev režimu zakážeme browser cache pro HTML — jinak změny šablon
+    nedojdou bez Cmd+Shift+R."""
+    if response.mimetype == "text/html":
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+    return response
+
+
 # --------------------------------------------------------------------------
 # Helpers
 # --------------------------------------------------------------------------

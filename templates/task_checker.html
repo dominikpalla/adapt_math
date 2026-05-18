@@ -130,34 +130,45 @@
         .live-code { display: inline-block; background: #f0f1f3; padding: 1px 6px; border-radius: 3px;
             font-family: 'SF Mono', Menlo, monospace; font-size: 11px; color: #555; word-break: break-word; }
 
-        /* Multiple choice editor */
+        /* Multiple choice editor — grid (4 sloupce: radio, key, label, ×).
+           minmax(0, 1fr) je grid analogie min-width:0 pro flex; bez něj
+           by 3. sloupec roštl s textem v inputu a tlačil ostatní mimo. */
         .mc-options { margin-top: 6px; }
-        /* width:100% + min-width:0 nutné, aby flex children mohli shrinkout pod min-content */
-        .mc-row { display: flex; gap: 6px; align-items: center; margin-bottom: 5px; width: 100%; min-width: 0; }
-        .mc-row input[type="radio"] { margin: 0; flex: 0 0 auto; }
+        .mc-row {
+            display: grid;
+            grid-template-columns: auto 90px minmax(0, 1fr) auto;
+            gap: 6px; align-items: center; margin-bottom: 6px;
+        }
+        .mc-row input[type="radio"] { margin: 0; }
 
-        /* Sandbox MC option (test "vyzkoušej řešení") */
+        /* Sandbox MC option — block-level s absolute positioned radio
+           (vědomě bez flexboxu, je to nejstabilnější napříč prohlížeči
+           u dlouhých LaTeX textů s vloženým KaTeX inline math) */
         .sb-mc-option {
-            display: flex; align-items: flex-start; gap: 10px;
-            padding: 10px 12px; margin-bottom: 6px;
-            background: #fafafa; border: 1px solid #eee; border-radius: 6px;
+            display: block;
+            position: relative;
+            padding: 12px 14px 12px 40px;
+            margin-bottom: 6px;
+            background: #fafafa; border: 1px solid #e0e0e0; border-radius: 6px;
             cursor: pointer; line-height: 1.55;
+            overflow-wrap: break-word; word-break: normal;
         }
         .sb-mc-option:hover { background: #f0f0f0; }
-        .sb-mc-option > input[type="radio"] { margin-top: 5px; flex: 0 0 auto; }
-        /* min-width:0 je kritický — bez něj flex child text overflowuje rodičovský sloupec */
-        .sb-mc-option > .sb-mc-text { flex: 1 1 0; min-width: 0; word-break: normal; overflow-wrap: anywhere; }
+        .sb-mc-option > input[type="radio"] {
+            position: absolute; left: 14px; top: 16px;
+            margin: 0;
+        }
         /* KaTeX defaultně používá white-space:nowrap — to pro inline math v dlouhých
            labelů znamená že math segment se chová jako jedno atomické slovo a může
            rozšířit rodičovský kontejner. Dovolíme zalamování všude, kde renderujeme
-           "delší" obsah (sandbox, náhledy, multi_field). */
+           delší obsah. */
         .sb-mc-option .katex,
         .preview-box .katex,
         .result-card .katex { white-space: normal; }
 
-        .mc-row input[name="mc-key"] { flex: 0 0 90px; width: 90px; }
-        .mc-row input[name="mc-label"] { flex: 1 1 0; min-width: 0; }
-        .mc-row .btn-x { flex: 0 0 auto; background: var(--red); color: #fff; border: none; border-radius: 4px;
+        .mc-row input[name="mc-key"] { width: 100%; }
+        .mc-row input[name="mc-label"] { width: 100%; min-width: 0; }
+        .mc-row .btn-x { background: var(--red); color: #fff; border: none; border-radius: 4px;
             padding: 4px 8px; cursor: pointer; font-size: 12px; }
 
         /* Buttons */
