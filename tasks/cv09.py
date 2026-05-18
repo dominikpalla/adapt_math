@@ -193,7 +193,7 @@ TASKS = [
         "task_id": "cv09_24",
         "content_latex": (
             r"\textbf{Kruhové jezero.} Poloměr 3 km; po břehu rychlost 6 km/h, na pramici 3 km/h. "
-            r"Bod $A,$ cíl $C$ naproti. Určete maximální dobu cesty z $A$ do $C$ (strategie „co nejdéle spolu") "
+            "Bod $A,$ cíl $C$ naproti. Určete maximální dobu cesty z $A$ do $C$ (strategie „co nejdéle spolu\") "
             r"a minimální dobu zpětné cesty chlapce."
         ),
         "results": [
