@@ -466,7 +466,7 @@ function refreshExpectedPreview() {
         } else if (r.type === 'multiple_choice') {
             body = (r.options || []).map(o => {
                 const ok = o.key === r.expected;
-                return `<div>${ok ? '✅' : '·'} <code>${escapeHtml(o.key)}</code> — $${o.label_latex || ''}$</div>`;
+                return `<div>${ok ? '✅' : '·'} <code>${escapeHtml(o.key)}</code> — ${renderInlineLatex(o.label_latex || '')}</div>`;
             }).join('');
         } else if (r.type === 'open_text') {
             body = `<em>${preprocessTextLatex(r.expected || '')}</em>`;
@@ -520,7 +520,6 @@ function buildResultsEditor() {
             <div class="result-card-head">
                 <span class="idx">${i+1}</span>
                 <span class="key">${escapeHtml(r.key || '')}</span>
-                <span class="badge b-${r.type}">${r.type}</span>
             </div>
             <div class="grid-2">
                 <div class="row">
@@ -556,7 +555,6 @@ function buildResultsEditor() {
             if (field === 'type') return changeResultType(i, v);
             state.results[i][field] = v;
             refreshExpectedPreview(); buildSandbox(); setDirty();
-            // re-render karty pokud měníme key (kvůli badge a karta head)
             if (field === 'key') {
                 document.querySelector(`.result-card:nth-child(${i+1}) .key`).textContent = v;
             }
@@ -708,9 +706,9 @@ function buildSandbox() {
 
         if (r.type === 'multiple_choice') {
             const opts = (r.options || []).map((o, j) => `
-                <label style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:#fafafa;border:1px solid #eee;border-radius:6px;margin-bottom:4px;cursor:pointer;">
-                    <input type="radio" name="sb-mc-${i}" value="${escapeHtml(o.key)}">
-                    <span>$${o.label_latex || ''}$</span>
+                <label style="display:flex;align-items:flex-start;gap:8px;padding:8px 12px;background:#fafafa;border:1px solid #eee;border-radius:6px;margin-bottom:4px;cursor:pointer;line-height:1.5;">
+                    <input type="radio" name="sb-mc-${i}" value="${escapeHtml(o.key)}" style="margin-top:4px;flex-shrink:0;">
+                    <span style="flex:1;">${renderInlineLatex(o.label_latex || '')}</span>
                 </label>`).join('');
             wrap.innerHTML = `
                 <label style="display:flex;align-items:center;gap:8px;"><small style="color:#888;">${i+1}. <code>${escapeHtml(r.key)}</code></small></label>

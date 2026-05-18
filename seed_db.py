@@ -40,11 +40,33 @@ TASKS = [
             {
                 "key": "negace",
                 "label_latex": r"\text{Negace: }",
-                "type": "open_text",
-                "expected": (
-                    r"Existuje trojice $x \in \mathbb{R},\ y \in \mathbb{R},\ z \in \mathbb{R}$ "
-                    r"taková, že $x \le y$ a $y \le z$ a zároveň $x > z.$"
-                ),
+                "type": "multiple_choice",
+                "options": [
+                    {
+                        "key": "a",
+                        "label_latex": (
+                            r"Existuje trojice $x, y, z \in \mathbb{R}$ taková, že "
+                            r"$x \le y$ a $y \le z$ a zároveň $x > z.$"
+                        ),
+                    },
+                    {
+                        # Distraktor: zachoval kvantifikátor ∀, jen negoval závěr.
+                        "key": "b",
+                        "label_latex": (
+                            r"Pro libovolnou trojici $x, y, z \in \mathbb{R}$ platí: "
+                            r"jestliže $x \le y$ a $y \le z,$ pak $x > z.$"
+                        ),
+                    },
+                    {
+                        # Distraktor: negoval předpoklad místo implikace celé.
+                        "key": "c",
+                        "label_latex": (
+                            r"Existuje trojice $x, y, z \in \mathbb{R}$ taková, že "
+                            r"$x > y$ nebo $y > z$ a zároveň $x \le z.$"
+                        ),
+                    },
+                ],
+                "expected": "a",
             },
         ],
         "cognitive_load": "B",
@@ -59,18 +81,62 @@ TASKS = [
         ),
         "results": [
             {
-                "key": "negace", "label_latex": r"\text{Negace: }", "type": "open_text",
-                "expected": (
-                    r"Existují okolí $U_1(a)$ a $U_2(a)$ bodu $a \in \mathbb{R}^*$ "
-                    r"taková, že $U_1(a) \cap U_2(a)$ není okolí bodu $a.$"
-                ),
+                "key": "negace", "label_latex": r"\text{Negace: }", "type": "multiple_choice",
+                "options": [
+                    {
+                        "key": "a",
+                        "label_latex": (
+                            r"Existují okolí $U_1(a)$ a $U_2(a)$ bodu $a \in \mathbb{R}^*$ taková, "
+                            r"že $U_1(a) \cap U_2(a)$ není okolí bodu $a.$"
+                        ),
+                    },
+                    {
+                        # Distraktor: zachoval „pro každá" místo ∃.
+                        "key": "b",
+                        "label_latex": (
+                            r"Pro každá okolí $U_1(a)$ a $U_2(a)$ bodu $a \in \mathbb{R}^*$ platí, "
+                            r"že $U_1(a) \cap U_2(a)$ není okolí bodu $a.$"
+                        ),
+                    },
+                    {
+                        # Distraktor: negoval předpoklad místo závěru implikace.
+                        "key": "c",
+                        "label_latex": (
+                            r"Existují okolí $U_1(a)$ a $U_2(a)$ bodu $a \in \mathbb{R}^*$ taková, "
+                            r"že $U_1(a)$ nebo $U_2(a)$ není okolí bodu $a.$"
+                        ),
+                    },
+                ],
+                "expected": "a",
             },
             {
-                "key": "obmena", "label_latex": r"\text{Obměna: }", "type": "open_text",
-                "expected": (
-                    r"Jestliže $U_1(a) \cap U_2(a)$ není okolí bodu $a \in \mathbb{R}^*,$ "
-                    r"potom $U_1(a)$ není okolí bodu $a$ nebo $U_2(a)$ není okolí bodu $a.$"
-                ),
+                "key": "obmena", "label_latex": r"\text{Obměna: }", "type": "multiple_choice",
+                "options": [
+                    {
+                        "key": "a",
+                        "label_latex": (
+                            r"Jestliže $U_1(a) \cap U_2(a)$ není okolí bodu $a \in \mathbb{R}^*,$ "
+                            r"potom $U_1(a)$ není okolí bodu $a$ nebo $U_2(a)$ není okolí bodu $a.$"
+                        ),
+                    },
+                    {
+                        # Distraktor: spojka „a" místo „nebo" v závěru (silnější tvrzení).
+                        "key": "b",
+                        "label_latex": (
+                            r"Jestliže $U_1(a) \cap U_2(a)$ není okolí bodu $a \in \mathbb{R}^*,$ "
+                            r"potom $U_1(a)$ není okolí bodu $a$ a $U_2(a)$ není okolí bodu $a.$"
+                        ),
+                    },
+                    {
+                        # Distraktor: ekvivalence místo obměny (přímý směr, ne kontrapozice).
+                        "key": "c",
+                        "label_latex": (
+                            r"Jestliže $U_1(a) \cap U_2(a)$ je okolí bodu $a \in \mathbb{R}^*,$ "
+                            r"potom $U_1(a)$ a $U_2(a)$ jsou okolí bodu $a.$"
+                        ),
+                    },
+                ],
+                "expected": "a",
             },
         ],
         "cognitive_load": "C",
@@ -85,18 +151,62 @@ TASKS = [
         ),
         "results": [
             {
-                "key": "negace", "label_latex": r"\text{Negace: }", "type": "open_text",
-                "expected": (
-                    r"Existují $a, b \in \mathbb{R}^*,\ a \ne b,$ taková, že pro každá okolí "
-                    r"$U(a)$ a $U(b)$ platí $U(a) \cap U(b) \ne \emptyset.$"
-                ),
+                "key": "negace", "label_latex": r"\text{Negace: }", "type": "multiple_choice",
+                "options": [
+                    {
+                        "key": "a",
+                        "label_latex": (
+                            r"Existují $a, b \in \mathbb{R}^*,\ a \ne b,$ taková, že pro každá okolí "
+                            r"$U(a)$ a $U(b)$ platí $U(a) \cap U(b) \ne \emptyset.$"
+                        ),
+                    },
+                    {
+                        # Distraktor: zachoval kvantifikátor „pro každé" místo ∃.
+                        "key": "b",
+                        "label_latex": (
+                            r"Pro každé $a, b \in \mathbb{R}^*,\ a \ne b,$ existují okolí $U(a)$ "
+                            r"a $U(b)$ taková, že $U(a) \cap U(b) \ne \emptyset.$"
+                        ),
+                    },
+                    {
+                        # Distraktor: negoval předpoklad $a \ne b$ místo závěru.
+                        "key": "c",
+                        "label_latex": (
+                            r"Existují $a, b \in \mathbb{R}^*,\ a = b,$ taková, že pro každá okolí "
+                            r"$U(a)$ a $U(b)$ platí $U(a) \cap U(b) = \emptyset.$"
+                        ),
+                    },
+                ],
+                "expected": "a",
             },
             {
-                "key": "obmena", "label_latex": r"\text{Obměna: }", "type": "open_text",
-                "expected": (
-                    r"Jestliže pro každá okolí $U(a)$ a $U(b)$ bodů $a, b \in \mathbb{R}^*$ platí "
-                    r"$U(a) \cap U(b) \ne \emptyset,$ pak $a = b.$"
-                ),
+                "key": "obmena", "label_latex": r"\text{Obměna: }", "type": "multiple_choice",
+                "options": [
+                    {
+                        "key": "a",
+                        "label_latex": (
+                            r"Jestliže pro každá okolí $U(a)$ a $U(b)$ bodů $a, b \in \mathbb{R}^*$ platí "
+                            r"$U(a) \cap U(b) \ne \emptyset,$ pak $a = b.$"
+                        ),
+                    },
+                    {
+                        # Distraktor: obrácená implikace (původní směr, ne kontrapozice).
+                        "key": "b",
+                        "label_latex": (
+                            r"Jestliže $a = b,$ pak pro nějaká okolí $U(a)$ a $U(b)$ platí "
+                            r"$U(a) \cap U(b) \ne \emptyset.$"
+                        ),
+                    },
+                    {
+                        # Distraktor: existence místo „pro každá" v předpokladu obměny.
+                        "key": "c",
+                        "label_latex": (
+                            r"Jestliže existují okolí $U(a)$ a $U(b)$ bodů $a, b \in \mathbb{R}^*$ taková, "
+                            r"že $U(a) \cap U(b) \ne \emptyset,$ pak $a = b.$"
+                        ),
+                    },
+                ],
+                "expected": "a",
             },
         ],
         "cognitive_load": "C",
