@@ -701,9 +701,7 @@ function renderResultExpectedEditor(r, i) {
         return `<div class="row">
             <label>Možnosti — radio = správná</label>
             <div class="mc-options">${rows}</div>
-            <button class="btn-add" data-idx="${i}" style="margin-top:6px;" class="btn-add-mc"
-                    onclick="(function(b){var ev=new Event('click');b.dispatchEvent(ev);})(this)"
-                    type="button">+ Přidat možnost</button>
+            <button class="btn-add btn-add-mc" data-idx="${i}" style="margin-top:6px;" type="button">+ Přidat možnost</button>
         </div>`;
     }
     if (r.type === 'open_text') {
@@ -715,11 +713,6 @@ function renderResultExpectedEditor(r, i) {
     }
     return '';
 }
-
-// Fix: btn-add pro MC potřebuje class, ne inline onclick (přepíšu po renderu).
-// Workaround: hledáme všechna add-MC tlačítka přímo přes data-idx s textem "+ Přidat možnost"
-// → necháno na bindings v buildResultsEditor (querySelector '.btn-add-mc')
-// Ošetříme přidání class atributu po renderingu níže.
 
 /* -------- Sandbox -------------------------------------------------------- */
 
