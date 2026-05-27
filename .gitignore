@@ -27,3 +27,14 @@ Thumbs.db
 
 # Claude
 .claude/
+
+# LaTeX aux
+*.aux
+*.log
+*.out
+*.toc
+*.lof
+*.lot
+*.fls
+*.fdb_latexmk
+*.synctex.gz

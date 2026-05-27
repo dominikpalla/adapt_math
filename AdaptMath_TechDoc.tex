@@ -1,0 +1,492 @@
+\documentclass[11pt,a4paper]{article}
+
+% ----- Kódování + jazyk -----
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[czech]{babel}
+
+% ----- Matematika + symboly -----
+\usepackage{amsmath,amssymb,amsfonts}
+
+% ----- Layout -----
+\usepackage[a4paper,margin=2.4cm,top=2.6cm,bottom=2.6cm]{geometry}
+\usepackage{setspace}
+\usepackage{enumitem}
+\setlist{itemsep=2pt,parsep=0pt}
+\usepackage{microtype}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small AdaptMath --- Technická dokumentace}
+\fancyhead[R]{\small TQ23000206}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% ----- Hyperlinks -----
+\usepackage[colorlinks=true,linkcolor=black,urlcolor=blue,citecolor=black]{hyperref}
+
+% ----- Barvy -----
+\usepackage{xcolor}
+\definecolor{orange}{HTML}{F37021}
+\definecolor{darkorange}{HTML}{D95E16}
+\definecolor{lightgray}{HTML}{F4F7F9}
+\definecolor{midgray}{HTML}{6C757D}
+\definecolor{codebg}{HTML}{F8F9FA}
+
+% ----- Code listings -----
+\usepackage{listings}
+\lstset{
+  basicstyle=\ttfamily\footnotesize,
+  backgroundcolor=\color{codebg},
+  frame=single,
+  framerule=0pt,
+  rulecolor=\color{codebg},
+  xleftmargin=8pt,
+  xrightmargin=8pt,
+  framesep=6pt,
+  aboveskip=6pt,
+  belowskip=6pt,
+  breaklines=true,
+  breakatwhitespace=true,
+  keywordstyle=\color{darkorange}\bfseries,
+  commentstyle=\color{midgray},
+  stringstyle=\color{blue!60!black},
+  showstringspaces=false,
+  literate={ě}{{\v e}}1 {š}{{\v s}}1 {č}{{\v c}}1 {ř}{{\v r}}1
+           {ž}{{\v z}}1 {ý}{{\'y}}1 {á}{{\'a}}1 {í}{{\'i}}1
+           {é}{{\'e}}1 {ú}{{\'u}}1 {ů}{{\r u}}1 {ó}{{\'o}}1
+           {Č}{{\v C}}1 {Š}{{\v S}}1 {Ř}{{\v R}}1 {Ž}{{\v Z}}1
+           {Á}{{\'A}}1 {ť}{{\v t}}1 {Ť}{{\v T}}1 {ď}{{\v d}}1
+           {ň}{{\v n}}1 {–}{{--}}1 {„}{{,,}}1 {“}{{``}}1
+           {…}{{\ldots}}1
+}
+\lstdefinestyle{python}{language=Python}
+\lstdefinestyle{json}{
+  morestring=[b]",
+  morekeywords={true,false,null},
+  string=[s]{"}{"},
+}
+\lstdefinestyle{shell}{
+  basicstyle=\ttfamily\footnotesize,
+  keywordstyle=\color{black},
+}
+
+% ----- Tabulky -----
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{longtable}
+
+% ----- Sekce styling -----
+\usepackage{titlesec}
+\titleformat{\section}{\Large\bfseries\color{darkorange}}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\large\bfseries}{\thesubsection.}{0.5em}{}
+
+% =============================================================================
+\begin{document}
+
+% ----- Titulní stránka -----
+\begin{titlepage}
+  \centering
+  \vspace*{2cm}
+  {\color{orange}\rule{\linewidth}{2pt}}
+  \vspace{1.5cm}
+
+  {\Huge\bfseries AdaptMath}\\[0.4cm]
+  {\Large Adaptivní vzdělávání pro matematické disciplíny}\\[1cm]
+
+  {\large\bfseries Technická dokumentace}\\[0.6cm]
+  {\itshape Task Checker --- nástroj pro plnění a kontrolu úloh}\\
+
+  \vspace{2cm}
+  {\color{orange}\rule{\linewidth}{1pt}}
+  \vspace{0.8cm}
+
+  \begin{tabular}{rl}
+    \textbf{Projekt:} & TQ23000206 (TA ČR) \\[3pt]
+    \textbf{Hlavní řešitel:} & Mgr.~Jana Medková, Ph.D. \\[3pt]
+    \textbf{Pracoviště:} & Fakulta informatiky a managementu, Univerzita Hradec Králové \\[3pt]
+    \textbf{Doba řešení:} & 09/2025 -- 02/2029 \\[3pt]
+    \textbf{Autor dokumentace:} & Mgr.~Dominik Palla \\[3pt]
+    \textbf{Verze:} & 1.0 \\[3pt]
+    \textbf{Datum:} & \today \\
+  \end{tabular}
+
+  \vfill
+  {\small Repozitář: \url{https://github.com/dominikpalla/adapt_math}}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% =============================================================================
+\section{Úvod}
+
+\subsection{Cíl projektu}
+
+\textbf{AdaptMath} je projekt aplikovaného výzkumu TA ČR (\textsc{TQ23000206}, program SIGMA), jehož cílem je navrhnout a pilotně ověřit nové přístupy k~adaptivnímu vzdělávání v~matematických oborech na vysokých školách. Klíčovým prvkem je vytvoření \emph{adaptivního enginu}, který na základě profilu studenta, klasifikace úloh a~jeho odpovědí dynamicky přizpůsobuje výběr další úlohy a~tvorbu personalizovaného kurzu.
+
+Plánované výstupy projektu:
+\begin{itemize}
+  \item \textbf{TQ23000206-V2} --- adaptivní engine pro matematické kurzy (software v~Pythonu),
+  \item \textbf{TQ23000206-V3} --- adaptivní kurzy pro výuku matematiky (integrace v~Moodlu).
+\end{itemize}
+
+\subsection{Co řeší tato dokumentace}
+
+Dokumentace popisuje \textbf{Task Checker} --- pomocnou webovou aplikaci určenou pro fázi \emph{plnění a kontroly obsahu}. Aplikace umožňuje výzkumnému týmu:
+
+\begin{itemize}
+  \item importovat matematické úlohy ze zdrojových \texttt{.tex} skript do databáze,
+  \item vizuálně procházet a~ověřovat zadání i~jejich očekávané výsledky,
+  \item editovat všechny atributy úlohy (zadání, výsledky, kategorie, vektor vah, IRT parametry),
+  \item testovat odpovědi pomocí \textbf{MathLive Compute Engine} stejným způsobem, jakým je bude vyhodnocovat budoucí studentský engine.
+\end{itemize}
+
+Adaptivní engine (IRT, BKT, personalizace) zatím není součástí --- bude přidán v~následující fázi projektu.
+
+\subsection{Tým}
+
+\begin{tabular}{lll}
+  \toprule
+  \textbf{Člen} & \textbf{Role} & \textbf{Odpovědnost} \\
+  \midrule
+  dr. Jana Medková      & hlavní řešitel       & vize datového modelu, vedení projektu \\
+  dr. Jiří Haviger      & IRT engine           & \texttt{py-irt}, kalibrace obtížnosti \\
+  dr. Eva Ševčíková     & BKT modely           & \texttt{py-bkt}, učící parametry $\alpha, \beta$ \\
+  dr. Petr Bauer        & obsah                & spoluautor skripta \emph{Základy matematiky 1} \\
+  dr. Štefan Šteflovič  & člen týmu            & \\
+  dr. Dominik Palla     & vývoj                & frontend, integrace, LLM funkce \\
+  \bottomrule
+\end{tabular}
+
+% =============================================================================
+\section{Architektura}
+
+\subsection{Technologický stack}
+
+\begin{tabular}{ll}
+  \toprule
+  \textbf{Vrstva}         & \textbf{Technologie} \\
+  \midrule
+  Backend                 & Python 3.10+, Flask 3.1, SQLAlchemy 2.x, psycopg2 \\
+  Databáze                & PostgreSQL 15 (v~Dockeru) \\
+  Frontend (render)       & KaTeX 0.16 --- sazba matematiky \\
+  Frontend (vstup)        & MathLive (\texttt{<math-field>} web component) \\
+  Vyhodnocení odpovědí    & MathLive Compute Engine (LaTeX $\to$ MathJSON) \\
+  Šablony                 & Jinja2 (server-side render) \\
+  Kontejnerizace          & Docker Compose \\
+  Frontend libraries      & CDN (jsdelivr, unpkg) --- žádný build krok \\
+  \bottomrule
+\end{tabular}
+
+\subsection{Struktura repozitáře}
+
+\begin{lstlisting}[style=shell]
+adapt_math/
+  app.py                   # Flask aplikace (routes, API)
+  database.py              # init_db (SQLAlchemy engine + session)
+  model.py                 # ORM model MathTask
+  seed_db.py               # drop & recreate + napln. uloh
+  docker-compose.yml       # PostgreSQL kontejner
+  tasks/                   # def. uloh, jeden soubor = jedno cviceni
+    __init__.py            # agreguje ALL_TASKS
+    knowledge_weights.py   # KNOWLEDGE_WEIGHTS, TASK_CATEGORIES
+    cv01.py ... cv13.py    # ulohy ze skripta "Zaklady matematiky 1"
+  templates/
+    tasks_list.html        # seznam vsech uloh (filtr)
+    task_checker.html      # editor jedne ulohy + sandbox
+\end{lstlisting}
+
+\subsection{Tok dat}
+
+\begin{enumerate}
+  \item Zdrojové \texttt{.tex} skripty (cvičení 1--13) jsou ručně přepsány do strukturovaných Python slovníků v~\texttt{tasks/cvNN.py} (LLM-asistovaná extrakce, viz sekce~\ref{sec:zdroje}).
+  \item \texttt{seed\_db.py} smaže a~znovu vytvoří tabulku \texttt{math\_tasks} a vloží do ní všech 415 úloh přes SQLAlchemy.
+  \item \texttt{app.py} (Flask) servíruje webové UI; přes endpoint \texttt{POST /api/tasks/<id>} expert ukládá změny.
+  \item Frontend MathLive Compute Engine vyhodnocuje studentské odpovědi symbolicky / numericky, bez backend kola.
+\end{enumerate}
+
+% =============================================================================
+\section{Datový model}
+
+\subsection{Tabulka \texttt{math\_tasks}}
+
+Definováno v~\texttt{model.py} (SQLAlchemy ORM). Aktuálně jediná tabulka.
+
+\begin{longtable}{p{3.6cm}p{2.6cm}p{8.5cm}}
+  \toprule
+  \textbf{Sloupec} & \textbf{Typ} & \textbf{Popis} \\
+  \midrule
+  \texttt{task\_id}            & String (PK) & Identifikátor stylu \texttt{cvNN\_i} (např. \texttt{cv04\_5}). \\
+  \texttt{content\_latex}      & String      & Zadání úlohy v LaTeXu; KaTeX render. Pure-math (bez \texttt{\$}) se v UI automaticky obalí do \texttt{\$\$...\$\$}. \\
+  \texttt{results}             & JSON        & Pole pojmenovaných výsledků (viz~\ref{sec:results}). \\
+  \texttt{category}            & String      & Primární téma úlohy (jeden řetězec z~51 \texttt{TASK\_CATEGORIES}). \\
+  \texttt{knowledge\_vector}   & JSON        & Slovník \texttt{\{name: int 0--100\}}; podíl skill-komponent pro distribuci přírůstku znalosti. Ukládají se jen non-zero hodnoty. \\
+  \texttt{cognitive\_load}     & String      & Klasifikace A--F (typ / praktičnost úlohy). \\
+  \texttt{graph\_vector}       & JSON        & \emph{Deprecated.} Starší tag-vektor (list stringů). Zachováno pro kompatibilitu, v~UI se needituje. \\
+  \texttt{irt\_difficulty}     & Float       & IRT obtížnost ($\pm 3$). Doladí Haviger. \\
+  \texttt{irt\_discrimination} & Float       & IRT diskriminace ($\pm 2{,}5$). \\
+  \bottomrule
+\end{longtable}
+
+\subsection{Konvence \texttt{task\_id}}
+
+Formát \texttt{cvNN\_i}, kde:
+\begin{itemize}
+  \item \texttt{NN} je dvouciferné číslo cvičení (01--13),
+  \item \texttt{i} je pořadové číslo úlohy v rámci cvičení (1, 2, ...).
+\end{itemize}
+
+Příklady: \texttt{cv01\_4} (4.\ úloha cv01), \texttt{cv12\_58} (poslední úloha cv12).
+
+\subsection{Struktura \texttt{results}}\label{sec:results}
+
+Pole \texttt{results} drží \textbf{kolekci pojmenovaných výsledků}. Každý prvek pole reprezentuje jeden očekávaný vstup od studenta. Úloha tak může mít více polí (např. \emph{D(f)~=~..., intervaly růstu, lokální extrém v $x = ...$}).
+
+Schema jednoho prvku:
+
+\begin{lstlisting}[style=json]
+{
+  "key": "<identifikátor>",        # interní, pro logging
+  "label_latex": "<LaTeX>",        # prefix před vstupem, např. "D(f) = "
+  "type": "<typ>",                 # decimal | mathlive | multiple_choice | open_text
+  "expected": <hodnota>,           # podle typu (viz níže)
+  "tolerance": <float>,            # pouze pro type=decimal
+  "options": [...]                 # pouze pro type=multiple_choice
+}
+\end{lstlisting}
+
+\subsection{Typy výsledků}
+
+\begin{longtable}{p{2.5cm}p{4cm}p{8cm}}
+  \toprule
+  \textbf{Typ} & \textbf{\texttt{expected}} & \textbf{Vyhodnocení} \\
+  \midrule
+  \texttt{decimal} & \texttt{float} & MathLive vstup parsovaný přes Compute Engine \texttt{.N().valueOf()}; porovnání numericky s \texttt{tolerance}. \\
+  \texttt{mathlive} & \texttt{string} (LaTeX) & Compute Engine 3-fázová strategie: \texttt{canonical.isSame()} $\to$ \texttt{simplify().isSame()} $\to$ \texttt{.N()} numericky. \\
+  \texttt{multiple\_choice} & klíč správné možnosti & Radio buttony; \texttt{options[]} je pole \texttt{\{key, label\_latex\}}. \\
+  \texttt{open\_text} & vzorové řešení (string) & Žádné auto-vyhodnocení; doporučuje LLM (Gemini) nebo expertní revizi. \\
+  \bottomrule
+\end{longtable}
+
+% =============================================================================
+\section{Vektor znalostí a kategorie}
+
+\subsection{Filozofie}
+
+Každá úloha trénuje různé \emph{skill-komponenty} v různém poměru. \texttt{knowledge\_vector} je slovník přiřazující každé komponentě procentuální váhu (0--100). Při řešení úlohy se přírůstek (úspěch) nebo úbytek (nesplnění) studentovy znalosti rozdělí mezi komponenty v poměru těchto vah.
+
+Paralelní vektor existuje i ve studentově profilu --- tam ale hodnoty $\in [0, 1]$ (úroveň znalosti v dané komponentě, IRT/BKT).
+
+\subsection{KNOWLEDGE\_WEIGHTS (67 vah)}
+
+Definováno v~\texttt{tasks/knowledge\_weights.py}. Rozděleno do dvou kategorií:
+
+\paragraph{(A) Algebraické a aritmetické skill-komponenty (16 vah).}
+\textit{lineární, kvadratická, mocninná, log, exponenciální, goniometrická, Absolutní hodnota, lomená lineární, zlomky, Aplikační, vzorec, vytýkání--krácení, Roznásobení závorky --- distributivní zákon, výpočet rovnic, výpočet nerovnic, Derivování.}
+
+\paragraph{(B) Kategorie úloh (51 vah).}
+Začínají od \emph{Algebraické výrazy} a pokračují přes \emph{Elementární funkce, Rovnice, Nerovnice, Soustavy rovnic, Funkce, Definiční obor, Aritmetika funkcí, Skládání, Sudá/lichá, Inverzní funkce, Tečna, Asymptota, Monotónie, Absolutní extrémy, Konvexnost, Spojitost, Bolzanova věta, Limita} (a její podtypy VOAL, LVL, S~odmocninou, Vytknutí nejvyšší mocniny, Jednostranné, Typová, L'Hospital), \emph{Derivace} (a její podtypy Sčítání, Součin, Podíl, Složená funkce, Diferenciál, Taylor, vyšších řádů, Průběh funkce), \emph{Primitivní funkce} (Sčítání, Per partes, 1./2.~věta o sub, Parciální zlomky), \emph{Určitý integrál} (UI variants), \emph{Nevlastní integrál, Obsah plochy.}
+
+\paragraph{Duplicitní názvy.} \emph{Sčítání} se přirozeně objevuje jako podtyp Derivace i Primitivní funkce. Rozlišujeme prefixem: \texttt{"Derivace --- Sčítání"} vs \texttt{"Prim. funkce --- Sčítání"}. Varianty pro určitý integrál nesou prefix \texttt{"UI - "} (např. \emph{UI - Per partes}).
+
+\subsection{TASK\_CATEGORIES (51 kategorií)}
+
+Subset \texttt{KNOWLEDGE\_WEIGHTS} začínající od indexu 16 (\emph{Algebraické výrazy}). Tato množina se nabízí v UI editoru jako \texttt{<select>} pro pole \emph{Kategorie úlohy}.
+
+V další fázi (zatím \textbf{není implementováno}) bude každá kategorie mít defaultní distribuci vah, která se automaticky aplikuje na \texttt{knowledge\_vector} při výběru kategorie, a~expert ji pak doladí na úrovni jednotlivé úlohy.
+
+% =============================================================================
+\section{Webové UI: Task Checker}
+
+\subsection{Routes}
+
+\begin{tabular}{lll}
+  \toprule
+  \textbf{Metoda} & \textbf{Cesta} & \textbf{Účel} \\
+  \midrule
+  \texttt{GET}    & \texttt{/}                & Redirect na první úlohu v abecedním pořadí. \\
+  \texttt{GET}    & \texttt{/tasks}           & Tabulka všech úloh (filtr podle tématu, fulltext). \\
+  \texttt{GET}    & \texttt{/tasks/<id>}      & Detail úlohy --- editor + sandbox. \\
+  \texttt{POST}   & \texttt{/api/tasks/<id>}  & Uložit změny (JSON body s editable poli). \\
+  \texttt{DELETE} & \texttt{/api/tasks/<id>}  & Smazat úlohu. \\
+  \bottomrule
+\end{tabular}
+
+\subsection{Editor úlohy (\texttt{/tasks/<id>})}
+
+UI je rozděleno do dvou sloupců.
+
+\paragraph{Levý sloupec (vizualizace + test).}
+\begin{itemize}
+  \item Živý KaTeX náhled zadání (re-renderuje při každém keystroke).
+  \item Sandbox „Vyzkoušej řešení" --- MathLive vstupní pole; tlačítko \emph{Otestovat} spustí vyhodnocení proti aktuálnímu (i neuloženému) \texttt{expected}.
+  \item Sekce „Vzorové odpovědi" --- vyrenderované očekávané hodnoty.
+\end{itemize}
+
+\paragraph{Pravý sloupec (editor).}
+\begin{itemize}
+  \item Task ID, kognitivní zátěž (select A--F), kategorie úlohy (select 51 položek).
+  \item Zadání v LaTeXu (textarea, full-width).
+  \item Editor výsledků --- karta pro každý prvek pole \texttt{results}; lze přidat/odebrat; pro každý se mění \texttt{key}, \texttt{label\_latex}, typ (select), a~\texttt{expected} (specifické pro typ --- MathLive pole, číselný input, MC options, textarea).
+\end{itemize}
+
+\paragraph{Pod editorem (full-width).}
+\begin{itemize}
+  \item \textbf{Vektor znalostí} --- plochý seznam 67 vah ve 2 sloupcích; každý řádek má label, range slider (0--100, krok 1), spojený number input, znak \texttt{\%}.
+  \item Filtr textový („lim", „derivace") + checkbox \emph{jen nenulové}.
+  \item Sumarizace v hlavičce sekce: aktuální součet všech vah, počet nenulových z 67, tlačítko \emph{Vynulovat vše}.
+  \item Slider $\leftrightarrow$ number input jsou dvousměrně synchronizované; aktivní řádky (váha $>0$) jsou zvýrazněné a uložené jako jediné v JSON (chybějící klíč $=$ 0).
+\end{itemize}
+
+\paragraph{Sticky save bar (dole).}
+\begin{itemize}
+  \item \emph{Uložit změny} --- \texttt{POST /api/tasks/<id>} s celým stavem;
+  \item \emph{Vrátit} --- obnoví poslední uložený stav;
+  \item \emph{Smazat úlohu} --- \texttt{DELETE} endpoint.
+\end{itemize}
+
+\paragraph{Klávesové zkratky.}
+$\leftarrow$ a $\rightarrow$ pro navigaci mezi úlohami, \texttt{Ctrl+S} (resp.~\texttt{Cmd+S}) pro uložení.
+
+\subsection{Tipy pro vyhodnocení MathLive Compute Engine}
+
+\begin{itemize}
+  \item \texttt{mathlive} odpovědi se ukládají jako čistý LaTeX. Compute Engine je tolerantní k variantám zápisu zlomku, znamének, \texttt{\textbackslash infty} vs \texttt{+\textbackslash infty}, atd.
+  \item Pro intervaly preferujeme standardní zápis: \texttt{(a, b)} otevřený, \texttt{[a, b]} uzavřený, \texttt{\textbackslash cup} pro sjednocení.
+  \item Tam, kde by Compute Engine selhal (cyklické sjednocení po $k \in \mathbb{Z}$, „limita neexistuje" jako popis), používáme \texttt{multiple\_choice} se třemi variantami (1 správná + 2 typické chyby).
+\end{itemize}
+
+% =============================================================================
+\section{Datový obsah}\label{sec:zdroje}
+
+\subsection{Zdroj úloh}
+
+Skripta \emph{Základy matematiky 1} (P.~Pražák, P.~Bauer; KIKM FIM UHK). Zdrojové \texttt{.tex} soubory cvičení 1--13 byly ručně (LLM-asistovaně) interpretovány a převedeny do strukturovaného formátu v~\texttt{tasks/cvNN.py}.
+
+\subsection{Pokrytí}
+
+\begin{tabular}{lll>{\centering\arraybackslash}p{1.6cm}}
+  \toprule
+  \textbf{Cvičení} & \textbf{Téma} & & \textbf{Úloh} \\
+  \midrule
+  cv01 & Funkce, definiční obor, kvadratická funkce               & & 37 \\
+  cv02 & Skládání, prostá, inverzní funkce                         & & 29 \\
+  cv03 & Monotonie, parita, polynomy, Hornerovo schéma             & & 42 \\
+  cv04 & Limita --- aritmetika limit                               & & 18 \\
+  cv05 & Limita --- věta o složené funkci, typové limity           & & 44 \\
+  cv06 & Spojitost funkce                                          & & 23 \\
+  cv07 & Derivace (součet, součin, podíl, řetízkové pravidlo)      & & 47 \\
+  cv08 & Tečna, normála, absolutní extrémy, L'Hospital             & & 36 \\
+  cv09 & 1.~derivace, lokální extrémy, optimalizace                & & 26 \\
+  cv10 & 2.~derivace (konvexita, inflexe), asymptoty               & & 18 \\
+  cv11 & Diferenciál, Taylorův a Maclaurinův polynom               & & 27 \\
+  cv12 & Primitivní funkce (linearita, per-partes, substituce)     & & 58 \\
+  cv13 & Integrace racionálních funkcí                             & & 10 \\
+  \midrule
+  \multicolumn{3}{r}{\textbf{Celkem}} & \textbf{415} \\
+  \bottomrule
+\end{tabular}
+
+\subsection{Distribuce typů výsledků}
+
+\begin{tabular}{lr}
+  \toprule
+  \textbf{Typ} & \textbf{Počet} \\
+  \midrule
+  \texttt{mathlive}         & 319 \\
+  \texttt{multiple\_choice} & 115 \\
+  \texttt{decimal}          & \phantom{1}83 \\
+  \texttt{open\_text}       & \phantom{11}0\,\textsuperscript{*} \\
+  \bottomrule
+\end{tabular}
+
+\textsuperscript{*}{\small Původní negace výroků byly převedeny na \texttt{multiple\_choice} se 3 možnostmi (správná + 2 typické chyby studentů).}
+
+% =============================================================================
+\section{Spuštění lokálně}
+
+\subsection{Závislosti}
+
+\begin{itemize}
+  \item Python 3.10+
+  \item Docker (pro PostgreSQL)
+  \item Python balíčky --- viz \texttt{.venv}: \texttt{flask}, \texttt{sqlalchemy}, \texttt{psycopg2-binary}, \texttt{google-generativeai} (volitelné, pro LLM nápovědu)
+\end{itemize}
+
+\subsection{První spuštění}
+
+\begin{lstlisting}[style=shell]
+# 1) klon repozitáře
+git clone https://github.com/dominikpalla/adapt_math.git
+cd adapt_math
+
+# 2) Python venv + dependencies
+python3 -m venv .venv
+source .venv/bin/activate
+pip install flask sqlalchemy psycopg2-binary google-generativeai python-dotenv
+
+# 3) Spustit PostgreSQL kontejner
+docker compose up -d
+
+# 4) Naplnit DB (drop & recreate + insert 415 úloh)
+python seed_db.py
+
+# 5) Spustit Flask
+python app.py
+\end{lstlisting}
+
+Aplikace běží na \url{http://127.0.0.1:5000}.
+
+\subsection{Opětovné nasazení po změně schématu}
+
+Jelikož v~aktuální fázi nepoužíváme migrace (Alembic), po každé změně sloupců v~\texttt{model.py} stačí spustit znovu \texttt{python seed\_db.py} --- skript provede \texttt{DROP TABLE \dots\ CASCADE} a \texttt{CREATE TABLE} dle aktuálního ORM modelu, načež úlohy vloží znovu.
+
+\textbf{Pozor:} drop \& recreate ztrácí veškerá data nasazená přes UI (ručně upravené kategorie, vektory znalostí). Pro produkci je nutné zavést migrace.
+
+% =============================================================================
+\section{Co dál (roadmap)}
+
+\subsection{Krátkodobé}
+
+\begin{enumerate}
+  \item \textbf{Distribuce vah dle kategorie.} Definovat slovník \texttt{CATEGORY\_DEFAULT\_VECTOR}, který pro každou ze 51 kategorií předvyplní výchozí distribuci 67 vah. Při výběru kategorie v UI se předvyplní \texttt{knowledge\_vector}, expert pak ladí.
+  \item \textbf{LLM vyhodnocení \texttt{open\_text}}. Aktuálně máme všechny negace převedeny na \texttt{multiple\_choice}; pro budoucí volné úlohy zavést endpoint \texttt{POST /api/eval-open-text} volající Gemini.
+  \item \textbf{Alembic migrace.} Nahradit drop \& recreate řízenými migracemi.
+\end{enumerate}
+
+\subsection{Střednědobé}
+
+\begin{enumerate}
+  \item \textbf{IRT engine} (\texttt{py-irt}). Pilotní tréninková fáze pro kalibraci obtížnosti a~diskriminace. Vlastní route \texttt{/student/<id>/next-task}, která vybere úlohu podle aktuálního $\theta$ studenta.
+  \item \textbf{BKT engine} (\texttt{py-bkt}). Po každé interakci aktualizuje studentův vektor znalostí na základě \texttt{knowledge\_vector} úlohy a parametrů $\alpha$, $\beta$.
+  \item \textbf{Studentský profil.} Tabulka \texttt{students} s preferencemi (styl učení, motivace, math anxiety) a vektorem znalostí (67 hodnot v $[0, 1]$).
+  \item \textbf{Logování interakcí} pro výzkum (čas řešení, jistota, AI nápověda).
+\end{enumerate}
+
+\subsection{Dlouhodobé}
+
+\begin{enumerate}
+  \item \textbf{Integrace s Moodle.} Engine jako externí Moodle plugin / LTI tool. Výstup TQ23000206-V3.
+  \item \textbf{Generování úloh LLM.} Tvorba variant na téma „kategorie + obtížnost".
+  \item \textbf{Dashboard pro experty.} Vizualizace pokroku jednotlivých studentů, analýza odchylek od průměru.
+\end{enumerate}
+
+% =============================================================================
+\section{Reference}
+
+\begin{itemize}
+  \item Repozitář projektu: \url{https://github.com/dominikpalla/adapt_math}
+  \item Skripta \emph{Základy matematiky 1}, P.~Pražák, P.~Bauer, FIM UHK
+  \item MathLive: \url{https://github.com/arnog/mathlive}
+  \item Compute Engine: \url{https://cortexjs.io/compute-engine/}
+  \item KaTeX: \url{https://katex.org/}
+  \item py-irt: \url{https://github.com/nd-ball/py-irt}
+  \item py-bkt: \url{https://github.com/CAHLR/pyBKT}
+\end{itemize}
+
+\vspace{2em}
+\noindent\rule{\linewidth}{0.4pt}\\[2pt]
+{\small\itshape Tato dokumentace byla vygenerována ve fázi plnění databáze úloh (Task Checker, verze 1.0). Bude rozšířena po implementaci IRT/BKT engine a integrace s Moodle.}
+
+\end{document}
