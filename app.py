@@ -15,6 +15,7 @@ from flask import Flask, render_template, request, jsonify, redirect, url_for
 from sqlalchemy.orm.attributes import flag_modified
 from database import init_db
 from model import MathTask
+from tasks.knowledge_weights import KNOWLEDGE_WEIGHTS, TASK_CATEGORIES
 
 DB_URL = "postgresql://adaptmath_user:supersecretpassword@localhost:5432/adaptmath"
 
@@ -39,7 +40,8 @@ def disable_cache(response):
 
 EDITABLE_FIELDS = {
     "task_id", "content_latex", "results",
-    "cognitive_load", "graph_vector",
+    "cognitive_load", "category", "knowledge_vector",
+    "graph_vector",  # ponecháno pro kompatibilitu, UI ho už needituje
     "irt_difficulty", "irt_discrimination",
 }
 
@@ -51,6 +53,8 @@ def task_to_dict(task):
         "content_latex": task.content_latex,
         "results": task.results,
         "cognitive_load": task.cognitive_load,
+        "category": task.category,
+        "knowledge_vector": task.knowledge_vector or {},
         "graph_vector": task.graph_vector,
         "irt_difficulty": task.irt_difficulty,
         "irt_discrimination": task.irt_discrimination,
@@ -105,7 +109,7 @@ def tasks_list():
 
 @app.route("/tasks/<task_id>")
 def task_checker(task_id):
-    """Task checker: zadání, parametry, výsledky, MathLive sandbox."""
+    """Task checker: zadání, parametry, výsledky, MathLive sandbox, vektor vah."""
     session = SessionLocal()
     try:
         task = session.query(MathTask).filter_by(task_id=task_id).first()
@@ -119,6 +123,8 @@ def task_checker(task_id):
             next_id=next_id,
             position=idx,
             total=total,
+            knowledge_weights=KNOWLEDGE_WEIGHTS,
+            task_categories=TASK_CATEGORIES,
         )
     finally:
         session.close()

@@ -58,8 +58,24 @@ class MathTask(Base):
     # Kolekce pojmenovaných výsledků (viz docstring výše)
     results = Column(JSON, nullable=False)
 
-    # ----- Metadata pro budoucí adaptivní engine (zatím needitujeme) -----
-    cognitive_load = Column(String, nullable=True)   # A-F
-    graph_vector = Column(JSON, nullable=True)       # ["Limity funkcí", ...]
+    # ----- Klasifikace / metadata pro adaptivní engine -----
+    # Kognitivní zátěž (A–F) — typ / praktičnost úlohy, edituje expert.
+    cognitive_load = Column(String, nullable=True)
+
+    # Primární kategorie úlohy (jeden řetězec ze seznamu TASK_CATEGORIES
+    # v tasks/knowledge_weights.py; podmnožina vah ~51 položek).
+    category = Column(String, nullable=True)
+
+    # Vektor vah znalostního grafu — dict {weight_name: int 0..100}.
+    # 67 možných vah definuje KNOWLEDGE_WEIGHTS v tasks/knowledge_weights.py.
+    # Při řešení úlohy se přírůstek / úbytek znalosti distribuuje mezi
+    # skill-komponenty v poměru těchto vah. Suma vah by se měla blížit 100 %.
+    knowledge_vector = Column(JSON, nullable=True)
+
+    # Starší tag-vektor (volné textové tagy) — nadále jen pro kompatibilitu,
+    # v UI editoru se už nezobrazuje. Plánujeme migrovat do knowledge_vector.
+    graph_vector = Column(JSON, nullable=True)
+
+    # IRT parametry (zatím needitujeme přes UI, doplní expert / py-irt pilot).
     irt_difficulty = Column(Float, nullable=True)    # ±3
     irt_discrimination = Column(Float, nullable=True)  # ±2.5

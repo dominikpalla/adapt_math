@@ -202,6 +202,42 @@
         .sb-result ul { margin: 6px 0 0 18px; padding: 0; }
         .sb-result .mode { font-family: monospace; font-size: 11px; opacity: 0.7; margin-left: 6px; }
 
+        /* Vektor znalostí (kv = knowledge_vector) */
+        .kv-card { margin-top: 20px; }
+        .kv-card h2 #kv-sum, .kv-card h2 #kv-nonzero { font-family: 'SF Mono', monospace; color: var(--orange-dark); }
+        .kv-filter { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
+        .kv-filter input[type="text"] {
+            flex: 1; min-width: 240px; padding: 8px 11px;
+            border: 1px solid #c8ced3; border-radius: 6px; font-size: 14px;
+        }
+        .kv-filter label { font-size: 13px; color: #555; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+        .kv-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            gap: 4px 18px;
+            max-height: 60vh; overflow-y: auto;
+            border: 1px solid var(--border); border-radius: 8px; padding: 10px;
+            background: #fafbfc;
+        }
+        .kv-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 110px 56px 16px;
+            align-items: center; gap: 8px;
+            padding: 4px 6px; border-radius: 4px;
+            min-width: 0;
+        }
+        .kv-row:hover { background: #fff; }
+        .kv-row.active { background: #fff7ee; }
+        .kv-row.hidden { display: none; }
+        .kv-label { font-size: 13px; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+        .kv-slider { width: 100%; cursor: pointer; }
+        .kv-number {
+            width: 100%; padding: 4px 6px; border: 1px solid #c8ced3; border-radius: 4px;
+            font-size: 12px; font-family: 'SF Mono', monospace; text-align: right;
+        }
+        .kv-number:focus { outline: none; border-color: var(--orange); }
+        .kv-pct { font-size: 11px; color: #888; }
+
         /* Save bar */
         .save-bar {
             position: sticky; bottom: 0; background: rgba(255,255,255,0.97);
@@ -276,10 +312,14 @@
                     </div>
                 </div>
                 <div class="row">
-                    <label>Znalostní graf (první chip je primární téma)</label>
-                    <div class="tags" id="tag-editor">
-                        <input type="text" id="tag-input" placeholder="Přidat téma a Enter…">
-                    </div>
+                    <label>Kategorie úlohy</label>
+                    <select id="f-category" data-bind="category">
+                        <option value="">— vyber kategorii —</option>
+                        {% for cat in task_categories %}
+                        <option value="{{ cat }}">{{ cat }}</option>
+                        {% endfor %}
+                    </select>
+                    <p class="hint-text">Primární téma úlohy. V další fázi se podle této kategorie přednastaví výchozí distribuce vah ve znalostním vektoru (níže), kterou pak doladíš ručně.</p>
                 </div>
             </section>
 
@@ -299,6 +339,39 @@
         </div>
 
     </div>
+
+    <!-- Vektor znalostí (znalostní graf) — plochý seznam 67 vah pod editorem -->
+    <section class="card kv-card">
+        <h2>
+            Vektor znalostí
+            <span class="hint">
+                celkem 0–100 %: <span id="kv-sum">0</span>
+                · nenulových: <span id="kv-nonzero">0</span> / {{ knowledge_weights|length }}
+                · <button type="button" class="btn-add" style="padding:2px 8px;font-size:11px;margin-left:6px;" onclick="resetKnowledgeVector()">↶ Vynulovat vše</button>
+            </span>
+        </h2>
+        <p class="hint-text" style="margin-top:-8px;">
+            Pro každou skill-komponentu nastav procentuální podíl, kterým úloha tento skill trénuje.
+            Při úspěšném vyřešení / nesplnění se přírůstek (resp. úbytek) znalosti rozdělí mezi komponenty
+            v poměru daném těmito vahami.
+        </p>
+        <div class="kv-filter">
+            <input type="text" id="kv-filter-input" placeholder="Filtr (např. „lim", „derivace", „zlomk")…" oninput="filterKv()">
+            <label><input type="checkbox" id="kv-only-nonzero" onchange="filterKv()"> jen nenulové</label>
+        </div>
+        <div class="kv-grid" id="kv-grid">
+            {% for w in knowledge_weights %}
+            <div class="kv-row" data-name="{{ w }}" data-name-lower="{{ w|lower }}">
+                <label class="kv-label" title="{{ w }}">{{ w }}</label>
+                <input type="range" min="0" max="100" step="1" value="0"
+                       class="kv-slider" data-name="{{ w }}">
+                <input type="number" min="0" max="100" step="1" value="0"
+                       class="kv-number" data-name="{{ w }}">
+                <span class="kv-pct">%</span>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
 
     <div class="save-bar">
         <button class="btn btn-save" id="btn-save" onclick="saveTask()">💾 Uložit změny</button>
@@ -426,7 +499,8 @@ function loadStateToForm() {
     document.getElementById('f-task_id').value = state.task_id || '';
     document.getElementById('f-content_latex').value = state.content_latex || '';
     document.getElementById('f-cognitive_load').value = state.cognitive_load || '';
-    renderTags();
+    document.getElementById('f-category').value = state.category || '';
+    loadKnowledgeVectorToForm();
     buildResultsEditor();
     refreshContentPreview();
     refreshExpectedPreview();
@@ -445,35 +519,91 @@ function attachBindings() {
     document.getElementById('f-cognitive_load').addEventListener('change', e => {
         state.cognitive_load = e.target.value || null; setDirty();
     });
-    document.getElementById('tag-input').addEventListener('keydown', e => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            const v = (e.target.value || '').trim();
-            if (v && !(state.graph_vector || []).includes(v)) {
-                state.graph_vector = [...(state.graph_vector || []), v];
-                renderTags(); setDirty();
-            }
-            e.target.value = '';
-        }
+    document.getElementById('f-category').addEventListener('change', e => {
+        state.category = e.target.value || null; setDirty();
+    });
+    attachKnowledgeVectorBindings();
+}
+
+/* -------- Vektor znalostí (knowledge_vector) ----------------------------- */
+/* state.knowledge_vector je dict {weight_name: int 0..100}. Ukládáme jen
+   non-zero hodnoty (chybějící klíč ⇒ 0).                                    */
+
+function loadKnowledgeVectorToForm() {
+    const kv = state.knowledge_vector || {};
+    document.querySelectorAll('.kv-slider').forEach(sl => {
+        const name = sl.dataset.name;
+        const val = Number(kv[name] || 0);
+        sl.value = val;
+        const num = document.querySelector(`.kv-number[data-name="${CSS.escape(name)}"]`);
+        if (num) num.value = val;
+        const row = sl.closest('.kv-row');
+        if (row) row.classList.toggle('active', val > 0);
+    });
+    updateKvSummary();
+    filterKv();
+}
+
+function attachKnowledgeVectorBindings() {
+    // slider ↔ number input
+    document.querySelectorAll('.kv-slider').forEach(sl => {
+        sl.addEventListener('input', e => {
+            const v = clampKv(parseInt(e.target.value, 10));
+            const name = e.target.dataset.name;
+            const num = document.querySelector(`.kv-number[data-name="${CSS.escape(name)}"]`);
+            if (num) num.value = v;
+            setKvWeight(name, v);
+        });
+    });
+    document.querySelectorAll('.kv-number').forEach(num => {
+        num.addEventListener('input', e => {
+            const v = clampKv(parseInt(e.target.value, 10) || 0);
+            const name = e.target.dataset.name;
+            const sl = document.querySelector(`.kv-slider[data-name="${CSS.escape(name)}"]`);
+            if (sl) sl.value = v;
+            setKvWeight(name, v);
+        });
     });
 }
 
-/* -------- Tags (graph_vector) -------------------------------------------- */
+function clampKv(v) { return Math.max(0, Math.min(100, isNaN(v) ? 0 : v)); }
 
-function renderTags() {
-    const ed = document.getElementById('tag-editor');
-    [...ed.querySelectorAll('.chip')].forEach(t => t.remove());
-    const input = ed.querySelector('input');
-    (state.graph_vector || []).forEach((topic, i) => {
-        const chip = document.createElement('span');
-        chip.className = 'chip' + (i === 0 ? ' primary' : '');
-        chip.innerHTML = `${escapeHtml(topic)} <span class="x" title="odebrat">×</span>`;
-        chip.querySelector('.x').onclick = () => {
-            state.graph_vector = state.graph_vector.filter((_, j) => j !== i);
-            renderTags(); setDirty();
-        };
-        ed.insertBefore(chip, input);
+function setKvWeight(name, value) {
+    const kv = { ...(state.knowledge_vector || {}) };
+    if (value > 0) kv[name] = value;
+    else delete kv[name];
+    state.knowledge_vector = kv;
+    const row = document.querySelector(`.kv-row[data-name="${CSS.escape(name)}"]`);
+    if (row) row.classList.toggle('active', value > 0);
+    updateKvSummary();
+    if (document.getElementById('kv-only-nonzero').checked) filterKv();
+    setDirty();
+}
+
+function updateKvSummary() {
+    const kv = state.knowledge_vector || {};
+    const values = Object.values(kv).map(Number).filter(n => n > 0);
+    const sum = values.reduce((a, b) => a + b, 0);
+    document.getElementById('kv-sum').textContent = sum;
+    document.getElementById('kv-nonzero').textContent = values.length;
+}
+
+function filterKv() {
+    const q = (document.getElementById('kv-filter-input').value || '').toLowerCase().trim();
+    const onlyNonZero = document.getElementById('kv-only-nonzero').checked;
+    document.querySelectorAll('.kv-row').forEach(row => {
+        const matchesQ = !q || (row.dataset.nameLower || '').includes(q);
+        const isNonZero = row.classList.contains('active');
+        const show = matchesQ && (!onlyNonZero || isNonZero);
+        row.classList.toggle('hidden', !show);
     });
+}
+
+function resetKnowledgeVector() {
+    if (!confirm('Opravdu vynulovat všechny váhy znalostního vektoru?')) return;
+    state.knowledge_vector = {};
+    loadKnowledgeVectorToForm();
+    setDirty();
 }
 
 /* -------- Content + expected preview ------------------------------------- */
