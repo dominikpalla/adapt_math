@@ -106,7 +106,7 @@
     \textbf{Hlavní řešitel:} & Mgr.~Jana Medková, Ph.D. \\[3pt]
     \textbf{Pracoviště:} & Fakulta informatiky a managementu, Univerzita Hradec Králové \\[3pt]
     \textbf{Doba řešení:} & 09/2025 -- 02/2029 \\[3pt]
-    \textbf{Autor dokumentace:} & Mgr.~Dominik Palla \\[3pt]
+    \textbf{Autor dokumentace:} & Ing.~Dominik Palla, Ph.D. \\[3pt]
     \textbf{Verze:} & 1.0 \\[3pt]
     \textbf{Datum:} & \today \\
   \end{tabular}
@@ -155,7 +155,7 @@ Adaptivní engine (IRT, BKT, personalizace) zatím není součástí --- bude p�
   dr. Eva Ševčíková     & BKT modely           & \texttt{py-bkt}, učící parametry $\alpha, \beta$ \\
   dr. Petr Bauer        & obsah                & spoluautor skripta \emph{Základy matematiky 1} \\
   dr. Štefan Šteflovič  & člen týmu            & \\
-  dr. Dominik Palla     & vývoj                & frontend, integrace, LLM funkce \\
+  Ing. Dominik Palla, Ph.D. & vývoj            & frontend, integrace, LLM funkce \\
   \bottomrule
 \end{tabular}
 
@@ -295,6 +295,128 @@ Začínají od \emph{Algebraické výrazy} a pokračují přes \emph{Elementárn
 Subset \texttt{KNOWLEDGE\_WEIGHTS} začínající od indexu 16 (\emph{Algebraické výrazy}). Tato množina se nabízí v UI editoru jako \texttt{<select>} pro pole \emph{Kategorie úlohy}.
 
 V další fázi (zatím \textbf{není implementováno}) bude každá kategorie mít defaultní distribuci vah, která se automaticky aplikuje na \texttt{knowledge\_vector} při výběru kategorie, a~expert ji pak doladí na úrovni jednotlivé úlohy.
+
+\subsection{Popis jednotlivých vah}\label{sec:vahy-popis}
+
+\subsubsection{(A) Algebraické a aritmetické skill-komponenty}
+
+Těchto 16 vah pokrývá \emph{nízkoúrovňové} matematické dovednosti, které
+jsou typicky vyžadovány napříč všemi úlohami bez ohledu na primární téma.
+Příklad: úloha „Najděte derivaci $y = \sqrt{x^2 + 3x + 1}$" se opírá
+o~komponenty \emph{mocninná}, \emph{vytýkání}, \emph{vzorec} a~\emph{Derivování},
+i~když je primárně kategorizována jako \emph{Derivace --- Složená funkce}.
+
+\begin{longtable}{p{5cm}p{10cm}}
+  \toprule
+  \textbf{Skill-komponenta} & \textbf{Popis} \\
+  \midrule
+  \endfirsthead
+  \toprule
+  \textbf{Skill-komponenta} & \textbf{Popis} \\
+  \midrule
+  \endhead
+
+  lineární & Manipulace s~lineárními výrazy $ax + b$, lineárními funkcemi a~jejich vlastnostmi. \\
+  kvadratická & Práce s~kvadratickými výrazy $ax^2 + bx + c$, hledání kořenů, doplnění na čtverec, vrchol paraboly. \\
+  mocninná & Mocninné funkce $x^n$ (vč. záporných a~zlomkových exponentů), pravidla pro mocniny. \\
+  log & Logaritmické funkce a~jejich vlastnosti ($\log_a x$, $\ln x$, vzorce pro součet, podíl a~mocninu argumentu). \\
+  exponenciální & Exponenciální funkce $a^x,\ e^x$, vzorce pro součin a~podíl, exp.~rovnice. \\
+  goniometrická & $\sin, \cos, \mathrm{tg}, \mathrm{cotg}$, jejich vzorce (součtové, dvojnásobný úhel, kvadratura), inverzní gonio funkce. \\
+  Absolutní hodnota & Manipulace s~$|x|$, rozklad podle znaménka, řešení rovnic a~nerovnic s~abs. hodnotou. \\
+  lomená lineární & Funkce typu $\frac{ax+b}{cx+d}$, jejich průběh, asymptoty, def.~obor. \\
+  zlomky & Operace se zlomky --- společný jmenovatel, krácení, sčítání, řetězené zlomky. \\
+  Aplikační & Slovní úlohy, modelace reálné situace matematickými prostředky (optimalizace, geometrie, fyzika, ekonomika). \\
+  vzorec & Aplikace klasických vzorců typu $(a \pm b)^2$, $a^2 - b^2$, $(a \pm b)^3$, kosinová věta apod. \\
+  vytýkání, krácení & Algebraické zjednodušování --- vytýkání společného činitele, krácení zlomků, faktorizace. \\
+  Roznásobení závorky --- distributivní zákon & Rozklad $a(b + c) = ab + ac$, roznásobení dvojčlenu/trojčlenu, polynomu. \\
+  výpočet rovnic & Řešení lineárních, kvadratických a~vyšších rovnic, manipulace s~rovnicemi (převody, substituce). \\
+  výpočet nerovnic & Řešení nerovnic, znaménková analýza, kombinace více nerovnic. \\
+  Derivování & Aplikace derivačních pravidel (součet, součin, podíl, řetízkové) --- jako mechanické dovednost. \\
+  \bottomrule
+\end{longtable}
+
+\subsubsection{(B) Kategorie úloh --- vyšší tematické okruhy}
+
+Zbývajících 51 vah odpovídá \emph{kategoriím úloh} v selektoru editoru.
+Jsou to nadřazená témata, do nichž úloha primárně spadá. V tabulce níže
+je vždy ke kategorii uveden i typický příklad zadání z~daného okruhu.
+
+\begin{longtable}{p{4.6cm}p{10.4cm}}
+  \toprule
+  \textbf{Kategorie} & \textbf{Popis} \\
+  \midrule
+  \endfirsthead
+  \toprule
+  \textbf{Kategorie} & \textbf{Popis} \\
+  \midrule
+  \endhead
+
+  \multicolumn{2}{l}{\textit{Předmatematické / přípravné}} \\[2pt]
+  Algebraické výrazy & Úpravy, rovnost, zjednodušování polynomiálních / racionálních výrazů. \\
+  Elementární funkce & Vlastnosti základních funkcí (poly, exp, log, gonio, mocninná) bez derivace. \\
+  Rovnice & Řešení rovnic včetně exp., log., goniometrických. \\
+  Nerovnice & Řešení nerovnic s~jednou neznámou; logaritmické, exponenciální. \\
+  Soustavy rovnic --- dosazovací a sčítací metoda & Lineární soustavy 2--3 neznámých. \\[4pt]
+
+  \multicolumn{2}{l}{\textit{Funkce a~jejich vlastnosti}} \\[2pt]
+  Funkce & Pojem funkce, graf, vlastnosti, ekvivalence předpisů. \\
+  Definiční obor & Stanovení $D_f$ (odmocniny, jmenovatele, log argumenty, $\arcsin$/$\arccos$). \\
+  Aritmetika funkcí & Operace $f+g$, $f \cdot g$, $f/g$ a~jejich def.~obory. \\
+  Skládání / rozkládání funkcí & $f \circ g$, určení vnitřní/vnější funkce, iterace. \\
+  Sudá / lichá & Symetrie funkce vzhledem k~ose $y$ resp.~k počátku. \\
+  Inverzní funkce & Stanovení $f^{-1}$, definiční obor a~obor hodnot. \\
+  Tečna ke grafu & Rovnice tečny / normály v~daném bodě; tečna rovnoběžná či kolmá k~zadané přímce. \\
+  Asymptota & Stanovení vertikálních, horizontálních a~šikmých asymptot. \\[4pt]
+
+  \multicolumn{2}{l}{\textit{Vyšetřování průběhu}} \\[2pt]
+  Monotónie, Určování Extrémů & Intervaly růstu/poklesu z~$f'$, klasifikace stacionárních bodů. \\
+  Absolutní extrémy na intervalu & Globální maximum / minimum na uzavřeném intervalu pomocí věty o~globálním extrému. \\
+  Určování lokálních extrémů & Lokální max/min z~první (a druhé) derivace. \\
+  Konvexnost / konkávnost & Intervaly konvexity, konkávity z~$f''$, inflexní body. \\
+  Spojitost & Spojitost v~bodě, na intervalu; doplnění funkční hodnoty; nalezení parametrů. \\
+  Bolzanova věta & Existence kořene rovnice v~uzavřeném intervalu na základě změny znaménka. \\[4pt]
+
+  \multicolumn{2}{l}{\textit{Limita funkce}} \\[2pt]
+  Limita & Obecná kategorie pro limitní výpočty (zastřešující). \\
+  VOAL (dosazení) & Limita pomocí věty o~aritmetice limit --- prosté dosazení do spojité funkce. \\
+  LVL (krácení) & Limita typu $0/0$ řešená krácením společného činitele (rozklad polynomu). \\
+  S odmocninou & Limita typu $0/0$ řešená rozšířením odmocninou (sdruženým výrazem). \\
+  Vytknutí nejvyšší mocniny & Limita v~$\pm\infty$ --- typ $\infty/\infty$, vytknutí dominantního členu. \\
+  Jednostranné limity & $\lim_{x \to a^\pm}$, vyšetření z~obou stran, neexistence dvoustranné limity. \\
+  Typová limita & Tabulkové („typové") limity --- $\frac{\sin x}{x}$, $\frac{e^x-1}{x}$, $(1+\tfrac{1}{x})^x$ atd. \\
+  Lhopitalovo pravidlo & L'Hospitalovo pravidlo pro neurčité výrazy $0/0$ a~$\infty/\infty$ a~jejich úpravy. \\[4pt]
+
+  \multicolumn{2}{l}{\textit{Derivace}} \\[2pt]
+  Derivace & Obecná kategorie pro derivační počet (zastřešující). \\
+  Derivace --- Sčítání & Pravidlo $(f + g)' = f' + g'$. \\
+  Součin & Pravidlo $(fg)' = f'g + fg'$. \\
+  Podíl & Pravidlo $\left(\tfrac{f}{g}\right)' = \tfrac{f'g - fg'}{g^2}$. \\
+  Složená funkce & Řetízkové pravidlo $(f \circ g)' = f'(g) \cdot g'$. \\
+  Diferenciál & $df(x, h) = f'(x) \cdot h$; aproximace, odhady chyb měření. \\
+  Taylorův polynom & Taylorův / Maclaurinův polynom v~okolí bodu (řád $n$). \\
+  Derivace vyšších řádů & $f^{(n)}$ a~jejich výpočet, formulace závěrů (vyšetření extrémů). \\
+  Průběh funkce & Komplexní vyšetření průběhu (D, parita, monotonie, extrémy, konvexita, asymptoty, graf). \\[4pt]
+
+  \multicolumn{2}{l}{\textit{Integrální počet}} \\[2pt]
+  Primitivní funkce & Obecná kategorie pro neurčitý integrál (zastřešující). \\
+  Prim.~funkce --- Sčítání & Linearita integrálu $\int (\alpha f + \beta g) = \alpha \int f + \beta \int g$. \\
+  Per partes & Metoda per-partes $\int u \, dv = uv - \int v \, du$ pro neurčitý integrál. \\
+  1.\,věta o sub & První věta o~substituci $\int f(g(x)) g'(x)\, dx = \int f(t)\, dt$ ($t = g(x)$). \\
+  2.\,věta o sub & Druhá věta o~substituci --- substituce $x = \varphi(t)$ (typicky s odmocninou nebo exp.). \\
+  Parciální zlomky & Rozklad racionální funkce na parciální zlomky, integrace. \\[4pt]
+
+  \multicolumn{2}{l}{\textit{Určitý integrál a~aplikace}} \\[2pt]
+  Určitý integrál & Obecná kategorie pro Riemannův určitý integrál (zastřešující). \\
+  UI - Sčítání & Linearita určitého integrálu --- $\int_a^b (\alpha f + \beta g) = \alpha \int_a^b f + \beta \int_a^b g$. \\
+  Roztrhnutí integrálu na dva & $\int_a^c f = \int_a^b f + \int_b^c f$ pro $a < b < c$. \\
+  UI - Per partes & Per-partes pro určitý integrál (s hraničními hodnotami). \\
+  UI - 1.\,věta o sub & První věta o~substituci pro určitý integrál (s úpravou mezí). \\
+  UI - 2.\,věta o sub & Druhá věta o~substituci pro určitý integrál (s úpravou mezí). \\
+  UI - Parciální zlomky & Aplikace parciálních zlomků v~určitém integrálu. \\
+  Nevlastní integrál & Integrály s~nekonečnými mezemi nebo s~funkcí neomezenou v~bodě intervalu. \\
+  Obsah plochy & Geometrická aplikace --- výpočet obsahu rovinné oblasti ohraničené grafy funkcí. \\
+  \bottomrule
+\end{longtable}
 
 % =============================================================================
 \section{Webové UI: Task Checker}
