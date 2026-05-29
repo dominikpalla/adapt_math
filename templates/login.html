@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AdaptMath — Přihlášení</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #f4f7f9 0%, #e8edf0 100%);
+            margin: 0; padding: 0;
+            min-height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+            color: #333;
+        }
+        .card {
+            background: #fff;
+            padding: 36px 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            width: 100%;
+            max-width: 380px;
+        }
+        .brand {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .brand .logo {
+            display: inline-block;
+            width: 56px; height: 56px;
+            background: #f37021;
+            color: #fff;
+            border-radius: 14px;
+            line-height: 56px;
+            font-size: 28px; font-weight: 700;
+            margin-bottom: 12px;
+        }
+        .brand h1 {
+            margin: 0;
+            font-size: 22px;
+            color: #222;
+        }
+        .brand .subtitle {
+            color: #888;
+            font-size: 13px;
+            margin-top: 4px;
+        }
+        form { margin-top: 24px; }
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 6px;
+        }
+        input[type="password"] {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #c8ced3;
+            border-radius: 8px;
+            font-size: 15px;
+            font-family: inherit;
+            background: #fafbfc;
+            transition: border-color 0.15s, background 0.15s;
+        }
+        input[type="password"]:focus {
+            outline: none;
+            border-color: #f37021;
+            background: #fff;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 16px;
+            background: #f37021;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        button:hover { background: #d95e16; }
+        button:active { transform: translateY(1px); }
+        .error {
+            background: #fdecea;
+            color: #b71c1c;
+            border-left: 3px solid #d32f2f;
+            padding: 10px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            margin-bottom: 16px;
+        }
+        .footer {
+            margin-top: 24px;
+            text-align: center;
+            color: #aaa;
+            font-size: 11px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="brand">
+            <div class="logo">A</div>
+            <h1>AdaptMath</h1>
+            <div class="subtitle">Task Checker — přihlášení</div>
+        </div>
+
+        {% if error %}
+        <div class="error">{{ error }}</div>
+        {% endif %}
+
+        <form method="POST" action="{{ url_for('login', next=request.args.get('next', '')) }}" autocomplete="off">
+            <label for="password">Heslo</label>
+            <input type="password" id="password" name="password" required autofocus>
+            <button type="submit">Přihlásit se</button>
+        </form>
+
+        <div class="footer">
+            TQ23000206 · AdaptMath · FIM UHK
+        </div>
+    </div>
+</body>
+</html>

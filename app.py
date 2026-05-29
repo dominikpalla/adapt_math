@@ -12,8 +12,11 @@ Demo s IRT/BKT engine je zatím odloženo (viz historie commitů pro starší ve
 """
 
 import os
+import secrets
+from functools import wraps
+from datetime import timedelta
 
-from flask import Flask, render_template, request, jsonify, redirect, url_for
+from flask import Flask, render_template, request, jsonify, redirect, url_for, session
 from werkzeug.middleware.proxy_fix import ProxyFix
 from sqlalchemy.orm.attributes import flag_modified
 from database import init_db
@@ -31,13 +34,28 @@ DB_URL = os.environ.get(
 app = Flask(__name__)
 
 # Reverse-proxy podpora (Apache, Nginx). Pokud aplikace běží za reverzní
-# proxy s sub-cestou (např. https://moodlefim.uhk.cz/adaptmath/), spouštíme
-# Flask se SCRIPT_NAME=/adaptmath. WSGI server (werkzeug, gunicorn) z této
-# env var automaticky prependuje prefix k výstupům url_for(), takže žádné
-# JS/HTML link tvrdě nesahá za hranice routes definovaných v app.py.
-# ProxyFix navíc respektuje X-Forwarded-* hlavičky (proto, host), což je
-# potřeba aby url_for(..., _external=True) vrátil správný https:// URL.
+# proxy s sub-cestou (např. https://moodlefim.uhk.cz/adaptmath/), Apache
+# odřízne /adaptmath/ z URL a pošle X-Forwarded-Prefix; ProxyFix prepne
+# WSGI environ tak, aby url_for() generoval URL s prefixem.
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+
+# --- Jednoduchá password ochrana (session-based) -----------------------------
+# Heslo se zadává přes /login formulář; po úspěchu se uloží do session,
+# která žije max APP_SESSION_DAYS dní. Heslo i SECRET_KEY jsou env-driven.
+APP_PASSWORD = os.environ.get("APP_PASSWORD", "kikmjenejlepsi")
+app.secret_key = os.environ.get("FLASK_SECRET_KEY") or secrets.token_hex(32)
+app.permanent_session_lifetime = timedelta(days=int(os.environ.get("APP_SESSION_DAYS", "30")))
+
+
+def require_login(view):
+    """Decorator: pokud uživatel není přihlášený, přesměruj na /login."""
+    @wraps(view)
+    def wrapped(*args, **kwargs):
+        if not session.get("logged_in"):
+            return redirect(url_for("login", next=request.full_path.rstrip("?")))
+        return view(*args, **kwargs)
+    return wrapped
+
 
 SessionLocal = init_db(DB_URL)
 
@@ -95,7 +113,33 @@ def neighbor_task_ids(session, task_id):
 # Routes
 # --------------------------------------------------------------------------
 
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    """Jednoduchá password ochrana — heslo se ověří proti APP_PASSWORD env var.
+    Při úspěchu se uloží `logged_in=True` do session a uživatel se přesměruje
+    na požadovanou stránku (parametr `next` nebo `/`)."""
+    error = None
+    if request.method == "POST":
+        if request.form.get("password") == APP_PASSWORD:
+            session["logged_in"] = True
+            session.permanent = True
+            next_url = request.args.get("next") or url_for("index")
+            # Bezpečnostní pojistka: redirect jen na lokální URL
+            if not next_url.startswith("/"):
+                next_url = url_for("index")
+            return redirect(next_url)
+        error = "Špatné heslo."
+    return render_template("login.html", error=error)
+
+
+@app.route("/logout", methods=["POST", "GET"])
+def logout():
+    session.pop("logged_in", None)
+    return redirect(url_for("login"))
+
+
 @app.route("/")
+@require_login
 def index():
     """Default — přesměruje na první úlohu v DB (nebo prompt na seed)."""
     session = SessionLocal()
@@ -113,6 +157,7 @@ def index():
 
 
 @app.route("/tasks")
+@require_login
 def tasks_list():
     """Tabulka všech úloh — odkaz na detail pro každou."""
     session = SessionLocal()
@@ -127,6 +172,7 @@ def tasks_list():
 
 
 @app.route("/tasks/<task_id>")
+@require_login
 def task_checker(task_id):
     """Task checker: zadání, parametry, výsledky, MathLive sandbox, vektor vah."""
     session = SessionLocal()
@@ -150,6 +196,7 @@ def task_checker(task_id):
 
 
 @app.route("/api/tasks/<task_id>", methods=["POST"])
+@require_login
 def api_task_save(task_id):
     """Uloží editovaná pole úlohy. Tělo: JSON s libovolnou podmnožinou polí.
     Pokud se mění task_id, vrátí nové URL pro redirect na frontendu."""
@@ -193,6 +240,7 @@ def api_task_save(task_id):
 
 
 @app.route("/api/tasks/<task_id>", methods=["DELETE"])
+@require_login
 def api_task_delete(task_id):
     """Smaže úlohu."""
     session = SessionLocal()
