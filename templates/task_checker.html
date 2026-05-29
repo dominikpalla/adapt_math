@@ -263,7 +263,7 @@
            class="nav-btn {{ 'disabled' if not next_id else '' }}">Další →</a>
         <span class="spacer"></span>
         <div class="links">
-            <a href="/tasks">📋 Seznam úloh</a>
+            <a href="{{ url_for('tasks_list') }}">📋 Seznam úloh</a>
         </div>
     </header>
 
@@ -392,6 +392,16 @@
  * ============================================================================= */
 
 const INITIAL = JSON.parse(document.getElementById('task-data').textContent);
+
+/* URLs vygenerované Flaskem přes url_for() — respektují SCRIPT_NAME / mountpoint
+   reverzní proxy. Lokálně dají /tasks, /api/tasks/...; za Apache reverse proxy
+   na sub-cestě (např. SCRIPT_NAME=/adaptmath) dají /adaptmath/tasks/... atd. */
+const URLS = {
+    tasksList: {{ url_for('tasks_list') | tojson | safe }},
+    task:   id => {{ url_for('task_checker',   task_id='__ID__') | tojson | safe }}.replace('__ID__', encodeURIComponent(id)),
+    apiTask: id => {{ url_for('api_task_save', task_id='__ID__') | tojson | safe }}.replace('__ID__', encodeURIComponent(id)),
+};
+
 let state = clone(INITIAL);
 let savedState = clone(INITIAL);
 
@@ -455,7 +465,7 @@ async function saveTask() {
     st.className = 'save-status saving'; st.textContent = '⏳ Ukládám…';
     document.getElementById('btn-save').disabled = true;
     try {
-        const res = await fetch('/api/tasks/' + encodeURIComponent(INITIAL.task_id), {
+        const res = await fetch(URLS.apiTask(INITIAL.task_id), {
             method: 'POST', headers: {'Content-Type':'application/json'},
             body: JSON.stringify(state),
         });
@@ -465,7 +475,7 @@ async function saveTask() {
         st.className = 'save-status saved'; st.textContent = '✓ Uloženo';
         if (data.renamed_to) {
             // task_id se změnilo — přesměrujeme na novou URL
-            setTimeout(() => location.href = '/tasks/' + encodeURIComponent(data.renamed_to), 600);
+            setTimeout(() => location.href = URLS.task(data.renamed_to), 600);
             return;
         }
         setTimeout(setDirty, 1200);
@@ -485,11 +495,11 @@ function revertChanges() {
 async function deleteTask() {
     if (!confirm(`Opravdu smazat úlohu ${state.task_id}? Akce je nevratná.`)) return;
     try {
-        const res = await fetch('/api/tasks/' + encodeURIComponent(INITIAL.task_id), { method: 'DELETE' });
+        const res = await fetch(URLS.apiTask(INITIAL.task_id), { method: 'DELETE' });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error);
         alert('Úloha smazána.');
-        location.href = '/tasks';
+        location.href = URLS.tasksList;
     } catch (e) { alert('Chyba: ' + e.message); }
 }
 
@@ -1018,9 +1028,9 @@ document.addEventListener('DOMContentLoaded', () => {
 document.addEventListener('keydown', e => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'MATH-FIELD') return;
     if (e.key === 'ArrowLeft' && {{ prev_id | tojson | safe }}) {
-        location.href = '/tasks/' + {{ prev_id | tojson | safe }};
+        location.href = URLS.task({{ prev_id | tojson | safe }});
     } else if (e.key === 'ArrowRight' && {{ next_id | tojson | safe }}) {
-        location.href = '/tasks/' + {{ next_id | tojson | safe }};
+        location.href = URLS.task({{ next_id | tojson | safe }});
     } else if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();
         saveTask();

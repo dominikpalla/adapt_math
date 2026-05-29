@@ -11,15 +11,34 @@ Minimální Flask aplikace pro kontrolu importovaných úloh:
 Demo s IRT/BKT engine je zatím odloženo (viz historie commitů pro starší verzi).
 """
 
+import os
+
 from flask import Flask, render_template, request, jsonify, redirect, url_for
+from werkzeug.middleware.proxy_fix import ProxyFix
 from sqlalchemy.orm.attributes import flag_modified
 from database import init_db
 from model import MathTask
 from tasks.knowledge_weights import KNOWLEDGE_WEIGHTS, TASK_CATEGORIES
 
-DB_URL = "postgresql://adaptmath_user:supersecretpassword@localhost:5432/adaptmath"
+# DB připojení. Pro produkci preferujeme DATABASE_URL env var (např. v systemd
+# unit `Environment="DATABASE_URL=postgresql://..."`); lokálně padá zpět na
+# výchozí dev hodnotu.
+DB_URL = os.environ.get(
+    "DATABASE_URL",
+    "postgresql://adaptmath_user:supersecretpassword@localhost:5432/adaptmath",
+)
 
 app = Flask(__name__)
+
+# Reverse-proxy podpora (Apache, Nginx). Pokud aplikace běží za reverzní
+# proxy s sub-cestou (např. https://moodlefim.uhk.cz/adaptmath/), spouštíme
+# Flask se SCRIPT_NAME=/adaptmath. WSGI server (werkzeug, gunicorn) z této
+# env var automaticky prependuje prefix k výstupům url_for(), takže žádné
+# JS/HTML link tvrdě nesahá za hranice routes definovaných v app.py.
+# ProxyFix navíc respektuje X-Forwarded-* hlavičky (proto, host), což je
+# potřeba aby url_for(..., _external=True) vrátil správný https:// URL.
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+
 SessionLocal = init_db(DB_URL)
 
 
