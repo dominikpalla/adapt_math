@@ -48,11 +48,17 @@ app.permanent_session_lifetime = timedelta(days=int(os.environ.get("APP_SESSION_
 
 
 def require_login(view):
-    """Decorator: pokud uživatel není přihlášený, přesměruj na /login."""
+    """Decorator: pokud uživatel není přihlášený, přesměruj na /login.
+
+    Do `next` parametru ukládáme **plnou** URL včetně reverse-proxy prefixu
+    (request.script_root). Jinak by Flask po loginu vrátil redirect Location
+    bez prefixu a browser by skončil mimo aplikaci (např. /tasks/... → Moodle).
+    """
     @wraps(view)
     def wrapped(*args, **kwargs):
         if not session.get("logged_in"):
-            return redirect(url_for("login", next=request.full_path.rstrip("?")))
+            target = (request.script_root or "") + request.full_path.rstrip("?")
+            return redirect(url_for("login", next=target))
         return view(*args, **kwargs)
     return wrapped
 
@@ -124,9 +130,15 @@ def login():
             session["logged_in"] = True
             session.permanent = True
             next_url = request.args.get("next") or url_for("index")
-            # Bezpečnostní pojistka: redirect jen na lokální URL
+            # Bezpečnostní pojistka: redirect jen na lokální URL.
+            # Pokud `next` přišel bez script_root (např. stará session,
+            # předchozí verze enginu), doplníme ho zde, ať redirect vede
+            # na správný host (ne na Moodle).
             if not next_url.startswith("/"):
                 next_url = url_for("index")
+            elif request.script_root and not next_url.startswith(request.script_root + "/") \
+                    and next_url != request.script_root:
+                next_url = request.script_root + next_url
             return redirect(next_url)
         error = "Špatné heslo."
     return render_template("login.html", error=error)
