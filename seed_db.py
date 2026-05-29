@@ -11,11 +11,18 @@ jedno cvičení ze skripta „Základy matematiky 1").
 
 from sqlalchemy import text
 
+import os
+
 from database import init_db
 from model import MathTask, Base
 from tasks import ALL_TASKS
 
-DB_URL = "postgresql://adaptmath_user:supersecretpassword@localhost:5432/adaptmath"
+# Pro produkci preferujeme DATABASE_URL env var (stejně jako app.py);
+# lokálně padá zpět na výchozí dev hodnotu.
+DB_URL = os.environ.get(
+    "DATABASE_URL",
+    "postgresql://adaptmath_user:supersecretpassword@localhost:5432/adaptmath",
+)
 
 
 def seed_database():
