@@ -17,6 +17,7 @@
         .filters { display:flex; gap:10px; margin-bottom: 14px; align-items: center; flex-wrap: wrap; }
         .filters input, .filters select { padding:8px 10px; border:1px solid #ccc; border-radius:6px; font-size: 13px; }
         .filters input { min-width: 250px; }
+        .filters select { min-width: 220px; }
 
         table { width:100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         th, td { padding: 10px 12px; border-bottom: 1px solid #eee; font-size: 13px; vertical-align: top; text-align: left; }
@@ -24,13 +25,57 @@
         tr:hover td { background: #fafafa; }
         a.task-link { color: #f37021; text-decoration: none; font-weight: 600; font-family: 'SF Mono', Menlo, monospace; }
         a.task-link:hover { text-decoration: underline; }
-        .preview { max-width: 480px; font-size: 14px; }
+        .preview { max-width: 380px; font-size: 14px; }
         .badge { display:inline-block; padding:2px 7px; border-radius:10px; font-size: 11px; font-weight: 600; margin-right: 3px; }
         .b-decimal{background:#e3f2fd;color:#0d47a1;}
         .b-mathlive{background:#fff3e0;color:#bf360c;}
         .b-multiple_choice{background:#f3e5f5;color:#4a148c;}
         .b-open_text{background:#fce4ec;color:#880e4f;}
-        .tags span { display:inline-block; background:#eef; color:#225; padding:1px 6px; border-radius:8px; font-size:11px; margin-right:3px; }
+
+        /* Kategorie chip barevně dle skupiny */
+        .cat-chip {
+            display: inline-block;
+            padding: 3px 9px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            background: #f5f5f5;
+            border: 1px solid currentColor;
+        }
+        .cat-chip.empty {
+            color: #bbb;
+            font-style: italic;
+            font-weight: 400;
+            border: 1px dashed #ddd;
+            background: transparent;
+        }
+        /* Stejné group barvy jako v task_checker.html */
+        .grp-vlasnosti  { color: #2e7d32; }
+        .grp-typ        { color: #ef6c00; }
+        .grp-dovednosti { color: #d84315; }
+        .grp-ss         { color: #8d6e00; }
+        .grp-funkce     { color: #1565c0; }
+        .grp-monotonie  { color: #6a1b9a; }
+        .grp-konvex     { color: #455a64; }
+        .grp-spojitost  { color: #00695c; }
+        .grp-limita     { color: #c2185b; }
+        .grp-derivace   { color: #283593; }
+        .grp-prubeh     { color: #424242; }
+        .grp-pf         { color: #b71c1c; }
+        .grp-ui         { color: #4e342e; }
+        option.grp-vlasnosti  { color: #2e7d32; }
+        option.grp-typ        { color: #ef6c00; }
+        option.grp-dovednosti { color: #d84315; }
+        option.grp-ss         { color: #8d6e00; }
+        option.grp-funkce     { color: #1565c0; }
+        option.grp-monotonie  { color: #6a1b9a; }
+        option.grp-konvex     { color: #455a64; }
+        option.grp-spojitost  { color: #00695c; }
+        option.grp-limita     { color: #c2185b; }
+        option.grp-derivace   { color: #283593; }
+        option.grp-prubeh     { color: #424242; }
+        option.grp-pf         { color: #b71c1c; }
+        option.grp-ui         { color: #4e342e; }
     </style>
 </head>
 <body>
@@ -40,9 +85,13 @@
     </header>
 
     <div class="filters">
-        <input type="text" id="q" placeholder="Hledat (task_id, téma, LaTeX)…" oninput="applyFilter()">
-        <select id="topic-filter" onchange="applyFilter()">
-            <option value="">Všechna témata</option>
+        <input type="text" id="q" placeholder="Hledat (task_id, kategorie, LaTeX)…" oninput="applyFilter()">
+        <select id="category-filter" onchange="applyFilter()">
+            <option value="">Všechny kategorie</option>
+            <option value="__empty__">— bez kategorie —</option>
+            {% for cat in task_categories %}
+            <option value="{{ cat }}" class="grp-{{ weight_groups[cat] }}">{{ cat }}</option>
+            {% endfor %}
         </select>
     </div>
 
@@ -52,14 +101,14 @@
                 <th>Task ID</th>
                 <th>Náhled zadání</th>
                 <th>Typy výsledků</th>
-                <th>Témata</th>
+                <th>Kategorie</th>
                 <th>Zátěž</th>
             </tr>
         </thead>
         <tbody id="tbody">
             {% for t in tasks %}
             <tr data-id="{{ t.task_id }}"
-                data-topics="{{ (t.graph_vector or []) | tojson | e }}"
+                data-category="{{ t.category or '' }}"
                 data-types="{{ (t.results | map(attribute='type') | list) | tojson | e }}">
                 <td><a href="{{ url_for('task_checker', task_id=t.task_id) }}" class="task-link">{{ t.task_id }}</a></td>
                 <td class="preview" data-latex="{{ t.content_latex }}"></td>
@@ -68,7 +117,13 @@
                         <span class="badge b-{{ r.type }}" title="{{ r.key }}">{{ r.type }}</span>
                     {% endfor %}
                 </td>
-                <td class="tags">{% for topic in (t.graph_vector or []) %}<span>{{ topic }}</span>{% endfor %}</td>
+                <td>
+                    {% if t.category %}
+                        <span class="cat-chip grp-{{ weight_groups.get(t.category, 'default') }}">{{ t.category }}</span>
+                    {% else %}
+                        <span class="cat-chip empty">— nepřiřazeno —</span>
+                    {% endif %}
+                </td>
                 <td>{{ t.cognitive_load or '—' }}</td>
             </tr>
             {% endfor %}
@@ -98,39 +153,27 @@
         });
     }
 
-    function collectTopics() {
-        const set = new Set();
-        document.querySelectorAll('tr[data-topics]').forEach(tr => {
-            try { JSON.parse(tr.dataset.topics).forEach(t => set.add(t)); } catch(e){}
-        });
-        const sel = document.getElementById('topic-filter');
-        [...set].sort().forEach(t => {
-            const o = document.createElement('option');
-            o.value = t; o.textContent = t; sel.appendChild(o);
-        });
-    }
-
     function applyFilter() {
         const q = (document.getElementById('q').value || '').toLowerCase().trim();
-        const topic = document.getElementById('topic-filter').value;
+        const catFilter = document.getElementById('category-filter').value;
         let visible = 0;
         document.querySelectorAll('#tbody tr').forEach(tr => {
             const id = tr.dataset.id.toLowerCase();
-            const topics = tr.dataset.topics.toLowerCase();
+            const cat = (tr.dataset.category || '').toLowerCase();
             const latex = (tr.querySelector('.preview').dataset.latex || '').toLowerCase();
-            const matchQ = !q || id.includes(q) || topics.includes(q) || latex.includes(q);
-            const matchTopic = !topic || topics.includes(topic.toLowerCase());
-            const show = matchQ && matchTopic;
+            const matchQ = !q || id.includes(q) || cat.includes(q) || latex.includes(q);
+            let matchCat;
+            if (!catFilter) matchCat = true;
+            else if (catFilter === '__empty__') matchCat = !tr.dataset.category;
+            else matchCat = tr.dataset.category === catFilter;
+            const show = matchQ && matchCat;
             tr.style.display = show ? '' : 'none';
             if (show) visible++;
         });
         document.getElementById('counter').textContent = `(${visible})`;
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-        collectTopics();
-        renderPreviews();
-    });
+    document.addEventListener('DOMContentLoaded', renderPreviews);
 </script>
 </body>
 </html>

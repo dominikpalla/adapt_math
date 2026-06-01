@@ -183,6 +183,9 @@ def tasks_list():
         return render_template(
             "tasks_list.html",
             tasks=[task_to_dict(t) for t in tasks],
+            weight_groups=WEIGHT_GROUPS,
+            group_labels=GROUP_LABELS,
+            task_categories=TASK_CATEGORIES,
         )
     finally:
         session.close()
