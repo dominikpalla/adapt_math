@@ -21,7 +21,12 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from sqlalchemy.orm.attributes import flag_modified
 from database import init_db
 from model import MathTask
-from tasks.knowledge_weights import KNOWLEDGE_WEIGHTS, TASK_CATEGORIES
+from tasks.knowledge_weights import (
+    KNOWLEDGE_WEIGHTS,
+    TASK_CATEGORIES,
+    WEIGHT_GROUPS,
+    GROUP_LABELS,
+)
 
 # DB připojení. Pro produkci preferujeme DATABASE_URL env var (např. v systemd
 # unit `Environment="DATABASE_URL=postgresql://..."`); lokálně padá zpět na
@@ -202,6 +207,8 @@ def task_checker(task_id):
             total=total,
             knowledge_weights=KNOWLEDGE_WEIGHTS,
             task_categories=TASK_CATEGORIES,
+            weight_groups=WEIGHT_GROUPS,
+            group_labels=GROUP_LABELS,
         )
     finally:
         session.close()

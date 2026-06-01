@@ -229,7 +229,42 @@
         .kv-row:hover { background: #fff; }
         .kv-row.active { background: #fff7ee; }
         .kv-row.hidden { display: none; }
-        .kv-label { font-size: 13px; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+        .kv-label { font-size: 13px; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; font-weight: 500; }
+
+        /* Barevné rozlišení skupin vah dle dohody s dr. Medkovou (260601_v2) */
+        .grp-vlasnosti  { color: #2e7d32; }   /* zelená */
+        .grp-typ        { color: #ef6c00; }   /* tmavě oranžová */
+        .grp-dovednosti { color: #d84315; }   /* červenooranžová */
+        .grp-ss         { color: #8d6e00; }   /* olivově žlutá (tmavší) */
+        .grp-funkce     { color: #1565c0; }   /* modrá */
+        .grp-monotonie  { color: #6a1b9a; }   /* fialová */
+        .grp-konvex     { color: #455a64; }   /* tmavě šedá */
+        .grp-spojitost  { color: #00695c; }   /* tyrkysová */
+        .grp-limita     { color: #c2185b; }   /* růžová */
+        .grp-derivace   { color: #283593; }   /* tmavě modrá */
+        .grp-prubeh     { color: #424242; }   /* uhlově šedá */
+        .grp-pf         { color: #b71c1c; }   /* tmavě červená */
+        .grp-ui         { color: #4e342e; }   /* hnědá */
+
+        /* Stejné barvy v <option> selectoru kategorie */
+        option.grp-vlasnosti  { color: #2e7d32; }
+        option.grp-typ        { color: #ef6c00; }
+        option.grp-dovednosti { color: #d84315; }
+        option.grp-ss         { color: #8d6e00; }
+        option.grp-funkce     { color: #1565c0; }
+        option.grp-monotonie  { color: #6a1b9a; }
+        option.grp-konvex     { color: #455a64; }
+        option.grp-spojitost  { color: #00695c; }
+        option.grp-limita     { color: #c2185b; }
+        option.grp-derivace   { color: #283593; }
+        option.grp-prubeh     { color: #424242; }
+        option.grp-pf         { color: #b71c1c; }
+        option.grp-ui         { color: #4e342e; }
+
+        /* Legenda pod hlavičkou KV sekce */
+        .kv-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 0 0 8px 0; font-size: 11px; }
+        .kv-legend .leg { display: inline-flex; align-items: center; gap: 4px; }
+        .kv-legend .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
         .kv-slider { width: 100%; cursor: pointer; }
         .kv-number {
             width: 100%; padding: 4px 6px; border: 1px solid #c8ced3; border-radius: 4px;
@@ -318,7 +353,7 @@
                     <select id="f-category" data-bind="category">
                         <option value="">— vyber kategorii —</option>
                         {% for cat in task_categories %}
-                        <option value="{{ cat }}">{{ cat }}</option>
+                        <option value="{{ cat }}" class="grp-{{ weight_groups[cat] }}">{{ cat }}</option>
                         {% endfor %}
                     </select>
                     <p class="hint-text">Primární téma úlohy. V další fázi se podle této kategorie přednastaví výchozí distribuce vah ve znalostním vektoru (níže), kterou pak doladíš ručně.</p>
@@ -361,10 +396,17 @@
             <input type="text" id="kv-filter-input" placeholder="Filtr (např. „lim", „derivace", „zlomk")…" oninput="filterKv()">
             <label><input type="checkbox" id="kv-only-nonzero" onchange="filterKv()"> jen nenulové</label>
         </div>
+        <!-- Legenda skupin vah -->
+        <div class="kv-legend">
+            {% set legend_order = ['vlasnosti', 'typ', 'dovednosti', 'ss', 'funkce', 'monotonie', 'spojitost', 'limita', 'derivace', 'konvex', 'prubeh', 'pf', 'ui'] %}
+            {% for g in legend_order %}
+            <span class="leg grp-{{ g }}"><span class="dot" style="background: currentColor;"></span>{{ group_labels[g] }}</span>
+            {% endfor %}
+        </div>
         <div class="kv-grid" id="kv-grid">
             {% for w in knowledge_weights %}
-            <div class="kv-row" data-name="{{ w }}" data-name-lower="{{ w|lower }}">
-                <label class="kv-label" title="{{ w }}">{{ w }}</label>
+            <div class="kv-row" data-name="{{ w }}" data-name-lower="{{ w|lower }}" data-group="{{ weight_groups[w] }}">
+                <label class="kv-label grp-{{ weight_groups[w] }}" title="{{ w }}">{{ w }}</label>
                 <input type="range" min="0" max="100" step="1" value="0"
                        class="kv-slider" data-name="{{ w }}">
                 <input type="number" min="0" max="100" step="1" value="0"
