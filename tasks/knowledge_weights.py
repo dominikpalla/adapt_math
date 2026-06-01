@@ -1,24 +1,29 @@
 """
 Definice vektoru vah (skill-komponent) pro AdaptMath.
 
-KNOWLEDGE_WEIGHTS — plochý seznam všech vah znalostního vektoru úlohy.
-Při editaci úlohy expert nastavuje pro každou váhu procentuální hodnotu
-(0–100), která vyjadřuje, jak moc daný skill úloha trénuje. Při úspěšném
-vyřešení úlohy se přírůstek znalosti rozdělí mezi její skill-komponenty
-v poměru daném těmito vahami; při nesplnění se obdobně rozdělí úbytek.
-
-Pro IRT/BKT engine pak ve studentově profilu existuje paralelní vektor
-stejných vah s hodnotami 0–1 (úroveň znalosti studenta v daném skillu).
+KNOWLEDGE_WEIGHTS — plochý seznam **61** všech vah znalostního vektoru
+úlohy. Při editaci expert nastavuje pro každou váhu procentuální hodnotu
+(0–100), která vyjadřuje, jak moc daný skill úloha trénuje. Pro IRT/BKT
+engine pak ve studentově profilu existuje paralelní vektor stejných vah
+s hodnotami 0–1 (úroveň znalosti studenta v daném skillu).
 
 Aktuální seznam pochází z konzultace s dr. Medkovou (verze 260601_v2):
-61 listových vah seskupených do 13 logických skupin (Vlasnosti, Typ,
-Dovednosti, SŠ, Funkce, Monotonie, Konvexnost/konkávnost, Spojitost,
-Limita, Derivace, Průběh funkce, Primitivní funkce, Určitý integrál).
-Hlavní (header) kategorie z původního excelu nejsou v seznamu — jen
-listové prvky.
+13 logických skupin (Vlasnosti, Typ, Dovednosti, SŠ, Funkce, Monotonie,
+Konvexnost/konkávnost, Spojitost, Limita, Derivace, Průběh funkce,
+Primitivní funkce, Určitý integrál).
 
-TASK_CATEGORIES — k výběru v UI selectoru kategorie úlohy. Aktuálně
-je to rovno KNOWLEDGE_WEIGHTS (každá váha může být i primární kategorií).
+V UI rozlišujeme **dvě věci**:
+
+  1) Vektor znalostí (`KNOWLEDGE_WEIGHTS`, 61) — celý mix vlastností,
+     typu, dovedností i kategorií SŠ/VŠ. Edituje se sliderami.
+
+  2) Anotace úlohy (ukládá se „bokem" pro pozdější automatické
+     předvyplnění vektoru znalostí):
+       - Kategorie (`TASK_CATEGORIES`, 45) — JEDNA primární kategorie
+         úlohy. Jen SŠ + VŠ matematika (bez vlastností/typu/dovedností).
+       - Vlastnosti (`TASK_PROPERTIES`, 9) — multi-select (checkboxy).
+       - Typ (`TASK_TYPES`, 1) — multi-select (checkboxy).
+       - Dovednosti (`TASK_SKILLS`, 6) — multi-select (checkboxy).
 
 WEIGHT_GROUPS — mapping name → group key pro barevné rozlišení v UI.
 """
@@ -166,8 +171,20 @@ GROUP_LABELS = {
     "ui":         "Určitý integrál",
 }
 
-# Kategorie úlohy (nabízeno v <select> v editoru) = celý seznam vah.
-TASK_CATEGORIES = list(KNOWLEDGE_WEIGHTS)
+# --- Anotační podmnožiny (ukládají se „bokem" do tasku, viz model.py) ---
+#
+# TASK_CATEGORIES je primární **jedinečná** kategorie (single-select); jen
+# matematické tematické skupiny (SŠ + VŠ), tedy bez Vlastností/Typu/Dovedností.
+_CATEGORY_GROUPS = {
+    "ss", "funkce", "monotonie", "konvex", "spojitost",
+    "limita", "derivace", "prubeh", "pf", "ui",
+}
+TASK_CATEGORIES = [w for w in KNOWLEDGE_WEIGHTS if weight_group(w) in _CATEGORY_GROUPS]
+
+# Multi-select checkboxy pod kategorií:
+TASK_PROPERTIES = [w for w in KNOWLEDGE_WEIGHTS if weight_group(w) == "vlasnosti"]
+TASK_TYPES      = [w for w in KNOWLEDGE_WEIGHTS if weight_group(w) == "typ"]
+TASK_SKILLS     = [w for w in KNOWLEDGE_WEIGHTS if weight_group(w) == "dovednosti"]
 
 
 # Sanity checky při importu
@@ -175,3 +192,9 @@ assert len(KNOWLEDGE_WEIGHTS) == 61, f"Očekáváno 61 vah, je {len(KNOWLEDGE_WE
 assert len(set(KNOWLEDGE_WEIGHTS)) == len(KNOWLEDGE_WEIGHTS), "Duplicitní názvy vah!"
 assert all(weight_group(w) != "default" for w in KNOWLEDGE_WEIGHTS), \
     f"Některá váha bez skupiny: {[w for w in KNOWLEDGE_WEIGHTS if weight_group(w) == 'default']}"
+assert len(TASK_CATEGORIES) == 45, f"Očekáváno 45 kategorií, je {len(TASK_CATEGORIES)}"
+assert len(TASK_PROPERTIES) == 9, f"Očekáváno 9 vlastností, je {len(TASK_PROPERTIES)}"
+assert len(TASK_TYPES) == 1, f"Očekáván 1 typ, je {len(TASK_TYPES)}"
+assert len(TASK_SKILLS) == 6, f"Očekáváno 6 dovedností, je {len(TASK_SKILLS)}"
+assert len(TASK_CATEGORIES) + len(TASK_PROPERTIES) + len(TASK_TYPES) + len(TASK_SKILLS) \
+       == len(KNOWLEDGE_WEIGHTS), "Suma anotačních podmnožin != 61"

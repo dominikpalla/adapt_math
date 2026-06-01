@@ -265,6 +265,30 @@
         .kv-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 0 0 8px 0; font-size: 11px; }
         .kv-legend .leg { display: inline-flex; align-items: center; gap: 4px; }
         .kv-legend .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+        /* Multi-select checkbox skupiny (Vlastnosti / Typ / Dovednosti) pod
+           selectem kategorie. Sdílí grp-* barvy. */
+        .tag-group { margin-top: 10px; }
+        .tag-group > .tg-head {
+            font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+            text-transform: uppercase; margin-bottom: 4px;
+        }
+        .tag-group .tg-options {
+            display: flex; flex-wrap: wrap; gap: 4px 10px;
+            background: #fafbfc; border: 1px solid var(--border);
+            border-radius: 6px; padding: 8px 10px;
+        }
+        .tag-group label.tg-opt {
+            display: inline-flex; align-items: center; gap: 5px;
+            font-size: 12.5px; cursor: pointer;
+            padding: 2px 6px; border-radius: 4px;
+            color: inherit;  /* zděděno z grp-* na rodiči */
+        }
+        .tag-group label.tg-opt:hover { background: #fff; }
+        .tag-group label.tg-opt input[type="checkbox"] {
+            margin: 0; cursor: pointer; accent-color: currentColor;
+        }
+        .tag-group label.tg-opt.checked { background: #fff7ee; font-weight: 600; }
         .kv-slider { width: 100%; cursor: pointer; }
         .kv-number {
             width: 100%; padding: 4px 6px; border: 1px solid #c8ced3; border-radius: 4px;
@@ -356,7 +380,43 @@
                         <option value="{{ cat }}" class="grp-{{ weight_groups[cat] }}">{{ cat }}</option>
                         {% endfor %}
                     </select>
-                    <p class="hint-text">Primární téma úlohy. V další fázi se podle této kategorie přednastaví výchozí distribuce vah ve znalostním vektoru (níže), kterou pak doladíš ručně.</p>
+                    <p class="hint-text">Primární téma úlohy (jen SŠ + VŠ matematika). V další fázi se podle této kategorie přednastaví výchozí distribuce vah ve znalostním vektoru (níže), kterou pak doladíš ručně.</p>
+                </div>
+
+                <div class="tag-group grp-vlasnosti">
+                    <div class="tg-head">Vlastnosti</div>
+                    <div class="tg-options" data-field="properties">
+                        {% for w in task_properties %}
+                        <label class="tg-opt">
+                            <input type="checkbox" value="{{ w }}" data-tag-field="properties">
+                            <span>{{ w.split(' - ', 1)[1] if ' - ' in w else w }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="tag-group grp-typ">
+                    <div class="tg-head">Typ</div>
+                    <div class="tg-options" data-field="task_type">
+                        {% for w in task_types %}
+                        <label class="tg-opt">
+                            <input type="checkbox" value="{{ w }}" data-tag-field="task_type">
+                            <span>{{ w.split(' - ', 1)[1] if ' - ' in w else w }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="tag-group grp-dovednosti">
+                    <div class="tg-head">Dovednosti</div>
+                    <div class="tg-options" data-field="skills">
+                        {% for w in task_skills %}
+                        <label class="tg-opt">
+                            <input type="checkbox" value="{{ w }}" data-tag-field="skills">
+                            <span>{{ w.split(' - ', 1)[1] if ' - ' in w else w }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
                 </div>
             </section>
 
@@ -554,6 +614,7 @@ function loadStateToForm() {
     document.getElementById('f-content_latex').value = state.content_latex || '';
     document.getElementById('f-cognitive_load').value = state.cognitive_load || '';
     document.getElementById('f-category').value = state.category || '';
+    loadTagFieldsToForm();
     loadKnowledgeVectorToForm();
     buildResultsEditor();
     refreshContentPreview();
@@ -576,7 +637,36 @@ function attachBindings() {
     document.getElementById('f-category').addEventListener('change', e => {
         state.category = e.target.value || null; setDirty();
     });
+    attachTagFieldBindings();
     attachKnowledgeVectorBindings();
+}
+
+/* -------- Multi-select tagy (properties / task_type / skills) ------------- */
+/* Každé pole je v state list stringů (názvy vah z KNOWLEDGE_WEIGHTS).        */
+
+function loadTagFieldsToForm() {
+    ['properties', 'task_type', 'skills'].forEach(field => {
+        const selected = new Set(state[field] || []);
+        document.querySelectorAll(`input[data-tag-field="${field}"]`).forEach(cb => {
+            const on = selected.has(cb.value);
+            cb.checked = on;
+            cb.closest('label.tg-opt').classList.toggle('checked', on);
+        });
+    });
+}
+
+function attachTagFieldBindings() {
+    document.querySelectorAll('input[data-tag-field]').forEach(cb => {
+        cb.addEventListener('change', e => {
+            const field = e.target.dataset.tagField;
+            const cur = new Set(state[field] || []);
+            if (e.target.checked) cur.add(e.target.value);
+            else cur.delete(e.target.value);
+            state[field] = Array.from(cur);
+            e.target.closest('label.tg-opt').classList.toggle('checked', e.target.checked);
+            setDirty();
+        });
+    });
 }
 
 /* -------- Vektor znalostí (knowledge_vector) ----------------------------- */

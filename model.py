@@ -62,12 +62,22 @@ class MathTask(Base):
     # Kognitivní zátěž (A–F) — typ / praktičnost úlohy, edituje expert.
     cognitive_load = Column(String, nullable=True)
 
-    # Primární kategorie úlohy (jeden řetězec ze seznamu TASK_CATEGORIES
-    # v tasks/knowledge_weights.py; podmnožina vah ~51 položek).
+    # Primární kategorie úlohy — jeden řetězec ze seznamu TASK_CATEGORIES
+    # v tasks/knowledge_weights.py (45 položek; jen SŠ + VŠ matematika,
+    # bez vlastností/typu/dovedností). Slouží k pozdější automatické
+    # generaci defaultního knowledge_vector dle kategorie.
     category = Column(String, nullable=True)
 
+    # Multi-select anotace (ukládají se „bokem" — orthogonální ke kategorii):
+    #   properties → list ze TASK_PROPERTIES (9 vlastností),
+    #   task_type  → list ze TASK_TYPES (zatím 1: Aplikační),
+    #   skills     → list ze TASK_SKILLS (6 dovedností).
+    properties = Column(JSON, nullable=True)
+    task_type = Column(JSON, nullable=True)
+    skills = Column(JSON, nullable=True)
+
     # Vektor vah znalostního grafu — dict {weight_name: int 0..100}.
-    # 67 možných vah definuje KNOWLEDGE_WEIGHTS v tasks/knowledge_weights.py.
+    # 61 možných vah definuje KNOWLEDGE_WEIGHTS v tasks/knowledge_weights.py.
     # Při řešení úlohy se přírůstek / úbytek znalosti distribuuje mezi
     # skill-komponenty v poměru těchto vah. Suma vah by se měla blížit 100 %.
     knowledge_vector = Column(JSON, nullable=True)

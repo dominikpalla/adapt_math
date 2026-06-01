@@ -24,6 +24,9 @@ from model import MathTask
 from tasks.knowledge_weights import (
     KNOWLEDGE_WEIGHTS,
     TASK_CATEGORIES,
+    TASK_PROPERTIES,
+    TASK_TYPES,
+    TASK_SKILLS,
     WEIGHT_GROUPS,
     GROUP_LABELS,
 )
@@ -88,7 +91,9 @@ def disable_cache(response):
 
 EDITABLE_FIELDS = {
     "task_id", "content_latex", "results",
-    "cognitive_load", "category", "knowledge_vector",
+    "cognitive_load", "category",
+    "properties", "task_type", "skills",
+    "knowledge_vector",
     "graph_vector",  # ponecháno pro kompatibilitu, UI ho už needituje
     "irt_difficulty", "irt_discrimination",
 }
@@ -102,6 +107,9 @@ def task_to_dict(task):
         "results": task.results,
         "cognitive_load": task.cognitive_load,
         "category": task.category,
+        "properties": task.properties or [],
+        "task_type": task.task_type or [],
+        "skills": task.skills or [],
         "knowledge_vector": task.knowledge_vector or {},
         "graph_vector": task.graph_vector,
         "irt_difficulty": task.irt_difficulty,
@@ -186,6 +194,9 @@ def tasks_list():
             weight_groups=WEIGHT_GROUPS,
             group_labels=GROUP_LABELS,
             task_categories=TASK_CATEGORIES,
+            task_properties=TASK_PROPERTIES,
+            task_types=TASK_TYPES,
+            task_skills=TASK_SKILLS,
         )
     finally:
         session.close()
@@ -210,6 +221,9 @@ def task_checker(task_id):
             total=total,
             knowledge_weights=KNOWLEDGE_WEIGHTS,
             task_categories=TASK_CATEGORIES,
+            task_properties=TASK_PROPERTIES,
+            task_types=TASK_TYPES,
+            task_skills=TASK_SKILLS,
             weight_groups=WEIGHT_GROUPS,
             group_labels=GROUP_LABELS,
         )
@@ -242,7 +256,8 @@ def api_task_save(task_id):
 
         for k, v in payload.items():
             setattr(task, k, v)
-        for k in ("results", "graph_vector"):
+        for k in ("results", "graph_vector", "knowledge_vector",
+                  "properties", "task_type", "skills"):
             if k in payload:
                 flag_modified(task, k)
 

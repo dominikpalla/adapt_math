@@ -107,7 +107,7 @@
     \textbf{Pracoviště:} & Fakulta informatiky a managementu, Univerzita Hradec Králové \\[3pt]
     \textbf{Doba řešení:} & 09/2025 -- 02/2029 \\[3pt]
     \textbf{Autor dokumentace:} & Ing.~Dominik Palla, Ph.D. \\[3pt]
-    \textbf{Verze:} & 1.0 \\[3pt]
+    \textbf{Verze:} & 1.1 \\[3pt]
     \textbf{Datum:} & \today \\
   \end{tabular}
 
@@ -220,8 +220,11 @@ Definováno v~\texttt{model.py} (SQLAlchemy ORM). Aktuálně jediná tabulka.
   \texttt{task\_id}            & String (PK) & Identifikátor stylu \texttt{cvNN\_i} (např. \texttt{cv04\_5}). \\
   \texttt{content\_latex}      & String      & Zadání úlohy v LaTeXu; KaTeX render. Pure-math (bez \texttt{\$}) se v UI automaticky obalí do \texttt{\$\$...\$\$}. \\
   \texttt{results}             & JSON        & Pole pojmenovaných výsledků (viz~\ref{sec:results}). \\
-  \texttt{category}            & String      & Primární téma úlohy (jeden řetězec z~51 \texttt{TASK\_CATEGORIES}). \\
-  \texttt{knowledge\_vector}   & JSON        & Slovník \texttt{\{name: int 0--100\}}; podíl skill-komponent pro distribuci přírůstku znalosti. Ukládají se jen non-zero hodnoty. \\
+  \texttt{category}            & String      & Primární téma úlohy --- jeden řetězec z~45 \texttt{TASK\_CATEGORIES} (jen SŠ + VŠ matematika, bez vlastností/typu/dovedností). \\
+  \texttt{properties}          & JSON        & Multi-select tagy: list ze 9 \texttt{TASK\_PROPERTIES} (Vlastnosti --- lineární, kvadratická, mocninná, \dots). \\
+  \texttt{task\_type}          & JSON        & Multi-select tagy: list z \texttt{TASK\_TYPES} (zatím 1 položka --- \emph{Aplikační}). \\
+  \texttt{skills}              & JSON        & Multi-select tagy: list ze 6 \texttt{TASK\_SKILLS} (Dovednosti --- aplikace vzorce, vytýkání, roznásobení, výpočet rovnic/nerovnic, derivování). \\
+  \texttt{knowledge\_vector}   & JSON        & Slovník \texttt{\{name: int 0--100\}}; podíl všech 61 skill-komponent pro distribuci přírůstku znalosti. Ukládají se jen non-zero hodnoty. \\
   \texttt{cognitive\_load}     & String      & Klasifikace A--F (typ / praktičnost úlohy). \\
   \texttt{graph\_vector}       & JSON        & \emph{Deprecated.} Starší tag-vektor (list stringů). Zachováno pro kompatibilitu, v~UI se needituje. \\
   \texttt{irt\_difficulty}     & Float       & IRT obtížnost ($\pm 3$). Doladí Haviger. \\
@@ -272,151 +275,181 @@ Schema jednoho prvku:
 % =============================================================================
 \section{Vektor znalostí a kategorie}
 
-\subsection{Filozofie}
+\subsection{Dvě úrovně anotace úlohy}
 
-Každá úloha trénuje různé \emph{skill-komponenty} v různém poměru. \texttt{knowledge\_vector} je slovník přiřazující každé komponentě procentuální váhu (0--100). Při řešení úlohy se přírůstek (úspěch) nebo úbytek (nesplnění) studentovy znalosti rozdělí mezi komponenty v poměru těchto vah.
+U každé úlohy rozlišujeme \textbf{dvě} ortogonální věci:
 
-Paralelní vektor existuje i ve studentově profilu --- tam ale hodnoty $\in [0, 1]$ (úroveň znalosti v dané komponentě, IRT/BKT).
+\begin{enumerate}
+  \item \textbf{Vektor znalostí} (\texttt{knowledge\_vector}, 61 vah) --- celý mix vlastností, typu, dovedností i kategorií SŠ/VŠ. Slovník přiřazující každé skill-komponentě procentuální váhu (0--100). Při řešení úlohy se přírůstek (úspěch) nebo úbytek (nesplnění) studentovy znalosti rozdělí mezi komponenty v poměru těchto vah. Paralelní vektor existuje i ve studentově profilu --- tam ale hodnoty $\in [0, 1]$ (IRT/BKT).
+  \item \textbf{Anotace úlohy} (uložená „bokem" pro pozdější automatické předvyplnění \texttt{knowledge\_vector}):
+  \begin{itemize}
+    \item \texttt{category} --- \emph{jedna} primární kategorie ze 45 (jen SŠ + VŠ matematika).
+    \item \texttt{properties} --- multi-select 9 vlastností.
+    \item \texttt{task\_type} --- multi-select typů (zatím 1).
+    \item \texttt{skills} --- multi-select 6 dovedností.
+  \end{itemize}
+  Anotace nemá žádný runtime efekt v IRT/BKT --- slouží jen k tomu, aby z ní engine v další fázi vygeneroval výchozí distribuci vah v knowledge\_vectoru, kterou expert ručně doladí.
+\end{enumerate}
 
-\subsection{KNOWLEDGE\_WEIGHTS (67 vah)}
+\subsection{KNOWLEDGE\_WEIGHTS (61 vah, verze 260601\_v2)}
 
-Definováno v~\texttt{tasks/knowledge\_weights.py}. Rozděleno do dvou kategorií:
+Definováno v~\texttt{tasks/knowledge\_weights.py}. Seznam byl revidován dr.~Medkovou (verze \texttt{260601\_v2}) a obsahuje pouze \emph{listové} váhy --- hlavní (header) kategorie z původního excelu nejsou v seznamu. Všechny váhy jsou seskupené do 13 \emph{skupin} pro účely barevného rozlišení v UI a budoucí paušální distribuce.
 
-\paragraph{(A) Algebraické a aritmetické skill-komponenty (16 vah).}
-\textit{lineární, kvadratická, mocninná, log, exponenciální, goniometrická, Absolutní hodnota, lomená lineární, zlomky, Aplikační, vzorec, vytýkání--krácení, Roznásobení závorky --- distributivní zákon, výpočet rovnic, výpočet nerovnic, Derivování.}
+\paragraph{Skupiny vah (13).} Každá váha nese prefix tvaru \texttt{Skupina - Název} (např. \texttt{"Limita - LVL (krácení)"}). Položky bez prefixu (\emph{Konvexnost/konkávnost}, \emph{Průběh funkce}) mají vlastní samostatnou skupinu.
 
-\paragraph{(B) Kategorie úloh (51 vah).}
-Začínají od \emph{Algebraické výrazy} a pokračují přes \emph{Elementární funkce, Rovnice, Nerovnice, Soustavy rovnic, Funkce, Definiční obor, Aritmetika funkcí, Skládání, Sudá/lichá, Inverzní funkce, Tečna, Asymptota, Monotónie, Absolutní extrémy, Konvexnost, Spojitost, Bolzanova věta, Limita} (a její podtypy VOAL, LVL, S~odmocninou, Vytknutí nejvyšší mocniny, Jednostranné, Typová, L'Hospital), \emph{Derivace} (a její podtypy Sčítání, Součin, Podíl, Složená funkce, Diferenciál, Taylor, vyšších řádů, Průběh funkce), \emph{Primitivní funkce} (Sčítání, Per partes, 1./2.~věta o sub, Parciální zlomky), \emph{Určitý integrál} (UI variants), \emph{Nevlastní integrál, Obsah plochy.}
-
-\paragraph{Duplicitní názvy.} \emph{Sčítání} se přirozeně objevuje jako podtyp Derivace i Primitivní funkce. Rozlišujeme prefixem: \texttt{"Derivace --- Sčítání"} vs \texttt{"Prim. funkce --- Sčítání"}. Varianty pro určitý integrál nesou prefix \texttt{"UI - "} (např. \emph{UI - Per partes}).
-
-\subsection{TASK\_CATEGORIES (51 kategorií)}
-
-Subset \texttt{KNOWLEDGE\_WEIGHTS} začínající od indexu 16 (\emph{Algebraické výrazy}). Tato množina se nabízí v UI editoru jako \texttt{<select>} pro pole \emph{Kategorie úlohy}.
-
-V další fázi (zatím \textbf{není implementováno}) bude každá kategorie mít defaultní distribuci vah, která se automaticky aplikuje na \texttt{knowledge\_vector} při výběru kategorie, a~expert ji pak doladí na úrovni jednotlivé úlohy.
-
-\subsection{Popis jednotlivých vah}\label{sec:vahy-popis}
-
-\subsubsection{(A) Algebraické a aritmetické skill-komponenty}
-
-Těchto 16 vah pokrývá \emph{nízkoúrovňové} matematické dovednosti, které
-jsou typicky vyžadovány napříč všemi úlohami bez ohledu na primární téma.
-Příklad: úloha „Najděte derivaci $y = \sqrt{x^2 + 3x + 1}$" se opírá
-o~komponenty \emph{mocninná}, \emph{vytýkání}, \emph{vzorec} a~\emph{Derivování},
-i~když je primárně kategorizována jako \emph{Derivace --- Složená funkce}.
-
-\begin{longtable}{p{5cm}p{10cm}}
+\begin{longtable}{p{4cm}rp{9.5cm}}
   \toprule
-  \textbf{Skill-komponenta} & \textbf{Popis} \\
+  \textbf{Skupina} & \textbf{\#} & \textbf{Barva v UI (CSS hex)} \\
   \midrule
   \endfirsthead
   \toprule
-  \textbf{Skill-komponenta} & \textbf{Popis} \\
+  \textbf{Skupina} & \textbf{\#} & \textbf{Barva v UI (CSS hex)} \\
   \midrule
   \endhead
-
-  lineární & Manipulace s~lineárními výrazy $ax + b$, lineárními funkcemi a~jejich vlastnostmi. \\
-  kvadratická & Práce s~kvadratickými výrazy $ax^2 + bx + c$, hledání kořenů, doplnění na čtverec, vrchol paraboly. \\
-  mocninná & Mocninné funkce $x^n$ (vč. záporných a~zlomkových exponentů), pravidla pro mocniny. \\
-  log & Logaritmické funkce a~jejich vlastnosti ($\log_a x$, $\ln x$, vzorce pro součet, podíl a~mocninu argumentu). \\
-  exponenciální & Exponenciální funkce $a^x,\ e^x$, vzorce pro součin a~podíl, exp.~rovnice. \\
-  goniometrická & $\sin, \cos, \mathrm{tg}, \mathrm{cotg}$, jejich vzorce (součtové, dvojnásobný úhel, kvadratura), inverzní gonio funkce. \\
-  Absolutní hodnota & Manipulace s~$|x|$, rozklad podle znaménka, řešení rovnic a~nerovnic s~abs. hodnotou. \\
-  lomená lineární & Funkce typu $\frac{ax+b}{cx+d}$, jejich průběh, asymptoty, def.~obor. \\
-  zlomky & Operace se zlomky --- společný jmenovatel, krácení, sčítání, řetězené zlomky. \\
-  Aplikační & Slovní úlohy, modelace reálné situace matematickými prostředky (optimalizace, geometrie, fyzika, ekonomika). \\
-  vzorec & Aplikace klasických vzorců typu $(a \pm b)^2$, $a^2 - b^2$, $(a \pm b)^3$, kosinová věta apod. \\
-  vytýkání, krácení & Algebraické zjednodušování --- vytýkání společného činitele, krácení zlomků, faktorizace. \\
-  Roznásobení závorky --- distributivní zákon & Rozklad $a(b + c) = ab + ac$, roznásobení dvojčlenu/trojčlenu, polynomu. \\
-  výpočet rovnic & Řešení lineárních, kvadratických a~vyšších rovnic, manipulace s~rovnicemi (převody, substituce). \\
-  výpočet nerovnic & Řešení nerovnic, znaménková analýza, kombinace více nerovnic. \\
-  Derivování & Aplikace derivačních pravidel (součet, součin, podíl, řetízkové) --- jako mechanické dovednost. \\
+  Vlastnosti              & 9 & zelená \texttt{\#2e7d32} \\
+  Typ                     & 1 & tmavě oranžová \texttt{\#ef6c00} \\
+  Dovednosti              & 6 & červenooranžová \texttt{\#d84315} \\
+  SŠ                      & 5 & olivově žlutá \texttt{\#8d6e00} \\
+  Funkce                  & 7 & modrá \texttt{\#1565c0} \\
+  Monotonie               & 2 & fialová \texttt{\#6a1b9a} \\
+  Konvexnost/konkávnost   & 1 & břidlicová \texttt{\#455a64} \\
+  Spojitost               & 2 & tyrkysová \texttt{\#00695c} \\
+  Limita                  & 7 & růžová \texttt{\#c2185b} \\
+  Derivace                & 7 & tmavě modrá \texttt{\#283593} \\
+  Průběh funkce           & 1 & uhlově šedá \texttt{\#424242} \\
+  Primitivní funkce       & 5 & tmavě červená \texttt{\#b71c1c} \\
+  Určitý integrál         & 8 & hnědá \texttt{\#4e342e} \\
+  \midrule
+  \textbf{Celkem}         & \textbf{61} & \\
   \bottomrule
 \end{longtable}
 
-\subsubsection{(B) Kategorie úloh --- vyšší tematické okruhy}
+Barvy odpovídají třídám \texttt{.grp-*} v \texttt{templates/task\_checker.html} a \texttt{templates/tasks\_list.html}. Stejné barvy se používají třikrát:
+\begin{enumerate}
+  \item v~\textbf{textu labelu} každého slideru ve „Vektoru znalostí" v editoru,
+  \item v~\textbf{textu \texttt{<option>}} v~select boxu \emph{Kategorie úlohy},
+  \item v~\textbf{rámu \texttt{cat-chip}} ve sloupci \emph{Kategorie} v seznamu úloh.
+\end{enumerate}
 
-Zbývajících 51 vah odpovídá \emph{kategoriím úloh} v selektoru editoru.
-Jsou to nadřazená témata, do nichž úloha primárně spadá. V tabulce níže
-je vždy ke kategorii uveden i typický příklad zadání z~daného okruhu.
+\subsection{TASK\_CATEGORIES, TASK\_PROPERTIES, TASK\_TYPES, TASK\_SKILLS}
 
-\begin{longtable}{p{4.6cm}p{10.4cm}}
+\texttt{KNOWLEDGE\_WEIGHTS} (61) je v \texttt{tasks/knowledge\_weights.py} rozdělen do čtyř disjunktních anotačních podmnožin:
+
+\begin{itemize}
+  \item \texttt{TASK\_CATEGORIES} (45) --- SŠ + Funkce + Monotonie + Konvexnost + Spojitost + Limita + Derivace + Průběh funkce + Primitivní funkce + Určitý integrál. Použito jako \emph{single-select} v UI: jedna primární kategorie úlohy.
+  \item \texttt{TASK\_PROPERTIES} (9) --- skupina \emph{Vlastnosti}. \emph{Multi-select} (checkboxy).
+  \item \texttt{TASK\_TYPES} (1) --- skupina \emph{Typ} (zatím jen \emph{Aplikační}). \emph{Multi-select}.
+  \item \texttt{TASK\_SKILLS} (6) --- skupina \emph{Dovednosti}. \emph{Multi-select}.
+\end{itemize}
+
+Součet $45 + 9 + 1 + 6 = 61$ pokrývá celý \texttt{KNOWLEDGE\_WEIGHTS} (sanity-check při importu modulu).
+
+V další fázi (zatím \textbf{není implementováno}) bude každá kategorie + kombinace tagů mít defaultní distribuci vah, která se automaticky aplikuje na \texttt{knowledge\_vector} při anotaci úlohy, a~expert ji pak doladí ručně.
+
+\subsection{Kompletní seznam vah}\label{sec:vahy-popis}
+
+Plný seznam 61 vah ve verzi \texttt{260601\_v2}, seskupený dle prefixu. Pořadí v tabulce odpovídá pořadí ve zdrojovém kódu i v UI.
+
+\begin{longtable}{p{1cm}p{6cm}p{8.5cm}}
   \toprule
-  \textbf{Kategorie} & \textbf{Popis} \\
+  \textbf{\#} & \textbf{Název} & \textbf{Stručná charakteristika} \\
   \midrule
   \endfirsthead
   \toprule
-  \textbf{Kategorie} & \textbf{Popis} \\
+  \textbf{\#} & \textbf{Název} & \textbf{Stručná charakteristika} \\
   \midrule
   \endhead
 
-  \multicolumn{2}{l}{\textit{Předmatematické / přípravné}} \\[2pt]
-  Algebraické výrazy & Úpravy, rovnost, zjednodušování polynomiálních / racionálních výrazů. \\
-  Elementární funkce & Vlastnosti základních funkcí (poly, exp, log, gonio, mocninná) bez derivace. \\
-  Rovnice & Řešení rovnic včetně exp., log., goniometrických. \\
-  Nerovnice & Řešení nerovnic s~jednou neznámou; logaritmické, exponenciální. \\
-  Soustavy rovnic --- dosazovací a sčítací metoda & Lineární soustavy 2--3 neznámých. \\[4pt]
+  \multicolumn{3}{l}{\textit{Vlastnosti (9)}} \\[2pt]
+   1 & Vlasnosti - Lineární                    & Manipulace s~lineárními výrazy a funkcemi $ax + b$. \\
+   2 & Vlasnosti - Kvadratická                 & Kvadratické výrazy $ax^2+bx+c$, kořeny, vrchol. \\
+   3 & Vlasnosti - Mocninná                    & Mocninné funkce $x^n$, pravidla pro mocniny. \\
+   4 & Vlasnosti - Logaritmická                & Logaritmy a jejich vlastnosti. \\
+   5 & Vlasnosti - Exponenciální               & Exponenciální funkce $a^x, e^x$, vzorce. \\
+   6 & Vlastnosti - Goniometrická              & $\sin, \cos, \mathrm{tg}, \mathrm{cotg}$ a jejich vzorce. \\
+   7 & Vlasnosti - Absolutní hodnota           & $|x|$, rozklad podle znaménka. \\
+   8 & Vlasnosti - Lomená lineární             & Funkce $\frac{ax+b}{cx+d}$. \\
+   9 & Vlasnosti - Zlomky                      & Operace se zlomky, společný jmenovatel, krácení. \\[4pt]
 
-  \multicolumn{2}{l}{\textit{Funkce a~jejich vlastnosti}} \\[2pt]
-  Funkce & Pojem funkce, graf, vlastnosti, ekvivalence předpisů. \\
-  Definiční obor & Stanovení $D_f$ (odmocniny, jmenovatele, log argumenty, $\arcsin$/$\arccos$). \\
-  Aritmetika funkcí & Operace $f+g$, $f \cdot g$, $f/g$ a~jejich def.~obory. \\
-  Skládání / rozkládání funkcí & $f \circ g$, určení vnitřní/vnější funkce, iterace. \\
-  Sudá / lichá & Symetrie funkce vzhledem k~ose $y$ resp.~k počátku. \\
-  Inverzní funkce & Stanovení $f^{-1}$, definiční obor a~obor hodnot. \\
-  Tečna ke grafu & Rovnice tečny / normály v~daném bodě; tečna rovnoběžná či kolmá k~zadané přímce. \\
-  Asymptota & Stanovení vertikálních, horizontálních a~šikmých asymptot. \\[4pt]
+  \multicolumn{3}{l}{\textit{Typ (1)}} \\[2pt]
+  10 & Typ - Aplikační                         & Slovní / aplikační úlohy, modelace reálné situace. \\[4pt]
 
-  \multicolumn{2}{l}{\textit{Vyšetřování průběhu}} \\[2pt]
-  Monotónie, Určování Extrémů & Intervaly růstu/poklesu z~$f'$, klasifikace stacionárních bodů. \\
-  Absolutní extrémy na intervalu & Globální maximum / minimum na uzavřeném intervalu pomocí věty o~globálním extrému. \\
-  Určování lokálních extrémů & Lokální max/min z~první (a druhé) derivace. \\
-  Konvexnost / konkávnost & Intervaly konvexity, konkávity z~$f''$, inflexní body. \\
-  Spojitost & Spojitost v~bodě, na intervalu; doplnění funkční hodnoty; nalezení parametrů. \\
-  Bolzanova věta & Existence kořene rovnice v~uzavřeném intervalu na základě změny znaménka. \\[4pt]
+  \multicolumn{3}{l}{\textit{Dovednosti (6)}} \\[2pt]
+  11 & Dovednosti - Aplikace vzorce            & Klasické vzorce $(a\pm b)^2, a^2-b^2$, kosinová věta atd. \\
+  12 & Dovednosti - Vytýkání, krácení          & Algebraické zjednodušování, faktorizace. \\
+  13 & Dovednosti - Roznásobení závorky        & Distributivní zákon $a(b+c)=ab+ac$. \\
+  14 & Dovednosti - Výpočet rovnic             & Manipulace s~rovnicemi (převody, substituce). \\
+  15 & Dovednosti - Výpočet nerovnic           & Řešení nerovnic, znaménková analýza. \\
+  16 & Dovednosti - Derivování                 & Aplikace derivačních pravidel jako mechanická dovednost. \\[4pt]
 
-  \multicolumn{2}{l}{\textit{Limita funkce}} \\[2pt]
-  Limita & Obecná kategorie pro limitní výpočty (zastřešující). \\
-  VOAL (dosazení) & Limita pomocí věty o~aritmetice limit --- prosté dosazení do spojité funkce. \\
-  LVL (krácení) & Limita typu $0/0$ řešená krácením společného činitele (rozklad polynomu). \\
-  S odmocninou & Limita typu $0/0$ řešená rozšířením odmocninou (sdruženým výrazem). \\
-  Vytknutí nejvyšší mocniny & Limita v~$\pm\infty$ --- typ $\infty/\infty$, vytknutí dominantního členu. \\
-  Jednostranné limity & $\lim_{x \to a^\pm}$, vyšetření z~obou stran, neexistence dvoustranné limity. \\
-  Typová limita & Tabulkové („typové") limity --- $\frac{\sin x}{x}$, $\frac{e^x-1}{x}$, $(1+\tfrac{1}{x})^x$ atd. \\
-  Lhopitalovo pravidlo & L'Hospitalovo pravidlo pro neurčité výrazy $0/0$ a~$\infty/\infty$ a~jejich úpravy. \\[4pt]
+  \multicolumn{3}{l}{\textit{SŠ (5)}} \\[2pt]
+  17 & SŠ - Algebraické výrazy                 & Úpravy, zjednodušování polynomiálních / racionálních výrazů. \\
+  18 & SŠ - Elementární funkce                 & Vlastnosti základních funkcí bez derivace. \\
+  19 & SŠ - Rovnice                            & Řešení rovnic vč. exp., log., goniometrických. \\
+  20 & SŠ - Nerovnice                          & Řešení nerovnic s~jednou neznámou. \\
+  21 & SŠ - Soustavy rovnic                    & Lineární soustavy 2--3 neznámých (dosazovací / sčítací). \\[4pt]
 
-  \multicolumn{2}{l}{\textit{Derivace}} \\[2pt]
-  Derivace & Obecná kategorie pro derivační počet (zastřešující). \\
-  Derivace --- Sčítání & Pravidlo $(f + g)' = f' + g'$. \\
-  Součin & Pravidlo $(fg)' = f'g + fg'$. \\
-  Podíl & Pravidlo $\left(\tfrac{f}{g}\right)' = \tfrac{f'g - fg'}{g^2}$. \\
-  Složená funkce & Řetízkové pravidlo $(f \circ g)' = f'(g) \cdot g'$. \\
-  Diferenciál & $df(x, h) = f'(x) \cdot h$; aproximace, odhady chyb měření. \\
-  Taylorův polynom & Taylorův / Maclaurinův polynom v~okolí bodu (řád $n$). \\
-  Derivace vyšších řádů & $f^{(n)}$ a~jejich výpočet, formulace závěrů (vyšetření extrémů). \\
-  Průběh funkce & Komplexní vyšetření průběhu (D, parita, monotonie, extrémy, konvexita, asymptoty, graf). \\[4pt]
+  \multicolumn{3}{l}{\textit{Funkce (7)}} \\[2pt]
+  22 & Funkce - Definiční obor                 & Stanovení $D_f$ (odmocniny, jmenovatele, log, $\arcsin$). \\
+  23 & Funkce - Aritmetika                     & Operace $f+g, f\cdot g, f/g$ a jejich def.~obory. \\
+  24 & Funkce - Skládání/rozkládání            & $f \circ g$, určení vnitřní / vnější funkce, iterace. \\
+  25 & Funkce - Sudá/lichá                     & Symetrie funkce vzhledem k~ose $y$ resp.~k počátku. \\
+  26 & Funkce - Inverzní funkce                & Stanovení $f^{-1}$, def.~obor a obor hodnot. \\
+  27 & Funkce - Tečna ke grafu                 & Rovnice tečny / normály v daném bodě. \\
+  28 & Funkce - Asymptota                      & Vertikální, horizontální a šikmé asymptoty. \\[4pt]
 
-  \multicolumn{2}{l}{\textit{Integrální počet}} \\[2pt]
-  Primitivní funkce & Obecná kategorie pro neurčitý integrál (zastřešující). \\
-  Prim.~funkce --- Sčítání & Linearita integrálu $\int (\alpha f + \beta g) = \alpha \int f + \beta \int g$. \\
-  Per partes & Metoda per-partes $\int u \, dv = uv - \int v \, du$ pro neurčitý integrál. \\
-  1.\,věta o sub & První věta o~substituci $\int f(g(x)) g'(x)\, dx = \int f(t)\, dt$ ($t = g(x)$). \\
-  2.\,věta o sub & Druhá věta o~substituci --- substituce $x = \varphi(t)$ (typicky s odmocninou nebo exp.). \\
-  Parciální zlomky & Rozklad racionální funkce na parciální zlomky, integrace. \\[4pt]
+  \multicolumn{3}{l}{\textit{Monotonie (2)}} \\[2pt]
+  29 & Monotonie - Absolutní extrémy na intervalu & Globální max/min na uzavřeném intervalu. \\
+  30 & Monotonie - Určování lokálních extrémů  & Lokální max/min z první (a druhé) derivace. \\[4pt]
 
-  \multicolumn{2}{l}{\textit{Určitý integrál a~aplikace}} \\[2pt]
-  Určitý integrál & Obecná kategorie pro Riemannův určitý integrál (zastřešující). \\
-  UI - Sčítání & Linearita určitého integrálu --- $\int_a^b (\alpha f + \beta g) = \alpha \int_a^b f + \beta \int_a^b g$. \\
-  Roztrhnutí integrálu na dva & $\int_a^c f = \int_a^b f + \int_b^c f$ pro $a < b < c$. \\
-  UI - Per partes & Per-partes pro určitý integrál (s hraničními hodnotami). \\
-  UI - 1.\,věta o sub & První věta o~substituci pro určitý integrál (s úpravou mezí). \\
-  UI - 2.\,věta o sub & Druhá věta o~substituci pro určitý integrál (s úpravou mezí). \\
-  UI - Parciální zlomky & Aplikace parciálních zlomků v~určitém integrálu. \\
-  Nevlastní integrál & Integrály s~nekonečnými mezemi nebo s~funkcí neomezenou v~bodě intervalu. \\
-  Obsah plochy & Geometrická aplikace --- výpočet obsahu rovinné oblasti ohraničené grafy funkcí. \\
+  \multicolumn{3}{l}{\textit{Konvexnost/konkávnost (1)}} \\[2pt]
+  31 & Konvexnost/konkávnost                   & Intervaly konvexity, konkávity z~$f''$, inflexní body. \\[4pt]
+
+  \multicolumn{3}{l}{\textit{Spojitost (2)}} \\[2pt]
+  32 & Spojitost - Spojitost                   & Spojitost v~bodě, na intervalu; dodefinování. \\
+  33 & Spojitost - Bolzanova věta              & Existence kořene v~uzavřeném intervalu. \\[4pt]
+
+  \multicolumn{3}{l}{\textit{Limita (7)}} \\[2pt]
+  34 & Limita - VOAL (dosazení)                & Věta o~aritmetice limit --- dosazení do spojité funkce. \\
+  35 & Limita - LVL (krácení)                  & Typ $0/0$ řešený krácením společného činitele. \\
+  36 & Limita - S odmocninou                   & Typ $0/0$ řešený rozšířením odmocninou. \\
+  37 & Limita - Vytknutí nejvyšší mocniny      & Typ $\infty/\infty$ v~$\pm\infty$. \\
+  38 & Limita - Jednostranné limity            & $\lim_{x \to a^\pm}$, neexistence dvoustranné limity. \\
+  39 & Limita - Typová limita                  & Tabulkové limity ($\sin x/x$, $(e^x-1)/x$, …). \\
+  40 & Limita - Lhopitalovo pravidlo           & L'Hospitalovo pravidlo pro $0/0$ a $\infty/\infty$. \\[4pt]
+
+  \multicolumn{3}{l}{\textit{Derivace (7)}} \\[2pt]
+  41 & Derivace - Sčítání                      & Pravidlo $(f+g)' = f'+g'$. \\
+  42 & Derivace - Součin                       & Pravidlo $(fg)' = f'g + fg'$. \\
+  43 & Derivace - Podíl                        & Pravidlo $(f/g)' = (f'g-fg')/g^2$. \\
+  44 & Derivace - Složená funkce               & Řetízkové pravidlo $(f \circ g)' = f'(g) \cdot g'$. \\
+  45 & Derivace - Diferenciál                  & $df(x,h) = f'(x)\cdot h$; aproximace, odhady chyb. \\
+  46 & Derivace - Taylorův polynom             & Taylorův / Maclaurinův polynom řádu $n$. \\
+  47 & Derivace - Vyšší řády                   & $f^{(n)}$ a jejich výpočet. \\[4pt]
+
+  \multicolumn{3}{l}{\textit{Průběh funkce (1)}} \\[2pt]
+  48 & Průběh funkce                           & Komplexní vyšetření průběhu (D, parita, monotonie, …). \\[4pt]
+
+  \multicolumn{3}{l}{\textit{Primitivní funkce (5)}} \\[2pt]
+  49 & Primitivní funkce - Sčítání             & Linearita integrálu. \\
+  50 & Primitivní funkce - Per partes          & $\int u\, dv = uv - \int v\, du$ pro neurčitý integrál. \\
+  51 & Primitivní funkce - 1.věta o subustituci & $\int f(g(x)) g'(x)\, dx = \int f(t)\, dt$. \\
+  52 & Primitivní funkce - 2.věta o substituci & Substituce $x = \varphi(t)$ (typicky s~odmocninou nebo exp.). \\
+  53 & Primitivní funkce - Parciální zlomky    & Rozklad racionální funkce, integrace. \\[4pt]
+
+  \multicolumn{3}{l}{\textit{Určitý integrál (8)}} \\[2pt]
+  54 & Určitý integrál - Sčítání               & Linearita určitého integrálu. \\
+  55 & Určitý integrál - Aditivita             & $\int_a^c f = \int_a^b f + \int_b^c f$ pro $a<b<c$. \\
+  56 & Určitý integrál - Per partes            & Per partes pro určitý integrál (s mezemi). \\
+  57 & Určitý integrál - 1.věta o substituci   & První věta s úpravou mezí. \\
+  58 & Určitý integrál - 2.věta o substituci   & Druhá věta s úpravou mezí. \\
+  59 & Určitý integrál - Parciální zlomky      & Parciální zlomky v určitém integrálu. \\
+  60 & Určitý integrál - Nevlastní             & Integrály s~nekonečnými mezemi nebo neomezenou funkcí. \\
+  61 & Určitý integrál - Obsah plochy          & Výpočet obsahu rovinné oblasti ohraničené grafy funkcí. \\
   \bottomrule
 \end{longtable}
+
+\paragraph{Pozn. k drobným typografickým odchylkám.} V seznamu se opakovaně objevuje „Vlasnosti" (1×~„Vlastnosti" pro Goniometrickou) a „subustituci" místo „substituci" --- ponecháno přesně dle excelu dr.~Medkové, ať se interní názvy nerozcházejí mezi zdroji.
 
 % =============================================================================
 \section{Webové UI: Task Checker}
@@ -427,13 +460,36 @@ je vždy ke kategorii uveden i typický příklad zadání z~daného okruhu.
   \toprule
   \textbf{Metoda} & \textbf{Cesta} & \textbf{Účel} \\
   \midrule
-  \texttt{GET}    & \texttt{/}                & Redirect na první úlohu v abecedním pořadí. \\
-  \texttt{GET}    & \texttt{/tasks}           & Tabulka všech úloh (filtr podle tématu, fulltext). \\
-  \texttt{GET}    & \texttt{/tasks/<id>}      & Detail úlohy --- editor + sandbox. \\
-  \texttt{POST}   & \texttt{/api/tasks/<id>}  & Uložit změny (JSON body s editable poli). \\
-  \texttt{DELETE} & \texttt{/api/tasks/<id>}  & Smazat úlohu. \\
+  \texttt{GET / POST} & \texttt{/login}           & Formulář pro zadání hesla (session-based ochrana). \\
+  \texttt{GET / POST} & \texttt{/logout}          & Smaže session, redirect na \texttt{/login}. \\
+  \texttt{GET}        & \texttt{/}                & Redirect na první úlohu (vyžaduje login). \\
+  \texttt{GET}        & \texttt{/tasks}           & Tabulka všech úloh (filtr podle kategorie, fulltext). \\
+  \texttt{GET}        & \texttt{/tasks/<id>}      & Detail úlohy --- editor + sandbox. \\
+  \texttt{POST}       & \texttt{/api/tasks/<id>}  & Uložit změny (JSON body s editable poli). \\
+  \texttt{DELETE}     & \texttt{/api/tasks/<id>}  & Smazat úlohu. \\
   \bottomrule
 \end{tabular}
+
+\subsection{Přihlášení a session}
+
+Všechny views kromě \texttt{/login} jsou chráněné dekorátorem \texttt{@require\_login}. Při neautentizovaném přístupu se uživatel přesměruje na \texttt{/login} s parametrem \texttt{next} obsahujícím plnou URL původního požadavku (včetně reverse-proxy prefixu \texttt{/adaptmath/}). Po zadání správného hesla se vytvoří podepsaná session cookie a uživatel se vrátí na původní stránku.
+
+Konfigurace přes env vars (systemd unit):
+\begin{itemize}
+  \item \texttt{APP\_PASSWORD} --- heslo pro celou aplikaci (jeden globální účet pro tým),
+  \item \texttt{FLASK\_SECRET\_KEY} --- 64-znakový hex pro podepisování cookies,
+  \item \texttt{APP\_SESSION\_DAYS} --- platnost session v dnech (default 30).
+\end{itemize}
+
+Login screen má orange-accent design (logo „A", brand \emph{AdaptMath}, autofocus na input). V editoru je v hlavičce stránky odkaz \emph{Odhlásit}.
+
+\subsection{Seznam úloh (\texttt{/tasks})}
+
+Tabulka 415 úloh se sloupci: \emph{Task ID}, \emph{Náhled zadání} (KaTeX), \emph{Typy výsledků} (badges), \emph{Kategorie}, \emph{Kognitivní zátěž}.
+
+\paragraph{Sloupec Kategorie.} Hodnota \texttt{t.category} z~DB se zobrazí jako \emph{cat-chip} (zaoblený rámec) v~barvě CSS třídy \texttt{.grp-XYZ} odpovídající skupině váhy. Pokud úloha kategorii ještě nemá nastavenou (typický stav po seedu), zobrazuje se světle šedý šrafovaný chip „--- nepřiřazeno ---".
+
+\paragraph{Filtr.} Dropdown nad tabulkou nabízí všech 61 kategorií (text option barevně podle skupiny) plus speciální položku „--- bez kategorie ---" pro rychlou identifikaci úloh, které tým ještě nezpracoval. Fulltext input hledá v \texttt{task\_id}, hodnotě kategorie i v \texttt{content\_latex}.
 
 \subsection{Editor úlohy (\texttt{/tasks/<id>})}
 
@@ -448,16 +504,25 @@ UI je rozděleno do dvou sloupců.
 
 \paragraph{Pravý sloupec (editor).}
 \begin{itemize}
-  \item Task ID, kognitivní zátěž (select A--F), kategorie úlohy (select 51 položek).
+  \item Task ID, kognitivní zátěž (select A--F).
+  \item \emph{Kategorie úlohy} --- single-select 45 položek (jen SŠ + VŠ matematika), text barevně rozlišený podle příslušné skupiny.
+  \item Pod selektem 3 \emph{multi-select} sekce s checkboxy --- jsou barevně sladěné se skupinou:
+  \begin{itemize}
+    \item \emph{Vlastnosti} (9 položek, zelená),
+    \item \emph{Typ} (zatím 1 položka --- Aplikační, krémová),
+    \item \emph{Dovednosti} (6 položek, oranžová).
+  \end{itemize}
+  Hodnoty se ukládají do JSON sloupců \texttt{properties}, \texttt{task\_type}, \texttt{skills}.
   \item Zadání v LaTeXu (textarea, full-width).
   \item Editor výsledků --- karta pro každý prvek pole \texttt{results}; lze přidat/odebrat; pro každý se mění \texttt{key}, \texttt{label\_latex}, typ (select), a~\texttt{expected} (specifické pro typ --- MathLive pole, číselný input, MC options, textarea).
 \end{itemize}
 
-\paragraph{Pod editorem (full-width).}
+\paragraph{Pod editorem (full-width) --- Vektor znalostí.}
 \begin{itemize}
-  \item \textbf{Vektor znalostí} --- plochý seznam 67 vah ve 2 sloupcích; každý řádek má label, range slider (0--100, krok 1), spojený number input, znak \texttt{\%}.
+  \item Plochý seznam \textbf{61 vah} ve 2 sloupcích; každý řádek má label v barvě skupiny, range slider (0--100, krok 1), spojený number input a znak \texttt{\%}.
+  \item Nad gridem je \textbf{legenda} 13 skupin --- každá s barevnou tečkou a jménem skupiny.
   \item Filtr textový („lim", „derivace") + checkbox \emph{jen nenulové}.
-  \item Sumarizace v hlavičce sekce: aktuální součet všech vah, počet nenulových z 67, tlačítko \emph{Vynulovat vše}.
+  \item Sumarizace v hlavičce sekce: aktuální součet všech vah, počet nenulových z 61, tlačítko \emph{Vynulovat vše}.
   \item Slider $\leftrightarrow$ number input jsou dvousměrně synchronizované; aktivní řádky (váha $>0$) jsou zvýrazněné a uložené jako jediné v JSON (chybějící klíč $=$ 0).
 \end{itemize}
 
@@ -532,33 +597,48 @@ Skripta \emph{Základy matematiky 1} (P.~Pražák, P.~Bauer; KIKM FIM UHK). Zdro
 
 \begin{itemize}
   \item Python 3.10+
-  \item Docker (pro PostgreSQL)
-  \item Python balíčky --- viz \texttt{.venv}: \texttt{flask}, \texttt{sqlalchemy}, \texttt{psycopg2-binary}, \texttt{google-generativeai} (volitelné, pro LLM nápovědu)
+  \item Docker (pro PostgreSQL) --- nebo systémový PostgreSQL 14+
+  \item Python balíčky: \texttt{flask}, \texttt{sqlalchemy}, \texttt{psycopg2-binary}
 \end{itemize}
 
 \subsection{První spuštění}
 
 \begin{lstlisting}[style=shell]
-# 1) klon repozitáře
+# 1) klon repozitare
 git clone https://github.com/dominikpalla/adapt_math.git
 cd adapt_math
 
 # 2) Python venv + dependencies
 python3 -m venv .venv
 source .venv/bin/activate
-pip install flask sqlalchemy psycopg2-binary google-generativeai python-dotenv
+pip install flask sqlalchemy psycopg2-binary
 
-# 3) Spustit PostgreSQL kontejner
+# 3) Spustit PostgreSQL kontejner (lokalne)
 docker compose up -d
 
-# 4) Naplnit DB (drop & recreate + insert 415 úloh)
+# 4) Naplnit DB (drop & recreate + insert 415 uloh)
 python seed_db.py
 
 # 5) Spustit Flask
 python app.py
 \end{lstlisting}
 
-Aplikace běží na \url{http://127.0.0.1:5000}.
+Aplikace běží na \url{http://127.0.0.1:5000}. Přihlašovací heslo je default \texttt{kikmjenejlepsi} (env \texttt{APP\_PASSWORD}).
+
+\subsection{Konfigurace přes env vars}
+
+Pro produkci preferujeme všechny citlivé hodnoty mimo zdrojový kód:
+
+\begin{tabular}{ll}
+  \toprule
+  \textbf{Env var} & \textbf{Účel} \\
+  \midrule
+  \texttt{DATABASE\_URL}       & Připojení k PostgreSQL (\texttt{postgresql://...}). \\
+  \texttt{APP\_PASSWORD}       & Heslo pro Flask login screen. \\
+  \texttt{FLASK\_SECRET\_KEY}  & Hex string pro podepisování session cookies. \\
+  \texttt{APP\_SESSION\_DAYS}  & Doba platnosti session (default 30). \\
+  \bottomrule
+\end{tabular}
 
 \subsection{Opětovné nasazení po změně schématu}
 
@@ -567,14 +647,93 @@ Jelikož v~aktuální fázi nepoužíváme migrace (Alembic), po každé změně
 \textbf{Pozor:} drop \& recreate ztrácí veškerá data nasazená přes UI (ručně upravené kategorie, vektory znalostí). Pro produkci je nutné zavést migrace.
 
 % =============================================================================
+\section{Nasazení do produkce (UHK)}
+
+Aplikace je nasazena na školní VM na adrese:
+\[
+\boxed{\texttt{https://moodlefim.uhk.cz/adaptmath/}}
+\]
+
+Server je sdílený s~existující Moodle instancí (FIM UHK, vnitřní IP \texttt{172.25.14.164}, Apache 2.4 + MariaDB). AdaptMath běží \emph{vedle} Moodlu jako Apache reverse proxy do lokální Flask aplikace, bez jakéhokoli zásahu do běhu Moodlu.
+
+\subsection{Architektura nasazení}
+
+\begin{enumerate}
+  \item \textbf{Flask aplikace} běží jako systemd služba \texttt{adaptmath.service} pod uživatelem \texttt{moodlepalla} a~naslouchá pouze na \texttt{127.0.0.1:5000} (loopback, ven se nedostane).
+  \item \textbf{PostgreSQL 14} (systémový, ne Docker) běží na \texttt{127.0.0.1:5432} s~databází \texttt{adaptmath} a uživatelem \texttt{adaptmath\_user}.
+  \item \textbf{Apache vhost} \texttt{moodle-ssl.conf} dělá reverse proxy:
+\begin{verbatim}
+    RedirectMatch permanent ^/adaptmath$ /adaptmath/
+    ProxyPreserveHost On
+    ProxyPass        /adaptmath/ http://127.0.0.1:5000/
+    ProxyPassReverse /adaptmath/ http://127.0.0.1:5000/
+    RequestHeader set X-Forwarded-Prefix "/adaptmath"
+\end{verbatim}
+  \item Flask aplikace používá \texttt{werkzeug.middleware.proxy\_fix.ProxyFix}, který čte \texttt{X-Forwarded-Prefix} z hlavičky a automaticky prependuje prefix k~výstupům \texttt{url\_for()}, takže všechny linky v UI vedou na \texttt{/adaptmath/...}.
+\end{enumerate}
+
+\subsection{Systemd unit}
+
+Soubor \texttt{/etc/systemd/system/adaptmath.service} (chmod 600 kvůli \texttt{FLASK\_SECRET\_KEY}):
+
+\begin{lstlisting}[style=shell]
+[Unit]
+Description=AdaptMath Task Checker (Flask)
+After=network.target postgresql.service
+Requires=postgresql.service
+
+[Service]
+Type=simple
+User=moodlepalla
+WorkingDirectory=/home/moodlepalla/adapt_math
+Environment="DATABASE_URL=postgresql://adaptmath_user:***@localhost:5432/adaptmath"
+Environment="APP_PASSWORD=***"
+Environment="FLASK_SECRET_KEY=<64 hex chars>"
+Environment="APP_SESSION_DAYS=30"
+ExecStart=/home/moodlepalla/adapt_math/.venv/bin/python -m flask --app app run --host 127.0.0.1 --port 5000
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
+\end{lstlisting}
+
+\subsection{Provozní příkazy}
+
+\begin{tabular}{ll}
+  \toprule
+  \textbf{Akce} & \textbf{Příkaz} \\
+  \midrule
+  Status        & \texttt{sudo systemctl status adaptmath} \\
+  Logy (live)   & \texttt{sudo journalctl -u adaptmath -f} \\
+  Restart       & \texttt{sudo systemctl restart adaptmath} \\
+  Update kódu   & \texttt{cd \textasciitilde/adapt\_math \&\& git pull \&\& sudo systemctl restart adaptmath} \\
+  Změnit heslo  & edit \texttt{adaptmath.service}, pak \texttt{daemon-reload} + restart \\
+  Reset DB      & \texttt{DATABASE\_URL=... .venv/bin/python seed\_db.py} \\
+  Vrátit vhost  & \texttt{sudo cp moodle-ssl.conf.bak.* moodle-ssl.conf} + \texttt{reload apache2} \\
+  \bottomrule
+\end{tabular}
+
+\subsection{Známá omezení}
+
+\begin{itemize}
+  \item \textbf{Werkzeug dev server} --- aktuálně Flask běží přes \texttt{flask run}, což je vývojový server. Pro skutečnou produkci by bylo lepší přepnout na \texttt{gunicorn} (jednoduchá změna v \texttt{ExecStart}).
+  \item \textbf{SSL certifikát} --- ručně instalovaný v~\texttt{/etc/ssl/certs/moodlefim.crt}, vyžaduje pravidelnou obnovu (řeší IT UHK; není Let's Encrypt s~auto-renew).
+  \item \textbf{Žádné DB migrace} --- viz „Opětovné nasazení po změně schématu" výše.
+  \item \textbf{Jediný globální účet} --- všichni členové týmu sdílí jedno heslo. Pro plnohodnotný multi-user režim budeme potřebovat Flask-Login a tabulku \texttt{users}.
+\end{itemize}
+
+% =============================================================================
 \section{Co dál (roadmap)}
 
 \subsection{Krátkodobé}
 
 \begin{enumerate}
-  \item \textbf{Distribuce vah dle kategorie.} Definovat slovník \texttt{CATEGORY\_DEFAULT\_VECTOR}, který pro každou ze 51 kategorií předvyplní výchozí distribuci 67 vah. Při výběru kategorie v UI se předvyplní \texttt{knowledge\_vector}, expert pak ladí.
+  \item \textbf{Tagování úloh experty.} Tým musí manuálně projít 415 úloh a~přiřadit \texttt{category} + nastavit \texttt{knowledge\_vector}. To je hlavní úkol Task Checkeru.
+  \item \textbf{Distribuce vah dle kategorie.} Definovat slovník \texttt{CATEGORY\_DEFAULT\_VECTOR}, který pro každou ze 61 kategorií předvyplní výchozí distribuci 61 vah. Při výběru kategorie v UI se předvyplní \texttt{knowledge\_vector}, expert pak ladí.
   \item \textbf{LLM vyhodnocení \texttt{open\_text}}. Aktuálně máme všechny negace převedeny na \texttt{multiple\_choice}; pro budoucí volné úlohy zavést endpoint \texttt{POST /api/eval-open-text} volající Gemini.
   \item \textbf{Alembic migrace.} Nahradit drop \& recreate řízenými migracemi.
+  \item \textbf{Gunicorn pro produkci.} Nahradit Werkzeug dev server na produkci.
 \end{enumerate}
 
 \subsection{Střednědobé}
@@ -582,7 +741,8 @@ Jelikož v~aktuální fázi nepoužíváme migrace (Alembic), po každé změně
 \begin{enumerate}
   \item \textbf{IRT engine} (\texttt{py-irt}). Pilotní tréninková fáze pro kalibraci obtížnosti a~diskriminace. Vlastní route \texttt{/student/<id>/next-task}, která vybere úlohu podle aktuálního $\theta$ studenta.
   \item \textbf{BKT engine} (\texttt{py-bkt}). Po každé interakci aktualizuje studentův vektor znalostí na základě \texttt{knowledge\_vector} úlohy a parametrů $\alpha$, $\beta$.
-  \item \textbf{Studentský profil.} Tabulka \texttt{students} s preferencemi (styl učení, motivace, math anxiety) a vektorem znalostí (67 hodnot v $[0, 1]$).
+  \item \textbf{Studentský profil.} Tabulka \texttt{students} s preferencemi (styl učení, motivace, math anxiety) a vektorem znalostí (61 hodnot v $[0, 1]$).
+  \item \textbf{Multi-user režim.} Tabulka \texttt{users} + Flask-Login pro plnohodnotné přihlašování více účtů (zatím sdílíme jedno heslo).
   \item \textbf{Logování interakcí} pro výzkum (čas řešení, jistota, AI nápověda).
 \end{enumerate}
 
