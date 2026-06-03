@@ -49,6 +49,9 @@
         }
         .nav-btn:hover { background: #eef1f3; text-decoration: none; }
         .nav-btn.disabled { opacity: 0.35; pointer-events: none; }
+        /* Carry button — vizuálně odlišený, ať se nesplete s plain Další → */
+        .nav-btn.nav-btn-carry { background: #fff3e0; border-color: #f7c08a; color: var(--orange-dark); }
+        .nav-btn.nav-btn-carry:hover { background: #ffe4c2; }
 
         /* Layout */
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
@@ -320,6 +323,9 @@
            class="nav-btn {{ 'disabled' if not prev_id else '' }}">← Předchozí</a>
         <a href="{{ url_for('task_checker', task_id=next_id) if next_id else '#' }}"
            class="nav-btn {{ 'disabled' if not next_id else '' }}">Další →</a>
+        <a href="{{ url_for('task_checker', task_id=next_id) if next_id else '#' }}"
+           class="nav-btn nav-btn-carry {{ 'disabled' if not next_id else '' }}"
+           title="Přenese kategorii + zaškrtnuté vlastnosti/typ/dovednosti do další úlohy — ale jen do polí, která tam jsou NULL.">📋 Další s kopií anotace →</a>
         <span class="spacer"></span>
         <div class="links">
             <a href="{{ url_for('tasks_list') }}">📋 Seznam úloh</a>
@@ -680,45 +686,60 @@ async function deleteTask() {
     } catch (e) { alert('Chyba: ' + e.message); }
 }
 
-/* -------- Sticky anotace (carry-over přes navigaci) ---------------------- */
-/* Jakmile uživatel pohne anotačním polem (kategorie / vlastnosti / typ /
-   dovednosti), uložíme si jeho aktuální hodnotu do sessionStorage. Při
-   otevření další úlohy aplikujeme sticky **field-by-field** podle pravidla:
+/* -------- Carry anotace (explicitní button „Další s kopií anotace") ----- */
+/* Žádné automatické sticky napříč úlohami. Carry je výhradně one-shot:
+   uživatel na současné úloze klikne na „📋 Další s kopií anotace →",
+   tím se hodnoty (kategorie + vlastnosti + typ + dovednosti) zapíšou
+   do sessionStorage a redirect proběhne na další úlohu. Tam se payload
+   přečte, aplikuje field-by-field **jen do polí, která jsou v DB NULL**,
+   a okamžitě se z sessionStorage smaže (aby se příště neaplikoval).
 
-     - když je v DB hodnota NULL (pole z task_to_dict přijde jako `null`)
-       → předvyplníme ze sticky (a autosave to uloží),
-     - když je v DB `[]` (vědomě prázdná anotace) nebo už nějaká hodnota
-       → necháme to být, sticky nepřepisuje existující data.
+   Plain „Další →" a obyčejné navigace (← Předchozí, Seznam úloh, šipky
+   na klávesnici) carry nepoužívají — chovají se jako čistě navigační. */
 
-   (Per zpětnou vazbu dr. Medkové, 2026-06-02/03 — sekvenční úlohy ve
-   stejném cvičení mívají často shodnou anotaci.) */
+const CARRY_KEY = 'adaptmath:carry';
+const CARRY_LIST_FIELDS = ['properties', 'task_type', 'skills'];
 
-const STICKY_KEY = 'adaptmath:sticky';
-const STICKY_LIST_FIELDS = ['properties', 'task_type', 'skills'];
-
-function loadSticky() {
-    try { return JSON.parse(sessionStorage.getItem(STICKY_KEY) || '{}'); }
-    catch (e) { return {}; }
+function setCarry(payload) {
+    try { sessionStorage.setItem(CARRY_KEY, JSON.stringify(payload)); } catch (e) {}
 }
-function saveSticky(patch) {
-    const next = Object.assign({}, loadSticky(), patch);
-    try { sessionStorage.setItem(STICKY_KEY, JSON.stringify(next)); } catch (e) {}
+function takeCarry() {
+    try {
+        const raw = sessionStorage.getItem(CARRY_KEY);
+        if (!raw) return null;
+        sessionStorage.removeItem(CARRY_KEY);  // one-shot
+        return JSON.parse(raw);
+    } catch (e) { return null; }
 }
-function applyStickyAnnotation() {
-    const sticky = loadSticky();
 
-    // 1) Kategorie (jednoduchý string).
-    if (state.category == null && sticky.category) {
-        state.category = sticky.category;
+/** Aplikuje carry payload na current state.
+ *  Pravidlo: jen do polí, která mají v DB NULL (state[field] === null).
+ *  Vědomě prázdné `[]` ani existující hodnoty se nepřepisují. */
+function applyCarryToState() {
+    const carry = takeCarry();
+    if (!carry) return;
+    if (state.category === null && carry.category) {
+        state.category = carry.category;
     }
-    // 2) Multi-select pole. Aplikujeme jen když state[field] === null
-    //    (úloha v DB anotaci ještě nemá). Prázdné `[]` znamená vědomě
-    //    prázdné a sticky se nepoužije.
-    STICKY_LIST_FIELDS.forEach(field => {
-        if (state[field] === null && Array.isArray(sticky[field]) && sticky[field].length) {
-            state[field] = sticky[field].slice();
+    CARRY_LIST_FIELDS.forEach(field => {
+        if (state[field] === null && Array.isArray(carry[field]) && carry[field].length) {
+            state[field] = carry[field].slice();
         }
     });
+}
+
+/** Klik na „📋 Další s kopií anotace →" — flushne pending save,
+ *  zapíše carry payload (aktuální anotaci) a naviguje na další úlohu. */
+async function nextWithCarry(url) {
+    if (!url || url === '#') return;
+    setCarry({
+        category: state.category,
+        properties: state.properties,
+        task_type: state.task_type,
+        skills: state.skills,
+    });
+    await flushPendingSave();
+    location.href = url;
 }
 
 /* -------- Two-way binding ------------------------------------------------- */
@@ -750,7 +771,6 @@ function attachBindings() {
     });
     document.getElementById('f-category').addEventListener('change', e => {
         state.category = e.target.value || null;
-        if (state.category) saveSticky({ category: state.category });
         setDirty();
     });
     attachTagFieldBindings();
@@ -779,10 +799,6 @@ function attachTagFieldBindings() {
             if (e.target.checked) cur.add(e.target.value);
             else cur.delete(e.target.value);
             state[field] = Array.from(cur);
-            // Sticky uchovává jen neprázdné výběry. Jakmile uživatel
-            // odškrtne vše, sticky zůstává s předchozí hodnotou (aby
-            // se nevymazala při chvilkovém uncheck-all).
-            if (state[field].length) saveSticky({ [field]: state[field] });
             e.target.closest('label.tg-opt').classList.toggle('checked', e.target.checked);
             setDirty();
         });
@@ -1274,17 +1290,24 @@ function renderSandboxResult(results) {
 /* -------- Bootstrap ------------------------------------------------------- */
 
 document.addEventListener('DOMContentLoaded', () => {
-    applyStickyAnnotation();   // předvyplní kategorii z sessionStorage, pokud ji úloha nemá
+    // Carry payload (z předchozí úlohy přes button „Další s kopií anotace")
+    // se aplikuje POUZE pokud cílové pole má v DB NULL. Když payload není,
+    // nic se neděje — plain navigace nepředvyplňuje.
+    applyCarryToState();
     attachBindings();
     loadStateToForm();
-    // Intercept Prev/Next + odkaz na seznam — flush autosave před navigací.
-    document.querySelectorAll('a.nav-btn, header a.nav-btn').forEach(a => {
+    // Intercept nav-btn (Prev / Next / Carry) — flush autosave před navigací.
+    document.querySelectorAll('a.nav-btn').forEach(a => {
         if (a.classList.contains('disabled')) return;
         a.addEventListener('click', e => {
             const href = a.getAttribute('href');
             if (!href || href === '#') return;
             e.preventDefault();
-            navigateTo(href);
+            if (a.classList.contains('nav-btn-carry')) {
+                nextWithCarry(href);
+            } else {
+                navigateTo(href);
+            }
         });
     });
 });
