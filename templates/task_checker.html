@@ -681,12 +681,20 @@ async function deleteTask() {
 }
 
 /* -------- Sticky anotace (carry-over přes navigaci) ---------------------- */
-/* Když uživatel pohne kategorií, uložíme si ji do sessionStorage. Při
-   otevření další úlohy, která ještě kategorii nemá, ji předvyplníme.
-   Příklady ve stejném cvičení jdou často po sobě stejnou kategorií,
-   takže to šetří kliknutí. (Per request dr. Medkové, 2026-06-02.) */
+/* Jakmile uživatel pohne anotačním polem (kategorie / vlastnosti / typ /
+   dovednosti), uložíme si jeho aktuální hodnotu do sessionStorage. Při
+   otevření další úlohy aplikujeme sticky **field-by-field** podle pravidla:
+
+     - když je v DB hodnota NULL (pole z task_to_dict přijde jako `null`)
+       → předvyplníme ze sticky (a autosave to uloží),
+     - když je v DB `[]` (vědomě prázdná anotace) nebo už nějaká hodnota
+       → necháme to být, sticky nepřepisuje existující data.
+
+   (Per zpětnou vazbu dr. Medkové, 2026-06-02/03 — sekvenční úlohy ve
+   stejném cvičení mívají často shodnou anotaci.) */
 
 const STICKY_KEY = 'adaptmath:sticky';
+const STICKY_LIST_FIELDS = ['properties', 'task_type', 'skills'];
 
 function loadSticky() {
     try { return JSON.parse(sessionStorage.getItem(STICKY_KEY) || '{}'); }
@@ -698,11 +706,19 @@ function saveSticky(patch) {
 }
 function applyStickyAnnotation() {
     const sticky = loadSticky();
-    if (!state.category && sticky.category) {
+
+    // 1) Kategorie (jednoduchý string).
+    if (state.category == null && sticky.category) {
         state.category = sticky.category;
-        // savedState zůstává s null → setDirty() po loadStateToForm to detekuje,
-        // autosave předvyplněnou kategorii uloží do DB.
     }
+    // 2) Multi-select pole. Aplikujeme jen když state[field] === null
+    //    (úloha v DB anotaci ještě nemá). Prázdné `[]` znamená vědomě
+    //    prázdné a sticky se nepoužije.
+    STICKY_LIST_FIELDS.forEach(field => {
+        if (state[field] === null && Array.isArray(sticky[field]) && sticky[field].length) {
+            state[field] = sticky[field].slice();
+        }
+    });
 }
 
 /* -------- Two-way binding ------------------------------------------------- */
@@ -763,6 +779,10 @@ function attachTagFieldBindings() {
             if (e.target.checked) cur.add(e.target.value);
             else cur.delete(e.target.value);
             state[field] = Array.from(cur);
+            // Sticky uchovává jen neprázdné výběry. Jakmile uživatel
+            // odškrtne vše, sticky zůstává s předchozí hodnotou (aby
+            // se nevymazala při chvilkovém uncheck-all).
+            if (state[field].length) saveSticky({ [field]: state[field] });
             e.target.closest('label.tg-opt').classList.toggle('checked', e.target.checked);
             setDirty();
         });

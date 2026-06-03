@@ -100,16 +100,24 @@ EDITABLE_FIELDS = {
 
 
 def task_to_dict(task):
-    """Serializace MathTask pro template / JSON odpověď."""
+    """Serializace MathTask pro template / JSON odpověď.
+
+    POZOR: u JSON polí (`properties`, `task_type`, `skills`) **schválně**
+    NEMAPUJEME ``None`` na ``[]``. Frontend potřebuje rozlišit:
+      - DB hodnota `NULL` (úloha ještě nebyla anotována) → frontend smí
+        předvyplnit ze sticky storage;
+      - DB hodnota `[]` (uživatel kdysi anotoval prázdně, vědomě) →
+        frontend NESMÍ přepsat ze sticky.
+    """
     return {
         "task_id": task.task_id,
         "content_latex": task.content_latex,
         "results": task.results,
         "cognitive_load": task.cognitive_load,
         "category": task.category,
-        "properties": task.properties or [],
-        "task_type": task.task_type or [],
-        "skills": task.skills or [],
+        "properties": task.properties,   # může být None
+        "task_type": task.task_type,     # může být None
+        "skills": task.skills,           # může být None
         "knowledge_vector": task.knowledge_vector or {},
         "graph_vector": task.graph_vector,
         "irt_difficulty": task.irt_difficulty,
