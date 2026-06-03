@@ -555,19 +555,77 @@ function getComputeEngine() {
     return null;
 }
 
-/* -------- Dirty tracking / Save ------------------------------------------ */
+/* -------- Dirty tracking / Save / Autosave ------------------------------- */
+/* Autosave: 800 ms po každé změně se stav debounce-uložen na server.
+   Manuální „💾 Uložit" funguje i nadále. Při Prev/Next navigaci nejdřív
+   flushneme případnou pending změnu, ať se nic neztratí. */
 
-function setDirty() {
-    const equal = JSON.stringify(state) === JSON.stringify(savedState);
-    const st = document.getElementById('save-status');
-    if (equal) { st.className = 'save-status'; st.textContent = ''; }
-    else       { st.className = 'save-status dirty'; st.textContent = '● neuložené změny'; }
+const AUTOSAVE_DELAY_MS = 800;
+let autosaveTimer = null;
+let saving = false;
+let lastSavedAt = null;
+
+function isDirty() {
+    return JSON.stringify(state) !== JSON.stringify(savedState);
 }
 
-async function saveTask() {
+function _fmtTime(d) {
+    const pad = n => String(n).padStart(2, '0');
+    return pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+}
+
+function renderSaveStatus() {
     const st = document.getElementById('save-status');
-    st.className = 'save-status saving'; st.textContent = '⏳ Ukládám…';
-    document.getElementById('btn-save').disabled = true;
+    if (!st) return;
+    if (saving) { st.className = 'save-status saving'; st.textContent = '⏳ Ukládám…'; return; }
+    if (isDirty()) {
+        st.className = 'save-status dirty';
+        st.textContent = '● neuloženo (autosave za <1 s)';
+        return;
+    }
+    if (lastSavedAt) {
+        st.className = 'save-status saved';
+        st.textContent = '✓ Uloženo v ' + _fmtTime(lastSavedAt);
+    } else {
+        st.className = 'save-status';
+        st.textContent = '';
+    }
+}
+
+function scheduleAutosave() {
+    if (autosaveTimer) clearTimeout(autosaveTimer);
+    autosaveTimer = setTimeout(() => {
+        autosaveTimer = null;
+        if (isDirty() && !saving) saveTask({ silent: true });
+    }, AUTOSAVE_DELAY_MS);
+}
+
+function setDirty() {
+    renderSaveStatus();
+    if (isDirty() && !saving) scheduleAutosave();
+}
+
+async function flushPendingSave() {
+    if (autosaveTimer) { clearTimeout(autosaveTimer); autosaveTimer = null; }
+    if (isDirty() && !saving) {
+        try { await saveTask({ silent: true }); }
+        catch (e) { /* error už zobrazený v save-status */ }
+    }
+}
+
+async function navigateTo(url) {
+    if (!url || url === '#') return;
+    await flushPendingSave();
+    location.href = url;
+}
+
+async function saveTask(opts) {
+    opts = opts || {};
+    const silent = !!opts.silent;
+    if (saving) return;
+    saving = true;
+    renderSaveStatus();
+    if (!silent) document.getElementById('btn-save').disabled = true;
     try {
         const res = await fetch(URLS.apiTask(INITIAL.task_id), {
             method: 'POST', headers: {'Content-Type':'application/json'},
@@ -576,19 +634,34 @@ async function saveTask() {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Neznámá chyba');
         savedState = clone(state);
-        st.className = 'save-status saved'; st.textContent = '✓ Uloženo';
+        lastSavedAt = new Date();
         if (data.renamed_to) {
             // task_id se změnilo — přesměrujeme na novou URL
+            saving = false;
+            renderSaveStatus();
             setTimeout(() => location.href = URLS.task(data.renamed_to), 600);
             return;
         }
-        setTimeout(setDirty, 1200);
     } catch (e) {
-        st.className = 'save-status error'; st.textContent = '✗ ' + e.message;
+        const st = document.getElementById('save-status');
+        st.className = 'save-status error';
+        st.textContent = '✗ ' + e.message;
+        if (!silent) alert('Chyba při ukládání: ' + e.message);
+        throw e;
     } finally {
+        saving = false;
         document.getElementById('btn-save').disabled = false;
+        renderSaveStatus();
     }
 }
+
+/* Varování při zavření tabu, pokud máme pending autosave / dirty stav. */
+window.addEventListener('beforeunload', e => {
+    if (saving || autosaveTimer || isDirty()) {
+        e.preventDefault();
+        e.returnValue = '';
+    }
+});
 
 function revertChanges() {
     if (!confirm('Vrátit poslední uložený stav? Neuložené změny se ztratí.')) return;
@@ -605,6 +678,31 @@ async function deleteTask() {
         alert('Úloha smazána.');
         location.href = URLS.tasksList;
     } catch (e) { alert('Chyba: ' + e.message); }
+}
+
+/* -------- Sticky anotace (carry-over přes navigaci) ---------------------- */
+/* Když uživatel pohne kategorií, uložíme si ji do sessionStorage. Při
+   otevření další úlohy, která ještě kategorii nemá, ji předvyplníme.
+   Příklady ve stejném cvičení jdou často po sobě stejnou kategorií,
+   takže to šetří kliknutí. (Per request dr. Medkové, 2026-06-02.) */
+
+const STICKY_KEY = 'adaptmath:sticky';
+
+function loadSticky() {
+    try { return JSON.parse(sessionStorage.getItem(STICKY_KEY) || '{}'); }
+    catch (e) { return {}; }
+}
+function saveSticky(patch) {
+    const next = Object.assign({}, loadSticky(), patch);
+    try { sessionStorage.setItem(STICKY_KEY, JSON.stringify(next)); } catch (e) {}
+}
+function applyStickyAnnotation() {
+    const sticky = loadSticky();
+    if (!state.category && sticky.category) {
+        state.category = sticky.category;
+        // savedState zůstává s null → setDirty() po loadStateToForm to detekuje,
+        // autosave předvyplněnou kategorii uloží do DB.
+    }
 }
 
 /* -------- Two-way binding ------------------------------------------------- */
@@ -635,7 +733,9 @@ function attachBindings() {
         state.cognitive_load = e.target.value || null; setDirty();
     });
     document.getElementById('f-category').addEventListener('change', e => {
-        state.category = e.target.value || null; setDirty();
+        state.category = e.target.value || null;
+        if (state.category) saveSticky({ category: state.category });
+        setDirty();
     });
     attachTagFieldBindings();
     attachKnowledgeVectorBindings();
@@ -1154,17 +1254,28 @@ function renderSandboxResult(results) {
 /* -------- Bootstrap ------------------------------------------------------- */
 
 document.addEventListener('DOMContentLoaded', () => {
+    applyStickyAnnotation();   // předvyplní kategorii z sessionStorage, pokud ji úloha nemá
     attachBindings();
     loadStateToForm();
+    // Intercept Prev/Next + odkaz na seznam — flush autosave před navigací.
+    document.querySelectorAll('a.nav-btn, header a.nav-btn').forEach(a => {
+        if (a.classList.contains('disabled')) return;
+        a.addEventListener('click', e => {
+            const href = a.getAttribute('href');
+            if (!href || href === '#') return;
+            e.preventDefault();
+            navigateTo(href);
+        });
+    });
 });
 
-/* Keyboard shortcuts: ← / → pro navigaci, Ctrl+S pro uložit */
+/* Keyboard shortcuts: ← / → pro navigaci (s flushem autosave), Ctrl+S pro uložit */
 document.addEventListener('keydown', e => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'MATH-FIELD') return;
     if (e.key === 'ArrowLeft' && {{ prev_id | tojson | safe }}) {
-        location.href = URLS.task({{ prev_id | tojson | safe }});
+        navigateTo(URLS.task({{ prev_id | tojson | safe }}));
     } else if (e.key === 'ArrowRight' && {{ next_id | tojson | safe }}) {
-        location.href = URLS.task({{ next_id | tojson | safe }});
+        navigateTo(URLS.task({{ next_id | tojson | safe }}));
     } else if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();
         saveTask();
