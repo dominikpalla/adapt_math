@@ -1,7 +1,7 @@
 """
 Definice vektoru vah (skill-komponent) pro AdaptMath.
 
-KNOWLEDGE_WEIGHTS — plochý seznam **63** všech vah znalostního vektoru
+KNOWLEDGE_WEIGHTS — plochý seznam **64** všech vah znalostního vektoru
 úlohy. Při editaci expert nastavuje pro každou váhu procentuální hodnotu
 (0–100), která vyjadřuje, jak moc daný skill úloha trénuje. Pro IRT/BKT
 engine pak ve studentově profilu existuje paralelní vektor stejných vah
@@ -21,7 +21,7 @@ V UI rozlišujeme **dvě věci**:
      předvyplnění vektoru znalostí):
        - Kategorie (`TASK_CATEGORIES`, 46) — JEDNA primární kategorie
          úlohy. Jen SŠ + VŠ matematika (bez vlastností/typu/dovedností).
-       - Vlastnosti (`TASK_PROPERTIES`, 10) — multi-select (checkboxy).
+       - Vlastnosti (`TASK_PROPERTIES`, 11) — multi-select (checkboxy).
        - Typ (`TASK_TYPES`, 1) — multi-select (checkboxy).
        - Dovednosti (`TASK_SKILLS`, 6) — multi-select (checkboxy).
 
@@ -33,6 +33,7 @@ KNOWLEDGE_WEIGHTS = [
     "Vlasnosti - Lineární",
     "Vlasnosti - Kvadratická",
     "Vlasnosti - Mocninná",
+    "Vlasnosti - Odmocninové",
     "Vlasnosti - Logaritmická",
     "Vlasnosti - Exponenciální",
     "Vlastnosti - Goniometrická",  # zachováváme dle zdroje (varianta „Vlastnosti")
@@ -190,13 +191,13 @@ TASK_SKILLS     = [w for w in KNOWLEDGE_WEIGHTS if weight_group(w) == "dovednost
 
 
 # Sanity checky při importu
-assert len(KNOWLEDGE_WEIGHTS) == 63, f"Očekáváno 63 vah, je {len(KNOWLEDGE_WEIGHTS)}"
+assert len(KNOWLEDGE_WEIGHTS) == 64, f"Očekáváno 64 vah, je {len(KNOWLEDGE_WEIGHTS)}"
 assert len(set(KNOWLEDGE_WEIGHTS)) == len(KNOWLEDGE_WEIGHTS), "Duplicitní názvy vah!"
 assert all(weight_group(w) != "default" for w in KNOWLEDGE_WEIGHTS), \
     f"Některá váha bez skupiny: {[w for w in KNOWLEDGE_WEIGHTS if weight_group(w) == 'default']}"
 assert len(TASK_CATEGORIES) == 46, f"Očekáváno 46 kategorií, je {len(TASK_CATEGORIES)}"
-assert len(TASK_PROPERTIES) == 10, f"Očekáváno 10 vlastností, je {len(TASK_PROPERTIES)}"
+assert len(TASK_PROPERTIES) == 11, f"Očekáváno 11 vlastností, je {len(TASK_PROPERTIES)}"
 assert len(TASK_TYPES) == 1, f"Očekáván 1 typ, je {len(TASK_TYPES)}"
 assert len(TASK_SKILLS) == 6, f"Očekáváno 6 dovedností, je {len(TASK_SKILLS)}"
 assert len(TASK_CATEGORIES) + len(TASK_PROPERTIES) + len(TASK_TYPES) + len(TASK_SKILLS) \
-       == len(KNOWLEDGE_WEIGHTS), "Suma anotačních podmnožin != 63"
+       == len(KNOWLEDGE_WEIGHTS), "Suma anotačních podmnožin != 64"
