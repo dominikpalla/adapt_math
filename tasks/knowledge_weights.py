@@ -33,7 +33,7 @@ KNOWLEDGE_WEIGHTS = [
     "Vlasnosti - Lineární",
     "Vlasnosti - Kvadratická",
     "Vlasnosti - Mocninná",
-    "Vlasnosti - Odmocninové",
+    "Vlasnosti - Odmocninová",
     "Vlasnosti - Logaritmická",
     "Vlasnosti - Exponenciální",
     "Vlastnosti - Goniometrická",  # zachováváme dle zdroje (varianta „Vlastnosti")
