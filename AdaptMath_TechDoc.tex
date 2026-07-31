@@ -107,7 +107,7 @@
     \textbf{Pracoviště:} & Fakulta informatiky a managementu, Univerzita Hradec Králové \\[3pt]
     \textbf{Doba řešení:} & 09/2025 -- 02/2029 \\[3pt]
     \textbf{Autor dokumentace:} & Ing.~Dominik Palla, Ph.D. \\[3pt]
-    \textbf{Verze:} & 1.1 \\[3pt]
+    \textbf{Verze:} & 1.2 \\[3pt]
     \textbf{Datum:} & \today \\
   \end{tabular}
 
@@ -280,22 +280,22 @@ Schema jednoho prvku:
 U každé úlohy rozlišujeme \textbf{dvě} ortogonální věci:
 
 \begin{enumerate}
-  \item \textbf{Vektor znalostí} (\texttt{knowledge\_vector}, 61 vah) --- celý mix vlastností, typu, dovedností i kategorií SŠ/VŠ. Slovník přiřazující každé skill-komponentě procentuální váhu (0--100). Při řešení úlohy se přírůstek (úspěch) nebo úbytek (nesplnění) studentovy znalosti rozdělí mezi komponenty v poměru těchto vah. Paralelní vektor existuje i ve studentově profilu --- tam ale hodnoty $\in [0, 1]$ (IRT/BKT).
+  \item \textbf{Vektor znalostí} (\texttt{knowledge\_vector}, 64 vah) --- celý mix vlastností, typu, dovedností i kategorií SŠ/VŠ. Slovník přiřazující každé skill-komponentě procentuální váhu (0--100). Při řešení úlohy se přírůstek (úspěch) nebo úbytek (nesplnění) studentovy znalosti rozdělí mezi komponenty v poměru těchto vah. Paralelní vektor existuje i ve studentově profilu --- tam ale hodnoty $\in [0, 1]$ (IRT/BKT).
   \item \textbf{Anotace úlohy} (uložená „bokem" pro pozdější automatické předvyplnění \texttt{knowledge\_vector}):
   \begin{itemize}
-    \item \texttt{category} --- \emph{jedna} primární kategorie ze 45 (jen SŠ + VŠ matematika).
-    \item \texttt{properties} --- multi-select 9 vlastností.
-    \item \texttt{task\_type} --- multi-select typů (zatím 1).
+    \item \texttt{category} --- \emph{jedna} primární kategorie ze 45 (jen SŠ + VŠ matematika + Výroková logika).
+    \item \texttt{properties} --- multi-select 11 vlastností.
+    \item \texttt{task\_type} --- multi-select 2 typů (\emph{Aplikační}, \emph{Extrémy funkcí}).
     \item \texttt{skills} --- multi-select 6 dovedností.
   \end{itemize}
   Anotace nemá žádný runtime efekt v IRT/BKT --- slouží jen k tomu, aby z ní engine v další fázi vygeneroval výchozí distribuci vah v knowledge\_vectoru, kterou expert ručně doladí.
 \end{enumerate}
 
-\subsection{KNOWLEDGE\_WEIGHTS (61 vah, verze 260601\_v2)}
+\subsection{KNOWLEDGE\_WEIGHTS (64 vah, verze 260731)}
 
-Definováno v~\texttt{tasks/knowledge\_weights.py}. Seznam byl revidován dr.~Medkovou (verze \texttt{260601\_v2}) a obsahuje pouze \emph{listové} váhy --- hlavní (header) kategorie z původního excelu nejsou v seznamu. Všechny váhy jsou seskupené do 13 \emph{skupin} pro účely barevného rozlišení v UI a budoucí paušální distribuce.
+Definováno v~\texttt{tasks/knowledge\_weights.py}. Seznam pochází z konzultace s dr.~Medkovou (základ \texttt{260601\_v2}, revize 2026-07-31 --- viz \emph{Změny 2026-07-31} na konci sekce). Obsahuje pouze \emph{listové} váhy --- hlavní (header) kategorie z původního excelu nejsou v seznamu. Všechny váhy jsou seskupené do 14 \emph{skupin} pro účely barevného rozlišení v UI a budoucí paušální distribuce.
 
-\paragraph{Skupiny vah (13).} Každá váha nese prefix tvaru \texttt{Skupina - Název} (např. \texttt{"Limita - LVL (krácení)"}). Položky bez prefixu (\emph{Konvexnost/konkávnost}, \emph{Průběh funkce}) mají vlastní samostatnou skupinu.
+\paragraph{Skupiny vah (14).} Většina vah nese prefix tvaru \texttt{Skupina - Název} (např. \texttt{"Limita - LVL (krácení)"}). Položky bez prefixu (\emph{Konvexnost/konkávnost}, \emph{Průběh funkce}, \emph{Monotonie a extrémy}, \emph{Výroková logika}) mají vlastní samostatnou skupinu.
 
 \begin{longtable}{p{4cm}rp{9.5cm}}
   \toprule
@@ -306,12 +306,13 @@ Definováno v~\texttt{tasks/knowledge\_weights.py}. Seznam byl revidován dr.~Me
   \textbf{Skupina} & \textbf{\#} & \textbf{Barva v UI (CSS hex)} \\
   \midrule
   \endhead
-  Vlastnosti              & 9 & zelená \texttt{\#2e7d32} \\
-  Typ                     & 1 & tmavě oranžová \texttt{\#ef6c00} \\
+  Vlastnosti              & 11 & zelená \texttt{\#2e7d32} \\
+  Typ                     & 2 & tmavě oranžová \texttt{\#ef6c00} \\
   Dovednosti              & 6 & červenooranžová \texttt{\#d84315} \\
   SŠ                      & 5 & olivově žlutá \texttt{\#8d6e00} \\
+  Výroková logika         & 1 & blue-gray \texttt{\#607d8b} \\
   Funkce                  & 7 & modrá \texttt{\#1565c0} \\
-  Monotonie               & 2 & fialová \texttt{\#6a1b9a} \\
+  Monotonie a extrémy     & 1 & fialová \texttt{\#6a1b9a} \\
   Konvexnost/konkávnost   & 1 & břidlicová \texttt{\#455a64} \\
   Spojitost               & 2 & tyrkysová \texttt{\#00695c} \\
   Limita                  & 7 & růžová \texttt{\#c2185b} \\
@@ -320,7 +321,7 @@ Definováno v~\texttt{tasks/knowledge\_weights.py}. Seznam byl revidován dr.~Me
   Primitivní funkce       & 5 & tmavě červená \texttt{\#b71c1c} \\
   Určitý integrál         & 8 & hnědá \texttt{\#4e342e} \\
   \midrule
-  \textbf{Celkem}         & \textbf{61} & \\
+  \textbf{Celkem}         & \textbf{64} & \\
   \bottomrule
 \end{longtable}
 
@@ -333,22 +334,24 @@ Barvy odpovídají třídám \texttt{.grp-*} v \texttt{templates/task\_checker.h
 
 \subsection{TASK\_CATEGORIES, TASK\_PROPERTIES, TASK\_TYPES, TASK\_SKILLS}
 
-\texttt{KNOWLEDGE\_WEIGHTS} (61) je v \texttt{tasks/knowledge\_weights.py} rozdělen do čtyř disjunktních anotačních podmnožin:
+\texttt{KNOWLEDGE\_WEIGHTS} (64) je v \texttt{tasks/knowledge\_weights.py} rozdělen do čtyř disjunktních anotačních podmnožin:
 
 \begin{itemize}
-  \item \texttt{TASK\_CATEGORIES} (45) --- SŠ + Funkce + Monotonie + Konvexnost + Spojitost + Limita + Derivace + Průběh funkce + Primitivní funkce + Určitý integrál. Použito jako \emph{single-select} v UI: jedna primární kategorie úlohy.
-  \item \texttt{TASK\_PROPERTIES} (9) --- skupina \emph{Vlastnosti}. \emph{Multi-select} (checkboxy).
-  \item \texttt{TASK\_TYPES} (1) --- skupina \emph{Typ} (zatím jen \emph{Aplikační}). \emph{Multi-select}.
+  \item \texttt{TASK\_CATEGORIES} (45) --- SŠ + Výroková logika + Funkce + Monotonie a extrémy + Konvexnost + Spojitost + Limita + Derivace + Průběh funkce + Primitivní funkce + Určitý integrál. Použito jako \emph{single-select} v UI: jedna primární kategorie úlohy.
+  \item \texttt{TASK\_PROPERTIES} (11) --- skupina \emph{Vlastnosti}. \emph{Multi-select} (checkboxy).
+  \item \texttt{TASK\_TYPES} (2) --- skupina \emph{Typ} (\emph{Aplikační}, \emph{Extrémy funkcí}). \emph{Multi-select}.
   \item \texttt{TASK\_SKILLS} (6) --- skupina \emph{Dovednosti}. \emph{Multi-select}.
 \end{itemize}
 
-Součet $45 + 9 + 1 + 6 = 61$ pokrývá celý \texttt{KNOWLEDGE\_WEIGHTS} (sanity-check při importu modulu).
+Součet $45 + 11 + 2 + 6 = 64$ pokrývá celý \texttt{KNOWLEDGE\_WEIGHTS} (sanity-check při importu modulu).
 
 V další fázi (zatím \textbf{není implementováno}) bude každá kategorie + kombinace tagů mít defaultní distribuci vah, která se automaticky aplikuje na \texttt{knowledge\_vector} při anotaci úlohy, a~expert ji pak doladí ručně.
 
 \subsection{Kompletní seznam vah}\label{sec:vahy-popis}
 
-Plný seznam 61 vah ve verzi \texttt{260601\_v2}, seskupený dle prefixu. Pořadí v tabulce odpovídá pořadí ve zdrojovém kódu i v UI.
+Plný seznam 64 vah, seskupený dle prefixu. Pořadí v tabulce odpovídá pořadí ve zdrojovém kódu i v UI.
+
+\textbf{Poznámka:} tabulka níže je snapshot z revize 2026-07-31; \emph{single source of truth} je \texttt{tasks/knowledge\_weights.py} (obsahuje sanity-check assertions, které selžou, pokud spočtené počty nesouhlasí). Detailní změny oproti verzi 260601\_v2 shrnuje závěrečná subsekce.
 
 \begin{longtable}{p{1cm}p{6cm}p{8.5cm}}
   \toprule
@@ -451,6 +454,31 @@ Plný seznam 61 vah ve verzi \texttt{260601\_v2}, seskupený dle prefixu. Pořad
 
 \paragraph{Pozn. k drobným typografickým odchylkám.} V seznamu se opakovaně objevuje „Vlasnosti" (1×~„Vlastnosti" pro Goniometrickou) a „subustituci" místo „substituci" --- ponecháno přesně dle excelu dr.~Medkové, ať se interní názvy nerozcházejí mezi zdroji.
 
+\subsection{Změny 2026-07-31 (v1.2)}
+
+Revize dle zpětné vazby dr.~Medkové:
+
+\begin{itemize}
+  \item \textbf{Sloučení}: \emph{Monotonie - Absolutní extrémy na intervalu} + \emph{Monotonie - Určování lokálních extrémů} $\rightarrow$ \emph{Monotonie a extrémy} (top-level, mimo prefix). Skupina \texttt{monotonie} má nyní 1 položku (dříve 2).
+  \item \textbf{Přejmenování}:
+  \begin{itemize}
+    \item \emph{Limita - Typová limita} $\rightarrow$ \emph{Limita - Limita složené funkce}.
+    \item \emph{Primitivní funkce - Parciální zlomky} $\rightarrow$ \emph{Primitivní funkce - Racionální funkce}.
+    \item \emph{Určitý integrál - Parciální zlomky} $\rightarrow$ \emph{Určitý integrál - Racionální funkce}.
+    \item \emph{SŠ - Výroková logika} $\rightarrow$ \emph{Výroková logika} (vyňata ze skupiny SŠ, nová samostatná skupina \texttt{logika} s barvou \texttt{\#607d8b}).
+  \end{itemize}
+  \item \textbf{Přidané položky} (během roku 2026):
+  \begin{itemize}
+    \item \emph{Vlasnosti - S parametrem}
+    \item \emph{Vlasnosti - Odmocninová}
+    \item \emph{Typ - Extrémy funkcí}
+  \end{itemize}
+  \item \textbf{Celkové počty}: KNOWLEDGE\_WEIGHTS 61 $\rightarrow$ 64, TASK\_CATEGORIES 45 (bez změny, ale s jiným složením), TASK\_PROPERTIES 9 $\rightarrow$ 11, TASK\_TYPES 1 $\rightarrow$ 2, skupin 13 $\rightarrow$ 14.
+  \item \textbf{DB migrace}: 107 řádků \texttt{math\_tasks.category} přepsáno v jedné transakci (Monotonie merge 39, Limita 22, Primitivní 11, Určitý integrál 0, Výroková logika 35). Zálohy pg\_dump + JSON před migrací uloženy do \texttt{\textasciitilde/adaptmath\_backups/} (s timestampy 2026-07-31 14:11, 14:55, 15:10).
+\end{itemize}
+
+\paragraph{Konvence \texttt{task\_id}: zero-pad.} Zároveň s taxonomií revidováno i číslování úloh --- příklad se zapisuje \emph{dvouciferně} (\texttt{cv03\_02}, \texttt{cv11\_04}, ...) místo dřívějšího \texttt{cv03\_2} / \texttt{cv11\_4}. Sjednocení řeší seřazení v seznamu úloh (dříve \texttt{cv01\_1, cv01\_10, cv01\_11, ..., cv01\_2, cv01\_3}). Migrace přepsala 117 řádků (116 přeformátovaných + 1 recovery úlohy s prázdným \texttt{task\_id}). Backend v \texttt{/api/tasks/<id>} POST teď odmítá prázdný nebo whitespace-only \texttt{task\_id} (HTTP 400), aby se stejný incident nemohl opakovat.
+
 % =============================================================================
 \section{Webové UI: Task Checker}
 
@@ -463,12 +491,15 @@ Plný seznam 61 vah ve verzi \texttt{260601\_v2}, seskupený dle prefixu. Pořad
   \texttt{GET / POST} & \texttt{/login}           & Formulář pro zadání hesla (session-based ochrana). \\
   \texttt{GET / POST} & \texttt{/logout}          & Smaže session, redirect na \texttt{/login}. \\
   \texttt{GET}        & \texttt{/}                & Redirect na první úlohu (vyžaduje login). \\
-  \texttt{GET}        & \texttt{/tasks}           & Tabulka všech úloh (filtr podle kategorie, fulltext). \\
+  \texttt{GET}        & \texttt{/tasks}           & Tabulka všech úloh (filtr, checkbox výběr, bulk panel). \\
   \texttt{GET}        & \texttt{/tasks/<id>}      & Detail úlohy --- editor + sandbox. \\
   \texttt{POST}       & \texttt{/api/tasks/<id>}  & Uložit změny (JSON body s editable poli). \\
+  \texttt{POST}       & \texttt{/api/tasks/bulk}  & Hromadná anotace vybraných úloh (viz níže). \\
   \texttt{DELETE}     & \texttt{/api/tasks/<id>}  & Smazat úlohu. \\
   \bottomrule
 \end{tabular}
+
+\paragraph{Odolnost proti \texttt{strict\_slashes}.} \texttt{app.url\_map.strict\_slashes = False} --- Flask matchuje jak \texttt{/tasks}, tak \texttt{/tasks/}. Fix incidentu (Windows/Chrome uživatelům někdy doplňuje koncové lomítko).
 
 \subsection{Přihlášení a session}
 
@@ -489,7 +520,16 @@ Tabulka 415 úloh se sloupci: \emph{Task ID}, \emph{Náhled zadání} (KaTeX), \
 
 \paragraph{Sloupec Kategorie.} Hodnota \texttt{t.category} z~DB se zobrazí jako \emph{cat-chip} (zaoblený rámec) v~barvě CSS třídy \texttt{.grp-XYZ} odpovídající skupině váhy. Pokud úloha kategorii ještě nemá nastavenou (typický stav po seedu), zobrazuje se světle šedý šrafovaný chip „--- nepřiřazeno ---".
 
-\paragraph{Filtr.} Dropdown nad tabulkou nabízí všech 61 kategorií (text option barevně podle skupiny) plus speciální položku „--- bez kategorie ---" pro rychlou identifikaci úloh, které tým ještě nezpracoval. Fulltext input hledá v \texttt{task\_id}, hodnotě kategorie i v \texttt{content\_latex}.
+\paragraph{Filtr.} Dropdown nad tabulkou nabízí všech 45 kategorií (text option barevně podle skupiny) plus speciální položku „--- bez kategorie ---" pro rychlou identifikaci úloh, které tým ještě nezpracoval. Fulltext input hledá v \texttt{task\_id}, hodnotě kategorie i v \texttt{content\_latex}.
+
+\paragraph{Hromadné tagování (bulk).} Vlevo v každém řádku je checkbox, v hlavičce master checkbox „vybrat všechny aktuálně viditelné" (respektuje filtr). Jakmile je vybrán $\geq 1$ řádek, ve spodní části viewportu se objeví \emph{sticky panel} se 4 sekcemi:
+
+\begin{itemize}
+  \item \emph{Kategorie} --- mode select (\texttt{Nastavit vždy} / \texttt{Jen když chybí}) + select kategorií. Režim \emph{Jen když chybí} přepíše pouze úlohy s \texttt{NULL}, existující hodnoty nemění.
+  \item \emph{Vlastnosti} / \emph{Typ} / \emph{Dovednosti} --- mode select (\texttt{Přidat} / \texttt{Nahradit} / \texttt{Odebrat}) + rozklápěcí \texttt{<details>} s checkboxy. \emph{Přidat} udělá union s existujícím výběrem, \emph{Nahradit} nahradí celý list, \emph{Odebrat} dropne uvedené hodnoty z existujícího výběru.
+\end{itemize}
+
+Před spuštěním se zobrazí potvrzovací \emph{modal} se sumarizací operací a preview prvních 15 task\_ids. Backend endpoint \texttt{POST /api/tasks/bulk} provede vše v jedné transakci a vrátí \texttt{\{changed, skipped, not\_found\}}. Klávesa \texttt{Esc} nebo klik mimo modal ho zavře.
 
 \subsection{Editor úlohy (\texttt{/tasks/<id>})}
 
@@ -505,17 +545,27 @@ UI je rozděleno do dvou sloupců.
 \paragraph{Pravý sloupec (editor).}
 \begin{itemize}
   \item Task ID, kognitivní zátěž (select A--F).
-  \item \emph{Kategorie úlohy} --- single-select 45 položek (jen SŠ + VŠ matematika), text barevně rozlišený podle příslušné skupiny.
+  \item \emph{Kategorie úlohy} --- single-select 45 položek (SŠ + Výroková logika + VŠ matematika), text barevně rozlišený podle příslušné skupiny.
   \item Pod selektem 3 \emph{multi-select} sekce s checkboxy --- jsou barevně sladěné se skupinou:
   \begin{itemize}
-    \item \emph{Vlastnosti} (9 položek, zelená),
-    \item \emph{Typ} (zatím 1 položka --- Aplikační, krémová),
+    \item \emph{Vlastnosti} (11 položek, zelená),
+    \item \emph{Typ} (2 položky --- Aplikační, Extrémy funkcí, krémová),
     \item \emph{Dovednosti} (6 položek, oranžová).
   \end{itemize}
-  Hodnoty se ukládají do JSON sloupců \texttt{properties}, \texttt{task\_type}, \texttt{skills}.
+  Hodnoty se ukládají do JSON sloupců \texttt{properties}, \texttt{task\_type}, \texttt{skills}. Serializace důsledně rozlišuje \texttt{NULL} (nikdy neanotováno) a \texttt{[]} (vědomě prázdná anotace) --- viz \emph{carry button} níže.
   \item Zadání v LaTeXu (textarea, full-width).
-  \item Editor výsledků --- karta pro každý prvek pole \texttt{results}; lze přidat/odebrat; pro každý se mění \texttt{key}, \texttt{label\_latex}, typ (select), a~\texttt{expected} (specifické pro typ --- MathLive pole, číselný input, MC options, textarea).
+  \item Editor výsledků --- karta pro každý prvek pole \texttt{results}; lze přidat/odebrat; pro každý se mění \texttt{key}, \texttt{label\_latex}, typ (select), a~\texttt{expected} (specifické pro typ):
+  \begin{itemize}
+    \item \texttt{decimal} --- číselný input + tolerance.
+    \item \texttt{mathlive} --- 1--N MathLive polí (viz \emph{Multi-variant} níže).
+    \item \texttt{multiple\_choice} --- řádky s viditelným \emph{oranžovým radiobuttonem} vlevo pro označení správné odpovědi (opraveno v revizi 2026-07-31, dřív bylo skryté kvůli generickému \texttt{.row input \{width:100\%\}} pravidlu), key inputem, label inputem a mazacím tlačítkem.
+    \item \texttt{open\_text} --- textarea se vzorovým řešením (vyhodnocuje ručně).
+  \end{itemize}
 \end{itemize}
+
+\paragraph{Multi-variant MathLive expected.} U typu \texttt{mathlive} umí \texttt{r.expected} být buď \emph{string} (1 přijatelná varianta --- backwards-compat s existujícími úlohami), nebo \emph{list stringů} (2 a více variant --- student uspěje, pokud trefí kteroukoli přes Compute Engine). V UI je pod polem tlačítko „\emph{+ Přidat další správnou variantu}"; přidáním druhé varianty se serializace přepne na list. Evaluator zkouší varianty postupně (symbolic $\rightarrow$ simplified $\rightarrow$ numeric) a v `mode' pole vrací index varianty, která uspěla. Řeší úlohy jako \texttt{cv12\_28}, kde MathLive nerozpozná ekvivalenci mezi ekvivalentními zápisy s racionálními mocninami.
+
+\paragraph{Autosave a carry button.} Editor má \emph{debouncovaný autosave} (800\,ms po každé změně, indikátor „ukládám… / uloženo v HH:MM:SS"). Navigační tlačítka \emph{Prev} / \emph{Další} flushnou pending save před přechodem, \texttt{beforeunload} varuje při zavření tabu s neuloženými změnami. Vedle plain „Další $\rightarrow$" je oranžový button „\emph{Další s kopií anotace} $\rightarrow$" (one-shot přes \texttt{sessionStorage}) --- přenese \texttt{category} + zaškrtnuté \emph{Vlastnosti/Typ/Dovednosti} do následující úlohy, ale \textbf{jen do polí, která jsou v DB \texttt{NULL}}. Nikdy nepřepisuje existující ani vědomě prázdné \texttt{[]}. Šetří klikání pro sekvenční úlohy stejné kategorie ve stejném cvičení.
 
 \paragraph{Pod editorem (full-width) --- Vektor znalostí.}
 \begin{itemize}
@@ -704,15 +754,20 @@ WantedBy=multi-user.target
   \toprule
   \textbf{Akce} & \textbf{Příkaz} \\
   \midrule
-  Status        & \texttt{sudo systemctl status adaptmath} \\
-  Logy (live)   & \texttt{sudo journalctl -u adaptmath -f} \\
-  Restart       & \texttt{sudo systemctl restart adaptmath} \\
-  Update kódu   & \texttt{cd \textasciitilde/adapt\_math \&\& git pull \&\& sudo systemctl restart adaptmath} \\
-  Změnit heslo  & edit \texttt{adaptmath.service}, pak \texttt{daemon-reload} + restart \\
-  Reset DB      & \texttt{DATABASE\_URL=... .venv/bin/python seed\_db.py} \\
-  Vrátit vhost  & \texttt{sudo cp moodle-ssl.conf.bak.* moodle-ssl.conf} + \texttt{reload apache2} \\
+  Status              & \texttt{sudo systemctl status adaptmath} \\
+  Logy (live)         & \texttt{sudo journalctl -u adaptmath -f} \\
+  Restart             & \texttt{sudo systemctl restart adaptmath} \\
+  Update kódu         & \texttt{cd \textasciitilde/adapt\_math \&\& git pull \&\& sudo systemctl restart adaptmath} \\
+  Změnit heslo        & edit \texttt{adaptmath.service}, pak \texttt{daemon-reload} + restart \\
+  Reset DB            & \texttt{DATABASE\_URL=... .venv/bin/python seed\_db.py} \\
+  Vrátit vhost        & \texttt{sudo cp moodle-ssl.conf.bak.* moodle-ssl.conf} + \texttt{reload apache2} \\
+  \textbf{Backup DB}  & \texttt{pg\_dump "\$DATABASE\_URL" -Fc -f \textasciitilde/adaptmath\_backups/adaptmath\_\$(date +\%Y\%m\%d\_\%H\%M).dump} \\
+  \textbf{Restore DB} & \texttt{pg\_restore -c -d "\$DATABASE\_URL" \textasciitilde/adaptmath\_backups/<...>.dump} \\
+  \textbf{Report XLSX} & \texttt{DATABASE\_URL=... .venv/bin/python scripts/export\_task\_stats.py --out ...} \\
   \bottomrule
 \end{tabular}
+
+\paragraph{Export statistik tagů.} Skript \texttt{scripts/export\_task\_stats.py} vytvoří komplexní XLSX (9 listů: Souhrn, Kategorie, Vlastnosti, Typy, Dovednosti, Kategorie×Vlastnosti, Kategorie×Dovednosti, Seznam úloh, Neanotované) s barevným rozlišením dle skupin. Jen \emph{read-only} dotazy na DB. Slouží pro reporting směrem k dr.~Medkové. Vyžaduje \texttt{openpyxl} v prod venvu.
 
 \subsection{Známá omezení}
 
@@ -730,7 +785,7 @@ WantedBy=multi-user.target
 
 \begin{enumerate}
   \item \textbf{Tagování úloh experty.} Tým musí manuálně projít 415 úloh a~přiřadit \texttt{category} + nastavit \texttt{knowledge\_vector}. To je hlavní úkol Task Checkeru.
-  \item \textbf{Distribuce vah dle kategorie.} Definovat slovník \texttt{CATEGORY\_DEFAULT\_VECTOR}, který pro každou ze 61 kategorií předvyplní výchozí distribuci 61 vah. Při výběru kategorie v UI se předvyplní \texttt{knowledge\_vector}, expert pak ladí.
+  \item \textbf{Distribuce vah dle kategorie.} Definovat slovník \texttt{CATEGORY\_DEFAULT\_VECTOR}, který pro každou ze 45 kategorií předvyplní výchozí distribuci 64 vah. Při výběru kategorie v UI se předvyplní \texttt{knowledge\_vector}, expert pak ladí.
   \item \textbf{LLM vyhodnocení \texttt{open\_text}}. Aktuálně máme všechny negace převedeny na \texttt{multiple\_choice}; pro budoucí volné úlohy zavést endpoint \texttt{POST /api/eval-open-text} volající Gemini.
   \item \textbf{Alembic migrace.} Nahradit drop \& recreate řízenými migracemi.
   \item \textbf{Gunicorn pro produkci.} Nahradit Werkzeug dev server na produkci.
@@ -741,7 +796,7 @@ WantedBy=multi-user.target
 \begin{enumerate}
   \item \textbf{IRT engine} (\texttt{py-irt}). Pilotní tréninková fáze pro kalibraci obtížnosti a~diskriminace. Vlastní route \texttt{/student/<id>/next-task}, která vybere úlohu podle aktuálního $\theta$ studenta.
   \item \textbf{BKT engine} (\texttt{py-bkt}). Po každé interakci aktualizuje studentův vektor znalostí na základě \texttt{knowledge\_vector} úlohy a parametrů $\alpha$, $\beta$.
-  \item \textbf{Studentský profil.} Tabulka \texttt{students} s preferencemi (styl učení, motivace, math anxiety) a vektorem znalostí (61 hodnot v $[0, 1]$).
+  \item \textbf{Studentský profil.} Tabulka \texttt{students} s preferencemi (styl učení, motivace, math anxiety) a vektorem znalostí (64 hodnot v $[0, 1]$).
   \item \textbf{Multi-user režim.} Tabulka \texttt{users} + Flask-Login pro plnohodnotné přihlašování více účtů (zatím sdílíme jedno heslo).
   \item \textbf{Logování interakcí} pro výzkum (čas řešení, jistota, AI nápověda).
 \end{enumerate}
