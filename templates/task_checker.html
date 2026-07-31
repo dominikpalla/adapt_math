@@ -142,7 +142,21 @@
             grid-template-columns: auto 90px minmax(0, 1fr) auto;
             gap: 6px; align-items: center; margin-bottom: 6px;
         }
-        .mc-row input[type="radio"] { margin: 0; }
+        /* Reset generického `.row input {width:100%; padding; border}` pravidla
+           pro radiobutton uvnitř .mc-row — jinak radio dostane 100% width +
+           padding + border a stane se neviditelným "obdélníkem". Chceme ho
+           renderovat jako nativní radio (student vidí, kliká, ví že to je
+           volba správné odpovědi). */
+        .mc-row input[type="radio"] {
+            width: 20px; height: 20px;
+            margin: 0; padding: 0;
+            border: none; background: transparent;
+            appearance: radio;
+            -webkit-appearance: radio;
+            cursor: pointer;
+            accent-color: var(--orange);
+        }
+        .mc-row input[type="radio"]:checked { outline: 2px solid var(--orange); outline-offset: 2px; border-radius: 50%; }
 
         /* Sandbox MC option — radio + label vedle sebe (flexbox).
            Předchozí verze s position:absolute na inputu selhávala v iOS
