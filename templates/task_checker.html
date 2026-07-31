@@ -144,22 +144,32 @@
         }
         .mc-row input[type="radio"] { margin: 0; }
 
-        /* Sandbox MC option — block-level s absolute positioned radio
-           (vědomě bez flexboxu, je to nejstabilnější napříč prohlížeči
-           u dlouhých LaTeX textů s vloženým KaTeX inline math) */
+        /* Sandbox MC option — radio + label vedle sebe (flexbox).
+           Předchozí verze s position:absolute na inputu selhávala v iOS
+           Chrome/Safari (radio se vykresloval vprostřed textu, přes text).
+           Flex + min-width:0 na textu je spolehlivější a wrap dlouhých
+           LaTeX vzorců uvnitř flex itemu funguje. */
         .sb-mc-option {
-            display: block;
-            position: relative;
-            padding: 12px 14px 12px 40px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 14px;
             margin-bottom: 6px;
             background: #fafafa; border: 1px solid #e0e0e0; border-radius: 6px;
             cursor: pointer; line-height: 1.55;
-            overflow-wrap: break-word; word-break: normal;
         }
         .sb-mc-option:hover { background: #f0f0f0; }
         .sb-mc-option > input[type="radio"] {
-            position: absolute; left: 14px; top: 16px;
-            margin: 0;
+            flex: 0 0 auto;
+            width: 18px; height: 18px;
+            margin: 3px 0 0 0;   /* mírně dolů, ať sedí s baseline prvního řádku */
+            cursor: pointer;
+        }
+        .sb-mc-option > .sb-mc-text {
+            flex: 1 1 auto;
+            min-width: 0;
+            overflow-wrap: break-word;
+            word-break: break-word;
         }
         /* KaTeX defaultně používá white-space:nowrap — to pro inline math v dlouhých
            labelů znamená že math segment se chová jako jedno atomické slovo a může
