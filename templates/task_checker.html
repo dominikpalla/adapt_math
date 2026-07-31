@@ -198,6 +198,21 @@
         .mc-row .btn-x { background: var(--red); color: #fff; border: none; border-radius: 4px;
             padding: 4px 8px; cursor: pointer; font-size: 12px; }
 
+        /* MathLive multi-variant editor: math-field + × pro odebrání varianty */
+        .ml-variants { display: flex; flex-direction: column; gap: 6px; }
+        .ml-variant-row { display: flex; gap: 8px; align-items: stretch; }
+        .ml-variant-row math-field { flex: 1 1 auto; min-width: 0; }
+        .ml-variant-row .ml-vidx {
+            display: inline-flex; align-items: center; justify-content: center;
+            padding: 0 8px; font-size: 11px; font-weight: 600; color: #888;
+            background: #f0f0f0; border-radius: 4px; font-family: 'SF Mono', monospace;
+        }
+        .btn-x-variant {
+            background: var(--red); color: #fff; border: none; border-radius: 4px;
+            padding: 0 10px; cursor: pointer; font-size: 14px; font-weight: bold;
+        }
+        .btn-x-variant:hover { opacity: 0.85; }
+
         /* Buttons */
         button.btn { border: none; padding: 9px 16px; font-size: 14px; border-radius: 6px;
             cursor: pointer; font-weight: 600; }
@@ -912,6 +927,28 @@ function resetKnowledgeVector() {
     setDirty();
 }
 
+/* -------- MathLive variants helper --------------------------------------
+ * `r.expected` u typu `mathlive` může být:
+ *   - string  (1 přijatelná varianta — backwards-compat, jak jsou uložené
+ *     existující úlohy)
+ *   - list[string] (2+ přijatelných variant — student uspěje, pokud trefí
+ *     kteroukoli přes Compute Engine)
+ *
+ * Interně vždy pracujeme s polem (getMathliveVariants), serializujeme
+ * zpět (setMathliveVariants) na string, pokud varianta zůstane jediná —
+ * aby se v DB nezměnil formát u úloh, kde má expert jen jednu odpověď.
+ */
+function getMathliveVariants(r) {
+    if (Array.isArray(r.expected)) return r.expected;
+    if (typeof r.expected === 'string') return [r.expected];
+    return [''];
+}
+function setMathliveVariants(r, variants) {
+    // Ochranná pojistka — nikdy neuložit prázdné pole
+    if (!variants.length) variants = [''];
+    r.expected = variants.length === 1 ? (variants[0] || '') : variants.slice();
+}
+
 /* -------- Content + expected preview ------------------------------------- */
 
 function refreshContentPreview() {
@@ -932,7 +969,16 @@ function refreshExpectedPreview() {
         if (r.type === 'decimal') {
             body = `<code>${escapeHtml(r.expected)}</code>` + (r.tolerance ? ` <small>(±${r.tolerance})</small>` : '');
         } else if (r.type === 'mathlive') {
-            body = `$${r.expected}$ <code class="live-code">${escapeHtml(r.expected || '')}</code>`;
+            const variants = getMathliveVariants(r).filter(v => v);
+            if (!variants.length) {
+                body = '<em style="color:#bbb;">(prázdné)</em>';
+            } else if (variants.length === 1) {
+                body = `$${variants[0]}$ <code class="live-code">${escapeHtml(variants[0])}</code>`;
+            } else {
+                body = variants.map((v, vi) =>
+                    `<div>${vi === 0 ? '' : '<em style="color:#888;">nebo</em> '}$${v}$ <code class="live-code">${escapeHtml(v)}</code></div>`
+                ).join('');
+            }
         } else if (r.type === 'multiple_choice') {
             body = (r.options || []).map(o => {
                 const ok = o.key === r.expected;
@@ -1036,18 +1082,46 @@ function buildResultsEditor() {
         b.onclick = () => removeResult(parseInt(b.dataset.idx, 10));
     });
 
-    // MathLive inputs (pro mathlive expected)
+    // MathLive inputs (pro mathlive expected) — nyní multi-variant přes vidx
     root.querySelectorAll('math-field[data-mf-role="expected"]').forEach(mf => {
         const i = parseInt(mf.dataset.idx, 10);
+        const vi = parseInt(mf.dataset.vidx, 10) || 0;
         const init = () => {
             if (!customElements.get('math-field')) return setTimeout(init, 50);
-            mf.value = state.results[i].expected || '';
+            const variants = getMathliveVariants(state.results[i]);
+            mf.value = variants[vi] || '';
             mf.addEventListener('input', () => {
-                state.results[i].expected = mf.value;
+                const variants = getMathliveVariants(state.results[i]);
+                variants[vi] = mf.value;
+                setMathliveVariants(state.results[i], variants);
                 refreshExpectedPreview(); buildSandbox(); setDirty();
             });
         };
         init();
+    });
+
+    // Add another accepted variant to a mathlive result
+    root.querySelectorAll('[data-add-variant]').forEach(b => {
+        b.onclick = () => {
+            const i = parseInt(b.dataset.addVariant, 10);
+            const variants = getMathliveVariants(state.results[i]);
+            variants.push('');
+            setMathliveVariants(state.results[i], variants);
+            buildResultsEditor(); refreshExpectedPreview(); buildSandbox(); setDirty();
+        };
+    });
+
+    // Remove one variant from a mathlive result (kromě poslední — nikdy 0 variant)
+    root.querySelectorAll('[data-remove-variant]').forEach(b => {
+        b.onclick = () => {
+            const i = parseInt(b.dataset.removeVariant, 10);
+            const vi = parseInt(b.dataset.vidx, 10);
+            const variants = getMathliveVariants(state.results[i]);
+            if (variants.length <= 1) return;
+            variants.splice(vi, 1);
+            setMathliveVariants(state.results[i], variants);
+            buildResultsEditor(); refreshExpectedPreview(); buildSandbox(); setDirty();
+        };
     });
 
     // Decimal expected/tolerance
@@ -1117,10 +1191,19 @@ function renderResultExpectedEditor(r, i) {
         </div>`;
     }
     if (r.type === 'mathlive') {
+        const variants = getMathliveVariants(r);
+        const multi = variants.length > 1;
+        const fields = variants.map((v, vi) => `
+            <div class="ml-variant-row" data-idx="${i}" data-vidx="${vi}">
+                ${multi ? `<span class="ml-vidx">#${vi + 1}</span>` : ''}
+                <math-field data-mf-role="expected" data-idx="${i}" data-vidx="${vi}"></math-field>
+                ${multi ? `<button class="btn-x-variant" data-remove-variant="${i}" data-vidx="${vi}" title="Odebrat tuto variantu">×</button>` : ''}
+            </div>`).join('');
         return `<div class="row">
-            <label>Správná odpověď (LaTeX)</label>
-            <math-field data-mf-role="expected" data-idx="${i}"></math-field>
-            <p class="hint-text">Porovnáno přes MathLive Compute Engine (symbolicky + numericky).</p>
+            <label>Správná odpověď (LaTeX)${multi ? ` <span style="color:#888;font-weight:normal;font-size:11px;">— ${variants.length} přijatelných variant</span>` : ''}</label>
+            <div class="ml-variants">${fields}</div>
+            <button class="btn-add" type="button" data-add-variant="${i}" style="margin-top:8px;">+ Přidat další správnou variantu</button>
+            <p class="hint-text">Porovnáno přes MathLive Compute Engine (symbolicky + numericky). Když je variant víc, student uspěje, pokud trefí <strong>kteroukoli</strong> z nich.</p>
         </div>`;
     }
     if (r.type === 'multiple_choice') {
@@ -1253,23 +1336,44 @@ async function evaluateResult(r, studentInput, idx) {
     if (r.type === 'mathlive') {
         const ce = getComputeEngine();
         if (!ce) return { ok: false, fieldLabel: baseLabel, detail: 'Compute Engine nenačten' };
-        let s, c;
-        try { s = ce.parse(studentInput); c = ce.parse(r.expected); }
-        catch(e) { return { ok: false, fieldLabel: baseLabel, detail: 'Parse error: ' + e.message }; }
-        try { if (s.canonical && c.canonical && s.canonical.isSame(c.canonical))
-            return { ok: true, fieldLabel: baseLabel, mode: 'symbolic', studentLatex: studentInput, correctLatex: r.expected }; } catch(e){}
-        try { if (s.simplify().isSame(c.simplify()))
-            return { ok: true, fieldLabel: baseLabel, mode: 'simplified', studentLatex: studentInput, correctLatex: r.expected }; } catch(e){}
-        try {
-            const sN = s.N().valueOf(), cN = c.N().valueOf();
-            if (sN === cN) return { ok: true, fieldLabel: baseLabel, mode: 'numeric', studentLatex: studentInput, correctLatex: r.expected, studentValue: sN, correctValue: cN };
-            if (Number.isFinite(sN) && Number.isFinite(cN)) {
-                const tol = Math.max(r.tolerance || 0, 1e-9);
-                const ok = Math.abs(sN - cN) <= tol;
-                return { ok, fieldLabel: baseLabel, mode: ok ? 'numeric' : 'mismatch', studentLatex: studentInput, correctLatex: r.expected, studentValue: sN, correctValue: cN };
+        const variants = getMathliveVariants(r).filter(v => v && v.trim());
+        if (!variants.length) return { ok: false, fieldLabel: baseLabel, detail: 'Prázdné expected' };
+
+        let s;
+        try { s = ce.parse(studentInput); }
+        catch(e) { return { ok: false, fieldLabel: baseLabel, detail: 'Parse error (student): ' + e.message }; }
+
+        // Zkusíme každou variantu; první match = úspěch. Když žádná neprojde,
+        // vrátíme detail o poslední (studentovi ukážeme, s čím jsme porovnávali).
+        let lastMismatch = null;
+        for (let vi = 0; vi < variants.length; vi++) {
+            const expected = variants[vi];
+            const variantTag = variants.length > 1 ? ` (varianta #${vi + 1}/${variants.length})` : '';
+            let c;
+            try { c = ce.parse(expected); }
+            catch(e) {
+                lastMismatch = { ok: false, fieldLabel: baseLabel, detail: `Parse error (varianta #${vi + 1}): ` + e.message };
+                continue;
             }
-            return { ok: false, fieldLabel: baseLabel, mode: 'mismatch', studentLatex: studentInput, correctLatex: r.expected, studentValue: sN, correctValue: cN };
-        } catch(e) { return { ok: false, fieldLabel: baseLabel, detail: 'Eval chyba: ' + e.message }; }
+            try { if (s.canonical && c.canonical && s.canonical.isSame(c.canonical))
+                return { ok: true, fieldLabel: baseLabel, mode: 'symbolic' + variantTag, studentLatex: studentInput, correctLatex: expected }; } catch(e){}
+            try { if (s.simplify().isSame(c.simplify()))
+                return { ok: true, fieldLabel: baseLabel, mode: 'simplified' + variantTag, studentLatex: studentInput, correctLatex: expected }; } catch(e){}
+            try {
+                const sN = s.N().valueOf(), cN = c.N().valueOf();
+                if (sN === cN)
+                    return { ok: true, fieldLabel: baseLabel, mode: 'numeric' + variantTag, studentLatex: studentInput, correctLatex: expected, studentValue: sN, correctValue: cN };
+                if (Number.isFinite(sN) && Number.isFinite(cN)) {
+                    const tol = Math.max(r.tolerance || 0, 1e-9);
+                    if (Math.abs(sN - cN) <= tol)
+                        return { ok: true, fieldLabel: baseLabel, mode: 'numeric' + variantTag, studentLatex: studentInput, correctLatex: expected, studentValue: sN, correctValue: cN };
+                }
+                lastMismatch = { ok: false, fieldLabel: baseLabel, mode: 'mismatch', studentLatex: studentInput, correctLatex: expected, studentValue: sN, correctValue: cN };
+            } catch(e) {
+                lastMismatch = { ok: false, fieldLabel: baseLabel, detail: `Eval chyba (varianta #${vi + 1}): ` + e.message };
+            }
+        }
+        return lastMismatch || { ok: false, fieldLabel: baseLabel, mode: 'mismatch', studentLatex: studentInput };
     }
     if (r.type === 'multiple_choice') {
         const ok = studentInput === r.expected;
