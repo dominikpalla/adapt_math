@@ -41,6 +41,13 @@ DB_URL = os.environ.get(
 
 app = Flask(__name__)
 
+# Přijmout jak `/tasks`, tak `/tasks/` — jinak Flask defaultně vrací 404
+# pro variantu, která neodpovídá dekorátoru. Chrome/Windows některým
+# uživatelům v adresním řádku doplňuje koncové lomítko, případně mají
+# záložku s `/tasks/`. Musí být nastaveno před tím, než se @app.route
+# dekorátory vezmou (kopírují si tuhle hodnotu do každého Rule).
+app.url_map.strict_slashes = False
+
 # Reverse-proxy podpora (Apache, Nginx). Pokud aplikace běží za reverzní
 # proxy s sub-cestou (např. https://moodlefim.uhk.cz/adaptmath/), Apache
 # odřízne /adaptmath/ z URL a pošle X-Forwarded-Prefix; ProxyFix prepne
