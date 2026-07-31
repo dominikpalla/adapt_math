@@ -322,6 +322,124 @@ def api_task_delete(task_id):
         session.close()
 
 
+@app.route("/api/tasks/bulk", methods=["POST"])
+@require_login
+def api_task_bulk():
+    """Hromadná anotace: pro vybrané task_ids aplikuj operace na jednotlivá
+    anotační pole. Vše v jedné transakci — buď všechny změny nebo žádná.
+
+    Očekávaný payload (všechna pole `operations` jsou volitelná):
+        {
+          "task_ids": ["cv01_01", "cv01_02", ...],
+          "operations": {
+            "category":   {"mode": "always"|"only_if_null", "value": "SŠ - Rovnice"},
+            "properties": {"mode": "add"|"replace"|"remove", "values": [...]},
+            "task_type":  {"mode": "add"|"replace"|"remove", "values": [...]},
+            "skills":     {"mode": "add"|"replace"|"remove", "values": [...]}
+          }
+        }
+
+    Vrací:
+        {
+          "ok": true,
+          "changed": <int>,   # kolik řádků reálně změněno
+          "skipped": <int>,   # kolik zůstalo beze změny (např. only_if_null a už mělo hodnotu)
+          "not_found": [...], # task_ids, které v DB neexistují
+        }
+    """
+    payload = request.get_json(silent=True) or {}
+    task_ids = payload.get("task_ids") or []
+    ops = payload.get("operations") or {}
+
+    if not isinstance(task_ids, list) or not task_ids:
+        return jsonify({"error": "task_ids musí být neprázdné pole."}), 400
+    if not isinstance(ops, dict) or not ops:
+        return jsonify({"error": "operations musí obsahovat alespoň jednu operaci."}), 400
+
+    # Validace jednotlivých operací
+    if "category" in ops:
+        op = ops["category"]
+        if op.get("mode") not in ("always", "only_if_null"):
+            return jsonify({"error": "category.mode musí být 'always' nebo 'only_if_null'."}), 400
+        if not isinstance(op.get("value"), (str, type(None))):
+            return jsonify({"error": "category.value musí být string nebo null."}), 400
+    for field in ("properties", "task_type", "skills"):
+        if field in ops:
+            op = ops[field]
+            if op.get("mode") not in ("add", "replace", "remove"):
+                return jsonify({"error": f"{field}.mode musí být 'add', 'replace' nebo 'remove'."}), 400
+            if not isinstance(op.get("values"), list):
+                return jsonify({"error": f"{field}.values musí být pole."}), 400
+            if not all(isinstance(v, str) for v in op["values"]):
+                return jsonify({"error": f"{field}.values musí obsahovat jen stringy."}), 400
+
+    from sqlalchemy import select
+    session = SessionLocal()
+    try:
+        rows = session.query(MathTask).filter(MathTask.task_id.in_(task_ids)).all()
+        found_ids = {r.task_id for r in rows}
+        not_found = [tid for tid in task_ids if tid not in found_ids]
+
+        changed = 0
+        skipped = 0
+        for task in rows:
+            row_changed = False
+
+            # 1) category (single-value string)
+            if "category" in ops:
+                op = ops["category"]
+                new_val = op["value"] or None
+                if op["mode"] == "always":
+                    if task.category != new_val:
+                        task.category = new_val
+                        row_changed = True
+                elif op["mode"] == "only_if_null":
+                    # Aplikuj jen když v DB je NULL (nikoli když je prázdný string)
+                    if task.category is None:
+                        task.category = new_val
+                        row_changed = True
+
+            # 2) multi-select pole (properties / task_type / skills)
+            for field in ("properties", "task_type", "skills"):
+                if field not in ops:
+                    continue
+                op = ops[field]
+                current = list(getattr(task, field) or [])
+                new_list = list(current)
+                if op["mode"] == "add":
+                    for v in op["values"]:
+                        if v not in new_list:
+                            new_list.append(v)
+                elif op["mode"] == "replace":
+                    new_list = list(op["values"])
+                elif op["mode"] == "remove":
+                    new_list = [v for v in current if v not in op["values"]]
+                if new_list != current:
+                    setattr(task, field, new_list)
+                    flag_modified(task, field)
+                    row_changed = True
+
+            if row_changed:
+                changed += 1
+            else:
+                skipped += 1
+
+        session.commit()
+        return jsonify({
+            "ok": True,
+            "changed": changed,
+            "skipped": skipped,
+            "not_found": not_found,
+        })
+    except Exception as e:
+        session.rollback()
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": f"Chyba serveru: {e}"}), 500
+    finally:
+        session.close()
+
+
 if __name__ == "__main__":
     print("🚀 AdaptMath Task Checker běží na http://127.0.0.1:5000")
     app.run(debug=True, port=5000)
