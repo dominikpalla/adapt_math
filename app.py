@@ -262,6 +262,18 @@ def api_task_save(task_id):
         if unknown:
             return jsonify({"error": f"Neznámá pole: {sorted(unknown)}"}), 400
 
+        # task_id validace — chránit před tím, aby autosave nechtěně
+        # neuložil prázdný nebo whitespace-only ID (autor se stalo, viz
+        # incident 2026-07-31: úloha s task_id='' šla z UI 404 a v seznamu
+        # měla prázdný sloupec, ačkoli fyzicky v DB stále existovala).
+        if "task_id" in payload:
+            raw = payload["task_id"]
+            if not isinstance(raw, str) or not raw.strip():
+                return jsonify({
+                    "error": "task_id nesmí být prázdné (autosave odmítnut)."
+                }), 400
+            payload["task_id"] = raw.strip()  # normalizovaně bez whitespace
+
         new_id = payload.get("task_id")
         renamed = new_id and new_id != task.task_id
         if renamed:
