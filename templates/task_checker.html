@@ -249,6 +249,7 @@
         .grp-typ        { color: #ef6c00; }   /* tmavě oranžová */
         .grp-dovednosti { color: #d84315; }   /* červenooranžová */
         .grp-ss         { color: #8d6e00; }   /* olivově žlutá (tmavší) */
+        .grp-logika     { color: #607d8b; }   /* blue-gray — samostatná Výroková logika */
         .grp-funkce     { color: #1565c0; }   /* modrá */
         .grp-monotonie  { color: #6a1b9a; }   /* fialová */
         .grp-konvex     { color: #455a64; }   /* tmavě šedá */
@@ -264,6 +265,7 @@
         option.grp-typ        { color: #ef6c00; }
         option.grp-dovednosti { color: #d84315; }
         option.grp-ss         { color: #8d6e00; }
+        option.grp-logika     { color: #607d8b; }
         option.grp-funkce     { color: #1565c0; }
         option.grp-monotonie  { color: #6a1b9a; }
         option.grp-konvex     { color: #455a64; }
@@ -474,7 +476,7 @@
         </div>
         <!-- Legenda skupin vah -->
         <div class="kv-legend">
-            {% set legend_order = ['vlasnosti', 'typ', 'dovednosti', 'ss', 'funkce', 'monotonie', 'spojitost', 'limita', 'derivace', 'konvex', 'prubeh', 'pf', 'ui'] %}
+            {% set legend_order = ['vlasnosti', 'typ', 'dovednosti', 'ss', 'logika', 'funkce', 'monotonie', 'spojitost', 'limita', 'derivace', 'konvex', 'prubeh', 'pf', 'ui'] %}
             {% for g in legend_order %}
             <span class="leg grp-{{ g }}"><span class="dot" style="background: currentColor;"></span>{{ group_labels[g] }}</span>
             {% endfor %}
