@@ -16,7 +16,7 @@ Strategie kódování:
 TASKS = [
     # --------------------- 3 negace výroků ---------------------
     {
-        "task_id": "cv01_1",
+        "task_id": "cv01_01",
         "content_latex": (
             r"Formulujte negaci filmového titulu: "
             r"\textit{Jestliže se rozzlobíme, budeme zlí.}"
@@ -33,7 +33,7 @@ TASKS = [
         "cognitive_load": "A", "graph_vector": ["Negace výroků"],
     },
     {
-        "task_id": "cv01_2",
+        "task_id": "cv01_02",
         "content_latex": (
             r"Formulujte negaci výroku: "
             r"\textit{Je-li } $\mathbf{B}$ \textit{ množina všech sudých prvočísel větších než } $2,$ "
@@ -51,7 +51,7 @@ TASKS = [
         "cognitive_load": "B", "graph_vector": ["Negace výroků"],
     },
     {
-        "task_id": "cv01_3",
+        "task_id": "cv01_03",
         "content_latex": (
             r"Formulujte negaci výroku o reflexivnosti uspořádání reálných čísel: "
             r"\textit{Pro každé } $x \in \mathbb{R}$ \textit{ platí } $x \le x.$"
@@ -70,35 +70,35 @@ TASKS = [
 
     # --------------------- 25 definičních oborů ---------------------
     {
-        "task_id": "cv01_4",
+        "task_id": "cv01_04",
         "content_latex": r"Určete definiční obor funkce $y = \sqrt{x-1} + \sqrt{6-x}$.",
         "results": [{"key": "D", "label_latex": r"D(f) = ", "type": "mathlive",
                      "expected": r"[1, 6]"}],
         "cognitive_load": "B", "graph_vector": ["Definiční obor"],
     },
     {
-        "task_id": "cv01_5",
+        "task_id": "cv01_05",
         "content_latex": r"Určete definiční obor funkce $y = \sqrt{x^2 - 5x + 6}$.",
         "results": [{"key": "D", "label_latex": r"D(f) = ", "type": "mathlive",
                      "expected": r"(-\infty, 2] \cup [3, \infty)"}],
         "cognitive_load": "C", "graph_vector": ["Definiční obor"],
     },
     {
-        "task_id": "cv01_6",
+        "task_id": "cv01_06",
         "content_latex": r"Určete definiční obor funkce $y = \dfrac{1}{\sqrt{6 + 7x - 3x^2}}$.",
         "results": [{"key": "D", "label_latex": r"D(f) = ", "type": "mathlive",
                      "expected": r"\left(-\frac{2}{3}, 3\right)"}],
         "cognitive_load": "C", "graph_vector": ["Definiční obor"],
     },
     {
-        "task_id": "cv01_7",
+        "task_id": "cv01_07",
         "content_latex": r"Určete definiční obor funkce $y = \log\left(5 - x - \dfrac{6}{x}\right)$.",
         "results": [{"key": "D", "label_latex": r"D(f) = ", "type": "mathlive",
                      "expected": r"(-\infty, 0) \cup (2, 3)"}],
         "cognitive_load": "D", "graph_vector": ["Definiční obor"],
     },
     {
-        "task_id": "cv01_8",
+        "task_id": "cv01_08",
         "content_latex": r"Určete definiční obor funkce $y = \ln\left(\dfrac{x^2 - 7x + 12}{x^2 - 2x - 3}\right)$.",
         "results": [{"key": "D", "label_latex": r"D(f) = ", "type": "mathlive",
                      "expected": r"(-\infty, -1) \cup (4, \infty)"}],
@@ -106,7 +106,7 @@ TASKS = [
     },
     {
         # Cyklický def. obor — multiple choice (mathlive sjednocení po k∈ℤ je moc).
-        "task_id": "cv01_9",
+        "task_id": "cv01_09",
         "content_latex": r"Určete definiční obor funkce $y = \sqrt{(\sin x + \cos x)^2 - 1}$.",
         "results": [{
             "key": "D", "label_latex": r"D(f) = ", "type": "multiple_choice",

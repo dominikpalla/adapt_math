@@ -6,7 +6,7 @@ hledání asymptot.
 
 def _conv(idx, fn, correct, distr_b, distr_c, cl="D"):
     return {
-        "task_id": f"cv10_{idx}",
+        "task_id": f"cv10_{idx:02d}",
         "content_latex": (
             r"Určete intervaly, na kterých je funkce $f$ ryze konvexní nebo ryze konkávní, "
             r"a inflexní body: $f(x) = " + fn + "$."
@@ -27,7 +27,7 @@ def _conv(idx, fn, correct, distr_b, distr_c, cl="D"):
 TASKS = [
     # --------------------- 3 negace ---------------------
     {
-        "task_id": "cv10_1",
+        "task_id": "cv10_01",
         "content_latex": (
             r"Formulujte negaci výroku o asociativnosti násobení: "
             r"\textit{Pro každou trojici } $x, y, z \in \mathbb{R}$ \textit{ platí } "
@@ -45,7 +45,7 @@ TASKS = [
         "cognitive_load": "C", "graph_vector": ["Negace výroků"],
     },
     {
-        "task_id": "cv10_2",
+        "task_id": "cv10_02",
         "content_latex": (
             r"Formulujte negaci výroku o neutrálním prvku pro součin: "
             r"\textit{Existuje } $\nu \in \mathbb{R} \setminus \{0\}$ \textit{ takové, že pro každé } "
@@ -63,7 +63,7 @@ TASKS = [
         "cognitive_load": "D", "graph_vector": ["Negace výroků"],
     },
     {
-        "task_id": "cv10_3",
+        "task_id": "cv10_03",
         "content_latex": (
             r"Formulujte negaci výroku o inverzním prvku pro součin: "
             r"\textit{Pro každé } $x \in \mathbb{R} \setminus \{0\}$ \textit{ existuje } $y \in \mathbb{R}$ "

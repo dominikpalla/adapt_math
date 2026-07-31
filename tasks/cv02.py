@@ -6,7 +6,7 @@ Vlastnosti: prostá funkce, inverzní funkce.
 TASKS = [
     # --------------------- 3 negace ---------------------
     {
-        "task_id": "cv02_1",
+        "task_id": "cv02_01",
         "content_latex": (
             r"Ve tvaru implikace formulujte rčení: \textit{Kdo maže, ten jede.} "
             r"Pak vyslovte jeho negaci."
@@ -34,7 +34,7 @@ TASKS = [
         "cognitive_load": "B", "graph_vector": ["Negace výroků"],
     },
     {
-        "task_id": "cv02_2",
+        "task_id": "cv02_02",
         "content_latex": (
             r"Nechť $\mathbf{M} \subseteq \mathbb{R}.$ Formulujte negaci výroku: "
             r"\textit{Funkce } $f: \mathbf{M} \to \mathbb{R}$ \textit{ je prostá na } $\mathbf{M}$ "
@@ -53,7 +53,7 @@ TASKS = [
         "cognitive_load": "D", "graph_vector": ["Negace výroků", "Prostá funkce"],
     },
     {
-        "task_id": "cv02_3",
+        "task_id": "cv02_03",
         "content_latex": (
             r"Formulujte negaci výroku: "
             r"\textit{Každá neprázdná shora omezená množina } $\mathbf{M} \subset \mathbb{R}$ "
@@ -73,7 +73,7 @@ TASKS = [
 
     # --------------------- 4 operace s funkcemi (multi-výsledek) ---------------------
     {
-        "task_id": "cv02_4",
+        "task_id": "cv02_04",
         "content_latex": r"Určete předpisy funkcí $f+g,\ f \cdot g,\ f/g,\ f \circ g,\ g \circ f$, je-li $f: y = 2x,\ g: y = x^2 + 1$.",
         "results": [
             {"key": "fplusg",  "label_latex": r"(f+g)(x) = ",      "type": "mathlive", "expected": r"2x + x^2 + 1"},
@@ -85,7 +85,7 @@ TASKS = [
         "cognitive_load": "C", "graph_vector": ["Skládání funkcí"],
     },
     {
-        "task_id": "cv02_5",
+        "task_id": "cv02_05",
         "content_latex": r"Určete předpisy funkcí $f+g,\ f \cdot g,\ f/g,\ f \circ g,\ g \circ f$, je-li $f: y = 3x - 2,\ g: y = |x|$.",
         "results": [
             {"key": "fplusg",  "label_latex": r"(f+g)(x) = ",      "type": "mathlive", "expected": r"3x + |x| - 2"},
@@ -97,7 +97,7 @@ TASKS = [
         "cognitive_load": "C", "graph_vector": ["Skládání funkcí"],
     },
     {
-        "task_id": "cv02_6",
+        "task_id": "cv02_06",
         "content_latex": r"Určete předpisy funkcí $f+g,\ f \cdot g,\ f/g,\ f \circ g,\ g \circ f$, je-li $f: y = \sqrt{x+1},\ g: y = x - 2$.",
         "results": [
             {"key": "fplusg",  "label_latex": r"(f+g)(x) = ",      "type": "mathlive", "expected": r"\sqrt{x+1} + x - 2"},
@@ -109,7 +109,7 @@ TASKS = [
         "cognitive_load": "C", "graph_vector": ["Skládání funkcí"],
     },
     {
-        "task_id": "cv02_7",
+        "task_id": "cv02_07",
         "content_latex": r"Určete předpisy funkcí $f+g,\ f \cdot g,\ f/g,\ f \circ g,\ g \circ f$, je-li $f: y = \dfrac{x}{x^2 + 1},\ g: y = \dfrac{1}{x}$.",
         "results": [
             {"key": "fplusg",  "label_latex": r"(f+g)(x) = ",      "type": "mathlive", "expected": r"\frac{2x^2 + 1}{x(x^2 + 1)}"},
@@ -123,7 +123,7 @@ TASKS = [
 
     # --------------------- f∘f a f∘f∘f pro f(x)=1/(1-x) ---------------------
     {
-        "task_id": "cv02_8",
+        "task_id": "cv02_08",
         "content_latex": r"Je-li $f(x) = \dfrac{1}{1 - x},$ určete předpis a definiční obor funkce $f \circ f.$",
         "results": [
             {"key": "predpis", "label_latex": r"(f \circ f)(x) = ", "type": "mathlive",
@@ -134,7 +134,7 @@ TASKS = [
         "cognitive_load": "D", "graph_vector": ["Skládání funkcí"],
     },
     {
-        "task_id": "cv02_9",
+        "task_id": "cv02_09",
         "content_latex": r"Je-li $f(x) = \dfrac{1}{1 - x},$ určete předpis a definiční obor funkce $f \circ f \circ f.$",
         "results": [
             {"key": "predpis", "label_latex": r"(f \circ f \circ f)(x) = ", "type": "mathlive",

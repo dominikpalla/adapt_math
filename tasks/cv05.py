@@ -6,7 +6,7 @@ Cvičení 5 — Limita funkce: věta o limitě složené funkce, typové limity.
 def _lim(idx, content, expected, cl="C"):
     """Jednoduchá limita s mathlive výsledkem."""
     return {
-        "task_id": f"cv05_{idx}",
+        "task_id": f"cv05_{idx:02d}",
         "content_latex": content,
         "results": [{"key": "lim", "label_latex": "", "type": "mathlive", "expected": expected}],
         "cognitive_load": cl, "graph_vector": ["Limity funkcí"],
@@ -16,7 +16,7 @@ def _lim(idx, content, expected, cl="C"):
 def _lim_dec(idx, content, value, tol=0.001, cl="B"):
     """Limita s číselnou hodnotou (decimal)."""
     return {
-        "task_id": f"cv05_{idx}",
+        "task_id": f"cv05_{idx:02d}",
         "content_latex": content,
         "results": [{"key": "lim", "label_latex": "", "type": "decimal", "expected": value, "tolerance": tol}],
         "cognitive_load": cl, "graph_vector": ["Limity funkcí"],
@@ -26,7 +26,7 @@ def _lim_dec(idx, content, value, tol=0.001, cl="B"):
 TASKS = [
     # --------------------- 3 negace ---------------------
     {
-        "task_id": "cv05_1",
+        "task_id": "cv05_01",
         "content_latex": (
             r"Formulujte negaci výroku: \textit{Je-li } $x = $ Karel IV. \textit{ a } "
             r"$\mathbf{C}$ \textit{ množina všech současných politiků, pak } $x \notin \mathbf{C}.$"
@@ -43,7 +43,7 @@ TASKS = [
         "cognitive_load": "B", "graph_vector": ["Negace výroků"],
     },
     {
-        "task_id": "cv05_2",
+        "task_id": "cv05_02",
         "content_latex": (
             r"Formulujte negaci výroku o slučitelnosti sčítání s uspořádáním: "
             r"\textit{Pro libovolnou trojici } $x, y, z \in \mathbb{R}$ \textit{ platí: "
@@ -61,7 +61,7 @@ TASKS = [
         "cognitive_load": "C", "graph_vector": ["Negace výroků"],
     },
     {
-        "task_id": "cv05_3",
+        "task_id": "cv05_03",
         "content_latex": (
             r"Formulujte negaci existenčního výroku: \textit{Pro každou } $f: \mathbb{R} \to \mathbb{R}$ "
             r"\textit{ a každý bod } $a \in \mathbb{R}^*$ \textit{ existuje nejvýše jedna limita } "

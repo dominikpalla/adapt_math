@@ -10,7 +10,7 @@ se správnou + 2 typickými chybami (prohození roste/klesá, posun bodů).
 
 def _mono(idx, fn, correct, distr_b, distr_c, cl="C"):
     return {
-        "task_id": f"cv09_{idx}",
+        "task_id": f"cv09_{idx:02d}",
         "content_latex": (
             r"Určete intervaly, na kterých je funkce $f$ ryze monotonní, "
             r"a určete lokální extrémy: $f(x) = " + fn + "$."
@@ -31,7 +31,7 @@ def _mono(idx, fn, correct, distr_b, distr_c, cl="C"):
 TASKS = [
     # --------------------- 3 negace ---------------------
     {
-        "task_id": "cv09_1",
+        "task_id": "cv09_01",
         "content_latex": (
             r"Nechť $f$ je spojitá na $\mathbf{I}$ a má v každém bodě derivaci. "
             r"Formulujte negaci výroku: \textit{Je-li } $f'(x) > 0$ \textit{ pro každý vnitřní bod "
@@ -49,7 +49,7 @@ TASKS = [
         "cognitive_load": "D", "graph_vector": ["Negace výroků", "Derivace"],
     },
     {
-        "task_id": "cv09_2",
+        "task_id": "cv09_02",
         "content_latex": (
             r"Formulujte negaci výroku: \textit{Je-li } $f'(x) < 0$ \textit{ pro každý vnitřní bod "
             r"intervalu } $\mathbf{I},$ \textit{ je } $f$ \textit{ klesající na } $\mathbf{I}.$"
@@ -66,7 +66,7 @@ TASKS = [
         "cognitive_load": "D", "graph_vector": ["Negace výroků", "Derivace"],
     },
     {
-        "task_id": "cv09_3",
+        "task_id": "cv09_03",
         "content_latex": (
             r"Formulujte negaci výroku: \textit{Je-li } $f'(x) = 0$ \textit{ pro každý vnitřní bod "
             r"intervalu } $\mathbf{I},$ \textit{ je } $f$ \textit{ konstantní na } $\mathbf{I}.$"

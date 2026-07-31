@@ -5,7 +5,7 @@ Cvičení 8 — Použití derivace: tečny a normály, absolutní extrémy, L'Ho
 
 def _lim(idx, content, expected, cl="C"):
     return {
-        "task_id": f"cv08_{idx}",
+        "task_id": f"cv08_{idx:02d}",
         "content_latex": content,
         "results": [{"key": "lim", "label_latex": "", "type": "mathlive", "expected": expected}],
         "cognitive_load": cl, "graph_vector": ["Limity funkcí", "L'Hospital"],
@@ -14,7 +14,7 @@ def _lim(idx, content, expected, cl="C"):
 
 def _lim_dec(idx, content, value, tol=0.001, cl="C"):
     return {
-        "task_id": f"cv08_{idx}",
+        "task_id": f"cv08_{idx:02d}",
         "content_latex": content,
         "results": [{"key": "lim", "label_latex": "", "type": "decimal", "expected": value, "tolerance": tol}],
         "cognitive_load": cl, "graph_vector": ["Limity funkcí", "L'Hospital"],
@@ -24,7 +24,7 @@ def _lim_dec(idx, content, value, tol=0.001, cl="C"):
 TASKS = [
     # --------------------- 3 negace ---------------------
     {
-        "task_id": "cv08_1",
+        "task_id": "cv08_01",
         "content_latex": (
             r"Formulujte negaci výroku o neutrálním prvku pro sčítání: "
             r"\textit{Existuje } $0 \in \mathbb{R}$ \textit{ takové, že pro každé } $x \in \mathbb{R}$ "
@@ -42,7 +42,7 @@ TASKS = [
         "cognitive_load": "C", "graph_vector": ["Negace výroků"],
     },
     {
-        "task_id": "cv08_2",
+        "task_id": "cv08_02",
         "content_latex": (
             r"Formulujte negaci výroku o opačném prvku: "
             r"\textit{Pro každé } $x \in \mathbb{R}$ \textit{ existuje } $y \in \mathbb{R}$ "
@@ -60,7 +60,7 @@ TASKS = [
         "cognitive_load": "C", "graph_vector": ["Negace výroků"],
     },
     {
-        "task_id": "cv08_3",
+        "task_id": "cv08_03",
         "content_latex": (
             r"Formulujte negaci výroku o komutativitě násobení: "
             r"\textit{Pro každou dvojici } $x, y \in \mathbb{R}$ \textit{ platí } $x \cdot y = y \cdot x.$"
@@ -79,7 +79,7 @@ TASKS = [
 
     # --------------------- 7 podul: tečna + normála ---------------------
     {
-        "task_id": "cv08_4",
+        "task_id": "cv08_04",
         "content_latex": r"Napište rovnice tečny $t$ a normály $n$ ke grafu funkce $y = x^2 \ln x$ v bodě $A = [1, 0]$.",
         "results": [
             {"key": "t", "label_latex": r"t:\ ", "type": "mathlive", "expected": r"y = x - 1"},
@@ -88,7 +88,7 @@ TASKS = [
         "cognitive_load": "C", "graph_vector": ["Tečna a normála"],
     },
     {
-        "task_id": "cv08_5",
+        "task_id": "cv08_05",
         "content_latex": r"Napište rovnice tečny $t$ a normály $n$ ke grafu funkce $y = x + \sqrt{1 - x}$ v bodě $A = [0, ?]$.",
         "results": [
             {"key": "t", "label_latex": r"t:\ ", "type": "mathlive", "expected": r"x - 2y + 2 = 0"},
@@ -97,7 +97,7 @@ TASKS = [
         "cognitive_load": "D", "graph_vector": ["Tečna a normála"],
     },
     {
-        "task_id": "cv08_6",
+        "task_id": "cv08_06",
         "content_latex": r"Napište rovnice tečny $t$ a normály $n$ ke grafu funkce $y = 2 + \tan^2 x$ v bodě $A = [0, ?]$.",
         "results": [
             {"key": "t", "label_latex": r"t:\ ", "type": "mathlive", "expected": r"y = 2"},
@@ -106,7 +106,7 @@ TASKS = [
         "cognitive_load": "C", "graph_vector": ["Tečna a normála"],
     },
     {
-        "task_id": "cv08_7",
+        "task_id": "cv08_07",
         "content_latex": r"Napište rovnice tečny $t$ a normály $n$ ke grafu funkce $y = \dfrac{2x + 1}{x^2}$ v bodě $A = [-2, ?]$.",
         "results": [
             {"key": "t", "label_latex": r"t:\ ", "type": "mathlive", "expected": r"x + 4y + 5 = 0"},
@@ -115,7 +115,7 @@ TASKS = [
         "cognitive_load": "D", "graph_vector": ["Tečna a normála"],
     },
     {
-        "task_id": "cv08_8",
+        "task_id": "cv08_08",
         "content_latex": r"Napište rovnice tečny $t$ a normály $n$ ke grafu funkce $y = \arctan\dfrac{2x - 3}{3x + 2}$ v bodě $A = \left[\tfrac{3}{2}, ?\right]$.",
         "results": [
             {"key": "t", "label_latex": r"t:\ ", "type": "mathlive", "expected": r"4x - 13y - 6 = 0"},
@@ -124,7 +124,7 @@ TASKS = [
         "cognitive_load": "E", "graph_vector": ["Tečna a normála"],
     },
     {
-        "task_id": "cv08_9",
+        "task_id": "cv08_09",
         "content_latex": r"Napište rovnice tečny $t$ a normály $n$ ke grafu funkce $y = 3 e^{2x} + 4x^2 + 6$ v bodě $A = [0, ?]$.",
         "results": [
             {"key": "t", "label_latex": r"t:\ ", "type": "mathlive", "expected": r"6x - y + 9 = 0"},

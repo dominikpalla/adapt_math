@@ -6,7 +6,7 @@ Cvičení 7 — Derivace: věty o derivaci součtu, součinu, podílu a složen�
 def _der(idx, expr, expected, cl="C", graph=None):
     """Derivace funkce — výsledek y' = ..."""
     return {
-        "task_id": f"cv07_{idx}",
+        "task_id": f"cv07_{idx:02d}",
         "content_latex": "Vypočítejte derivaci funkce $y = " + expr + "$.",
         "results": [{"key": "y_der", "label_latex": r"y' = ", "type": "mathlive", "expected": expected}],
         "cognitive_load": cl,
@@ -17,7 +17,7 @@ def _der(idx, expr, expected, cl="C", graph=None):
 TASKS = [
     # --------------------- 3 negace ---------------------
     {
-        "task_id": "cv07_1",
+        "task_id": "cv07_01",
         "content_latex": (
             r"Formulujte negaci výroku: \textit{Pro každou dvojici } $x, y \in \mathbb{R}$ \textit{ platí: "
             r"je-li } $0 \le x$ \textit{ a } $0 \le y,$ \textit{ pak } $0 \le x \cdot y.$"
@@ -34,7 +34,7 @@ TASKS = [
         "cognitive_load": "C", "graph_vector": ["Negace výroků"],
     },
     {
-        "task_id": "cv07_2",
+        "task_id": "cv07_02",
         "content_latex": (
             r"Formulujte negaci věty: \textit{Jestliže má } $f$ \textit{ v bodě } $a$ \textit{ konečné "
             r"obě jednostranné derivace, pak je } $f$ \textit{ v bodě } $a$ \textit{ spojitá.}"
@@ -51,7 +51,7 @@ TASKS = [
         "cognitive_load": "D", "graph_vector": ["Negace výroků", "Derivace"],
     },
     {
-        "task_id": "cv07_3",
+        "task_id": "cv07_03",
         "content_latex": (
             r"Formulujte negaci věty: \textit{Jestliže má } $f$ \textit{ v bodě } $a$ \textit{ derivaci "
             r"a lokální extrém, pak } $f'(a) = 0.$"

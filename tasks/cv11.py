@@ -5,7 +5,7 @@ Cvičení 11 — Diferenciál funkce, Taylorův a Maclaurinův polynom.
 TASKS = [
     # --------------------- 3 negace ---------------------
     {
-        "task_id": "cv11_1",
+        "task_id": "cv11_01",
         "content_latex": (
             r"Nechť $\mathbf{M} \subseteq \mathbb{R}.$ Formulujte negaci výroku: "
             r"\textit{Funkce } $f$ \textit{ je klesající na } $\mathbf{M}$ \textit{ právě tehdy, když "
@@ -24,7 +24,7 @@ TASKS = [
         "cognitive_load": "D", "graph_vector": ["Negace výroků", "Monotonie"],
     },
     {
-        "task_id": "cv11_2",
+        "task_id": "cv11_02",
         "content_latex": (
             r"Formulujte negaci distributivního zákona: "
             r"\textit{Pro každou trojici } $x, y, z \in \mathbb{R}$ \textit{ platí } "
@@ -42,7 +42,7 @@ TASKS = [
         "cognitive_load": "C", "graph_vector": ["Negace výroků"],
     },
     {
-        "task_id": "cv11_3",
+        "task_id": "cv11_03",
         "content_latex": (
             r"Negujte trichotomii: \textit{Pro každou dvojici } $x, y \in \mathbb{R}$ \textit{ platí: } "
             r"$x > y$ \textit{ nebo } $x < y$ \textit{ nebo } $x = y.$"
@@ -61,7 +61,7 @@ TASKS = [
 
     # --------------------- 3 podul: diferenciál — odvození aproximace ---------------------
     {
-        "task_id": "cv11_4",
+        "task_id": "cv11_04",
         "content_latex": (
             r"Pomocí diferenciálu ukažte, že pro $h \to 0$ platí "
             r"$(1 + h)^\alpha \approx 1 + \alpha h$, kde $\alpha \in \mathbb{R}$. "
@@ -74,7 +74,7 @@ TASKS = [
         "cognitive_load": "D", "graph_vector": ["Diferenciál"],
     },
     {
-        "task_id": "cv11_5",
+        "task_id": "cv11_05",
         "content_latex": (
             r"Pomocí diferenciálu ukažte, že pro $h \to 0$ platí "
             r"$\sqrt{a + h} \approx \sqrt{a} + \dfrac{h}{2\sqrt{a}}$, kde $a > 0$. "
@@ -87,7 +87,7 @@ TASKS = [
         "cognitive_load": "D", "graph_vector": ["Diferenciál"],
     },
     {
-        "task_id": "cv11_6",
+        "task_id": "cv11_06",
         "content_latex": (
             r"Pomocí diferenciálu ukažte, že pro $h \to 0$ platí "
             r"$\sqrt[3]{a + h} \approx \sqrt[3]{a} + \dfrac{h}{3\sqrt[3]{a^2}}$, kde $a > 0$. "
@@ -101,13 +101,13 @@ TASKS = [
     },
 
     # --------------------- 7 podul: přibližná hodnota pomocí diferenciálu ---------------------
-    {"task_id":"cv11_7",  "content_latex":r"Pomocí diferenciálu určete přibližně $\sqrt[3]{26{,}19}$.",
+    {"task_id": "cv11_07",  "content_latex":r"Pomocí diferenciálu určete přibližně $\sqrt[3]{26{,}19}$.",
      "results":[{"key":"v","label_latex":r"\approx ","type":"decimal","expected":2.97,"tolerance":0.01}],
      "cognitive_load":"C","graph_vector":["Diferenciál"]},
-    {"task_id":"cv11_8",  "content_latex":r"Pomocí diferenciálu určete přibližně $\sqrt[4]{16{,}64}$.",
+    {"task_id": "cv11_08",  "content_latex":r"Pomocí diferenciálu určete přibližně $\sqrt[4]{16{,}64}$.",
      "results":[{"key":"v","label_latex":r"\approx ","type":"decimal","expected":2.02,"tolerance":0.01}],
      "cognitive_load":"C","graph_vector":["Diferenciál"]},
-    {"task_id":"cv11_9",  "content_latex":r"Pomocí diferenciálu určete přibližně $\sqrt{8{,}76}$.",
+    {"task_id": "cv11_09",  "content_latex":r"Pomocí diferenciálu určete přibližně $\sqrt{8{,}76}$.",
      "results":[{"key":"v","label_latex":r"\approx ","type":"decimal","expected":2.96,"tolerance":0.01}],
      "cognitive_load":"C","graph_vector":["Diferenciál"]},
     {"task_id":"cv11_10", "content_latex":r"Pomocí diferenciálu určete přibližně $\sqrt{99{,}8}$.",

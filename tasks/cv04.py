@@ -6,7 +6,7 @@ Zdroj: skripta „Základy matematiky 1", Pavel Pražák a Petr Bauer (KIKM FIM 
 TASKS = [
     # --- 4.1, 4.2, 4.3: negace výroků (multiple_choice s 3 možnostmi) ---
     {
-        "task_id": "cv04_1",
+        "task_id": "cv04_01",
         "content_latex": (
             r"Formulujte negaci výroku o tranzitivnosti uspořádání reálných čísel: "
             r"\textit{Pro libovolnou trojici } $x \in \mathbb{R},\ y \in \mathbb{R},\ z \in \mathbb{R}$ "
@@ -25,7 +25,7 @@ TASKS = [
         "graph_vector": ["Negace výroků", "Limity funkcí"],
     },
     {
-        "task_id": "cv04_2",
+        "task_id": "cv04_02",
         "content_latex": (
             r"Formulujte negaci a obměnu výroku: "
             r"\textit{Jsou-li } $U_1(a)$ \textit{ a } $U_2(a)$ \textit{ okolí bodu } $a \in \mathbb{R}^*,$ "
@@ -55,7 +55,7 @@ TASKS = [
         "graph_vector": ["Negace výroků", "Limity funkcí"],
     },
     {
-        "task_id": "cv04_3",
+        "task_id": "cv04_03",
         "content_latex": (
             r"Formulujte negaci a obměnu výroku: "
             r"\textit{Jsou-li } $a, b \in \mathbb{R}^*,\ a \ne b,$ \textit{ pak existují } $U(a)$ "
@@ -86,27 +86,27 @@ TASKS = [
     },
 
     # --- 4.4 a)–o): aritmetika limit ---
-    {"task_id": "cv04_4",
+    {"task_id": "cv04_04",
      "content_latex": r"\lim_{x \to 3} \frac{5x^2 - 8x - 13}{x^2 - 5}",
      "results": [{"key": "lim", "label_latex": "", "type": "decimal", "expected": 2.0, "tolerance": 0.001}],
      "cognitive_load": "B", "graph_vector": ["Limity funkcí"]},
-    {"task_id": "cv04_5",
+    {"task_id": "cv04_05",
      "content_latex": r"\lim_{x \to 2} \frac{3x^2 - x - 10}{x^2 - 4}",
      "results": [{"key": "lim", "label_latex": "", "type": "mathlive", "expected": r"\frac{11}{4}"}],
      "cognitive_load": "C", "graph_vector": ["Limity funkcí"]},
-    {"task_id": "cv04_6",
+    {"task_id": "cv04_06",
      "content_latex": r"\lim_{x \to 3} \frac{x^4 - 81}{2x^2 - 5x - 3}",
      "results": [{"key": "lim", "label_latex": "", "type": "mathlive", "expected": r"\frac{108}{7}"}],
      "cognitive_load": "C", "graph_vector": ["Limity funkcí"]},
-    {"task_id": "cv04_7",
+    {"task_id": "cv04_07",
      "content_latex": r"\lim_{x \to -2} \frac{\frac{1}{x} + \frac{1}{2}}{x^3 + 8}",
      "results": [{"key": "lim", "label_latex": "", "type": "mathlive", "expected": r"-\frac{1}{48}"}],
      "cognitive_load": "D", "graph_vector": ["Limity funkcí"]},
-    {"task_id": "cv04_8",
+    {"task_id": "cv04_08",
      "content_latex": r"\lim_{x \to 2} \frac{x^3 - 2x^2 - 4x + 8}{x^4 - 8x^2 + 16}",
      "results": [{"key": "lim", "label_latex": "", "type": "mathlive", "expected": r"\frac{1}{4}"}],
      "cognitive_load": "D", "graph_vector": ["Limity funkcí"]},
-    {"task_id": "cv04_9",
+    {"task_id": "cv04_09",
      "content_latex": r"\lim_{x \to 2} \frac{x^4 - 2x^3 + 2x^2 - 5x + 2}{x - 2}",
      "results": [{"key": "lim", "label_latex": "", "type": "decimal", "expected": 11.0, "tolerance": 0.001}],
      "cognitive_load": "C", "graph_vector": ["Limity funkcí"]},

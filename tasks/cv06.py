@@ -6,7 +6,7 @@ Cvičení 6 — Spojitost funkce.
 def _neg(idx, content, opts, cl="C"):
     """Negace s 3 MC možnostmi (první je správná = klíč 'a')."""
     return {
-        "task_id": f"cv06_{idx}",
+        "task_id": f"cv06_{idx:02d}",
         "content_latex": content,
         "results": [{
             "key": "negace", "label_latex": r"\text{Negace: }", "type": "multiple_choice",
@@ -46,7 +46,7 @@ TASKS = [
 
     # --------------------- 7 podul: spojitost po částech ---------------------
     {
-        "task_id": "cv06_4",
+        "task_id": "cv06_04",
         "content_latex": (
             r"Rozhodněte, zda je funkce $f(x) = \begin{cases} x^2 & x < 1 \\ \sqrt{x} & x \ge 1 \end{cases}$ "
             r"spojitá na $\mathbb{R}$ a uveďte hodnotu limity v bodě nespojitosti (pokud existuje)."
@@ -61,7 +61,7 @@ TASKS = [
         "cognitive_load": "C", "graph_vector": ["Spojitost"],
     },
     {
-        "task_id": "cv06_5",
+        "task_id": "cv06_05",
         "content_latex": (
             r"Rozhodněte, zda je funkce $f(x) = \begin{cases} \sin x & x < \pi/4 \\ \cos x & x \ge \pi/4 \end{cases}$ "
             r"spojitá v bodě $\pi/4$."
@@ -76,7 +76,7 @@ TASKS = [
         "cognitive_load": "C", "graph_vector": ["Spojitost"],
     },
     {
-        "task_id": "cv06_6",
+        "task_id": "cv06_06",
         "content_latex": (
             r"Je funkce $f(x) = \begin{cases} x^4 \sin(1/x) & x \ne 0 \\ 0 & x = 0 \end{cases}$ "
             r"spojitá v bodě $0$? Uveďte limitu."
@@ -91,7 +91,7 @@ TASKS = [
         "cognitive_load": "D", "graph_vector": ["Spojitost"],
     },
     {
-        "task_id": "cv06_7",
+        "task_id": "cv06_07",
         "content_latex": (
             r"Funkce $f(x) = \begin{cases} \dfrac{x^2 - 4}{x - 2} & x \ne 2 \\ A & x = 2 \end{cases}$. "
             r"Pro jakou hodnotu $A$ je $f$ spojitá v bodě $2$?"
@@ -101,7 +101,7 @@ TASKS = [
         "cognitive_load": "C", "graph_vector": ["Spojitost"],
     },
     {
-        "task_id": "cv06_8",
+        "task_id": "cv06_08",
         "content_latex": (
             r"Funkce $f(x) = \begin{cases} \dfrac{1}{(1+x)^2} & x \ne -1 \\ A & x = -1 \end{cases}$. "
             r"Pro kterou hodnotu $A$ je $f$ spojitá v bodě $-1$?"
@@ -118,7 +118,7 @@ TASKS = [
         "cognitive_load": "C", "graph_vector": ["Spojitost"],
     },
     {
-        "task_id": "cv06_9",
+        "task_id": "cv06_09",
         "content_latex": (
             r"Je funkce $f(x) = \begin{cases} e^{-1/x^2} & x \ne 0 \\ 0 & x = 0 \end{cases}$ "
             r"spojitá v bodě $0$? Uveďte limitu."
@@ -251,7 +251,7 @@ TASKS = [
     # --------------------- 4 podul: Bolzano (kořen v intervalu) ---------------------
     *[
         {
-            "task_id": f"cv06_{20+i}",
+            "task_id": f"cv06_{20+i:02d}",
             "content_latex": text,
             "results": [{
                 "key": "exist", "label_latex": r"\text{Kořen v intervalu: }", "type": "multiple_choice",

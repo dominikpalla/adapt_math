@@ -7,7 +7,7 @@ def _int(idx, fn, expected, cl="C", graph=None):
     """Standardní úloha „určete primitivní funkci" → mathlive výsledek bez +c
     (student doplní +c sám; my v Compute Engine porovnáme tvar bez konstanty)."""
     return {
-        "task_id": f"cv12_{idx}",
+        "task_id": f"cv12_{idx:02d}",
         "content_latex": "Určete primitivní funkci k $f(x) = " + fn + "$.",
         "results": [{"key": "F", "label_latex": r"F(x) = ", "type": "mathlive",
                      "expected": expected, "tolerance": 0.0}],
@@ -19,7 +19,7 @@ def _int(idx, fn, expected, cl="C", graph=None):
 TASKS = [
     # --------------------- 2 negace ---------------------
     {
-        "task_id": "cv12_1",
+        "task_id": "cv12_01",
         "content_latex": (
             r"Mějme funkci $f$ a k ní primitivní funkci $F$. Formulujte negaci výroku: "
             r"\textit{Je-li } $f$ \textit{ kladná na celém } $\mathbb{R},$ \textit{ potom } $F$ "
@@ -37,7 +37,7 @@ TASKS = [
         "cognitive_load": "C", "graph_vector": ["Negace výroků", "Primitivní funkce"],
     },
     {
-        "task_id": "cv12_2",
+        "task_id": "cv12_02",
         "content_latex": (
             r"Formulujte negaci výroku: \textit{Je-li } $F$ \textit{ primitivní funkcí k } $f$ "
             r"\textit{ a } $G$ \textit{ k } $g,$ \textit{ pak pro všechna } $\alpha, \beta \in \mathbb{R}$ "

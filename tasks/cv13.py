@@ -5,7 +5,7 @@ Cvičení 13 — Integrace racionálních funkcí (parciální zlomky).
 
 def _int(idx, fn, expected, cl="D"):
     return {
-        "task_id": f"cv13_{idx}",
+        "task_id": f"cv13_{idx:02d}",
         "content_latex": "Určete primitivní funkci k racionální funkci $f(x) = " + fn + "$.",
         "results": [{"key": "F", "label_latex": r"F(x) = ", "type": "mathlive",
                      "expected": expected, "tolerance": 0.0}],

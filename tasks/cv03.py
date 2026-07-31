@@ -6,7 +6,7 @@ Polynomy, Hornerovo schéma, racionální funkce.
 TASKS = [
     # --------------------- 3 negace ---------------------
     {
-        "task_id": "cv03_1",
+        "task_id": "cv03_01",
         "content_latex": (
             r"Nechť $\mathbf{M} \subseteq \mathbb{R}.$ Formulujte negaci výroku: "
             r"\textit{Funkce } $f$ \textit{ je rostoucí na } $\mathbf{M}$ \textit{ právě tehdy, "
@@ -25,7 +25,7 @@ TASKS = [
         "cognitive_load": "D", "graph_vector": ["Negace výroků", "Monotonie"],
     },
     {
-        "task_id": "cv03_2",
+        "task_id": "cv03_02",
         "content_latex": (
             r"Nechť $\mathbf{M} \subseteq \mathbb{R}.$ Formulujte negaci výroku: "
             r"\textit{Funkce } $f$ \textit{ je klesající na } $\mathbf{M}$ \textit{ právě tehdy, "
@@ -44,7 +44,7 @@ TASKS = [
         "cognitive_load": "D", "graph_vector": ["Negace výroků", "Monotonie"],
     },
     {
-        "task_id": "cv03_3",
+        "task_id": "cv03_03",
         "content_latex": (
             r"Formulujte negaci výroku o antisymetrii uspořádání reálných čísel: "
             r"\textit{Pro každé } $x \in \mathbb{R}$ \textit{ a pro každé } $y \in \mathbb{R}$ "
@@ -64,7 +64,7 @@ TASKS = [
 
     # --------------------- 3 iterace složené funkce ---------------------
     {
-        "task_id": "cv03_4",
+        "task_id": "cv03_04",
         "content_latex": (
             r"Jestliže $f_0: y = x^2$ a $f_{n+1} = f_0 \circ f_n,$ kde $n \in \mathbb{N}_0,$ "
             r"určete předpis pro funkci $f_n.$"
@@ -74,7 +74,7 @@ TASKS = [
         "cognitive_load": "D", "graph_vector": ["Skládání funkcí"],
     },
     {
-        "task_id": "cv03_5",
+        "task_id": "cv03_05",
         "content_latex": (
             r"Jestliže $f_0: y = \dfrac{x}{x+1}$ a $f_{n+1} = f_0 \circ f_n,$ kde $n \in \mathbb{N}_0,$ "
             r"určete předpis pro funkci $f_n.$"
@@ -84,7 +84,7 @@ TASKS = [
         "cognitive_load": "E", "graph_vector": ["Skládání funkcí"],
     },
     {
-        "task_id": "cv03_6",
+        "task_id": "cv03_06",
         "content_latex": (
             r"Jestliže $f_0: y = \dfrac{1}{2 - x}$ a $f_{n+1} = f_0 \circ f_n,$ kde $n \in \mathbb{N}_0,$ "
             r"určete předpis pro funkci $f_n.$"
@@ -97,7 +97,7 @@ TASKS = [
     # --------------------- 10 podul: sudá/lichá/nic ---------------------
     *[
         {
-            "task_id": f"cv03_{7+i}",
+            "task_id": f"cv03_{7+i:02d}",
             "content_latex": "Rozhodněte, zda je funkce $f$ sudá, lichá nebo nemá ani jednu z těchto vlastností: $" + expr + "$.",
             "results": [{
                 "key": "parita", "label_latex": r"\text{Vlastnost: }", "type": "multiple_choice",
@@ -128,7 +128,7 @@ TASKS = [
     # --------------------- 4 podul: monotonie f∘g ---------------------
     *[
         {
-            "task_id": f"cv03_{17+i}",
+            "task_id": f"cv03_{17+i:02d}",
             "content_latex": text,
             "results": [{
                 "key": "mono", "label_latex": r"f \circ g \text{ je }", "type": "multiple_choice",
@@ -152,7 +152,7 @@ TASKS = [
     # --------------------- 4 podul: parita f∘g ---------------------
     *[
         {
-            "task_id": f"cv03_{21+i}",
+            "task_id": f"cv03_{21+i:02d}",
             "content_latex": text,
             "results": [{
                 "key": "parita", "label_latex": r"f \circ g \text{ je }", "type": "multiple_choice",
@@ -176,7 +176,7 @@ TASKS = [
     # --------------------- 4 podul: parita f·g ---------------------
     *[
         {
-            "task_id": f"cv03_{25+i}",
+            "task_id": f"cv03_{25+i:02d}",
             "content_latex": text,
             "results": [{
                 "key": "parita", "label_latex": r"f \cdot g \text{ je }", "type": "multiple_choice",
