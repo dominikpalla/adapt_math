@@ -633,9 +633,12 @@ function setupCzechMathLive() {
     // `sin^-1`, `tan^-1` atd. — a to je pro české studenty matoucí.
     if (window.mathVirtualKeyboard) {
         window.mathVirtualKeyboard.layouts = [
-            // f(x) první → při otevření klávesnice je to výchozí aktivní tab
-            // (MathLive picks index 0 as default). Student uvidí české gonio
-            // hned, aniž by musel klikat na jinou záložku.
+            // Pořadí per dr. Medková 2026-08-03:
+            //   1) numeric — čísla první (výchozí aktivní tab)
+            //   2) f(x)    — česká gonio
+            //   3) greek   — řecká
+            //   4) ∞≠∈    — vlastní symboly
+            'numeric',
             {
                 label: 'f(x)',
                 tooltip: 'Funkce (česká notace)',
@@ -670,7 +673,6 @@ function setupCzechMathLive() {
                     ],
                 ],
             },
-            'numeric',
             'greek',
             {
                 label: '∞≠∈',
