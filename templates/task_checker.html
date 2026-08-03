@@ -602,6 +602,79 @@ function getComputeEngine() {
     return null;
 }
 
+/* -------- MathLive: české goniometrické konvence -----------------------
+ * Použití české notace `tg`/`cotg`/`arctg`/`arccotg` místo anglických
+ * `tan`/`cot`/`arctan`/`arccot` (per dr. Medková 2026-08-03).
+ *
+ * 1) Custom virtual keyboard layout `f(x)` — přepsán default MathLive
+ *    layout, tak aby student viděl na klávesnici jen české zkratky.
+ * 2) Macros `\tg` → `\tan` (a spol.) — semantická ekvivalence, evaluator
+ *    porovná student input `\tg x` s existujícím expected `\tan x` jako
+ *    identické (obojí expanduje na `\tan`). Backwards-compat: existující
+ *    úlohy s `\tan` v expected fungují bez migrace, migrace obsahu na
+ *    české zkratky je jen kosmetika pro konzistenci UI.
+ */
+function setupCzechMathLive() {
+    if (!window.MathfieldElement) { setTimeout(setupCzechMathLive, 50); return; }
+
+    // Macros: definují, jak evaluátor a display zpracují \tg atd.
+    // `def: '\\tan'` znamená, že Compute Engine při parse vidí `\tan`
+    // (semanticky správně), zatímco display zobrazí `tg` (přes label).
+    MathfieldElement.macros = {
+        ...(MathfieldElement.macros || {}),
+        tg:       { def: '\\tan',                       args: 0 },
+        cotg:     { def: '\\cot',                       args: 0 },
+        arctg:    { def: '\\arctan',                    args: 0 },
+        arccotg:  { def: '\\operatorname{arccot}',      args: 0 },
+    };
+
+    // Přepsat default `functions` layout na český. Ostatní layouty
+    // (numeric, symbols, greek) necháváme defaultní.
+    if (window.mathVirtualKeyboard) {
+        window.mathVirtualKeyboard.layouts = [
+            'numeric',
+            'symbols',
+            'greek',
+            {
+                label: 'f(x)',
+                tooltip: 'Funkce (česká notace)',
+                rows: [
+                    [
+                        { latex: '\\sin',  label: 'sin' },
+                        { latex: '\\cos',  label: 'cos' },
+                        { latex: '\\tg',   label: 'tg' },
+                        { latex: '\\cotg', label: 'cotg' },
+                        { latex: '\\ln',   label: 'ln' },
+                        { latex: '\\log',  label: 'log' },
+                        { latex: '\\exp',  label: 'exp' },
+                    ],
+                    [
+                        { latex: '\\arcsin',  label: 'arcsin' },
+                        { latex: '\\arccos',  label: 'arccos' },
+                        { latex: '\\arctg',   label: 'arctg' },
+                        { latex: '\\arccotg', label: 'arccotg' },
+                        { latex: '\\sqrt{#0}',    label: '√' },
+                        { latex: '#0^2',          label: 'x²' },
+                        { latex: '#0^{#?}',       label: 'xʸ' },
+                    ],
+                    [
+                        { latex: '\\lim_{#? \\to #?} #0', label: 'lim' },
+                        { latex: '\\int', label: '∫' },
+                        { latex: '\\int_{#?}^{#?} #0', label: '∫ₐᵇ' },
+                        { latex: '\\frac{d}{dx} #0',    label: 'd/dx' },
+                        { latex: '\\sum_{#?}^{#?} #0',  label: 'Σ' },
+                        { latex: '\\infty', label: '∞' },
+                    ],
+                ],
+            },
+        ];
+    }
+}
+// Zavolej hned + zálohou při DOMContentLoaded (kdyby mathlive skript
+// ještě nebyl načtený).
+setupCzechMathLive();
+document.addEventListener('DOMContentLoaded', setupCzechMathLive);
+
 /* -------- Dirty tracking / Save / Autosave ------------------------------- */
 /* Autosave: 800 ms po každé změně se stav debounce-uložen na server.
    Manuální „💾 Uložit" funguje i nadále. Při Prev/Next navigaci nejdřív
