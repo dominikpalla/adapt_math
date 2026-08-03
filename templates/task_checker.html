@@ -653,8 +653,8 @@ function setupCzechMathLive() {
                         { latex: '\\arccos',  label: 'arccos' },
                         { latex: '\\arctg',   label: 'arctg' },
                         { latex: '\\arccotg', label: 'arccotg' },
-                        // Konkatenace kvůli Jinja — `{#` je začátek komentáře v Jinja
-                        // a MathLive placeholdery jsou `#0`/`#?` v `{...}`.
+                        // Konkatenace kvůli Jinja — otevřená složená + hash je začátek
+                        // Jinja komentáře, a MathLive placeholdery jsou #0/#? uvnitř složených.
                         { latex: '\\sqrt{' + '#0}',                 label: '√' },
                         { latex: '#0^2',                             label: 'x²' },
                         { latex: '#0^{' + '#?}',                     label: 'xʸ' },
