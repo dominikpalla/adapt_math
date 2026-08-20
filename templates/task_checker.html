@@ -87,9 +87,14 @@
         .preview-box {
             padding: 18px; background: #fdfdfd; border-left: 4px solid var(--orange);
             border-radius: 6px; min-height: 50px; font-size: 17px; line-height: 1.55;
+            /* Overflow guard — dlouhá LaTeX expression (bez soft breaks) by mohla
+               přetéct sidebar/parent. Vodorovný scroll je lepší než overlap. */
+            overflow-x: auto; max-width: 100%; word-wrap: break-word;
         }
         .preview-box em { font-style: italic; color: #555; }
         .preview-box.empty { color: #bbb; font-style: italic; }
+        /* KaTeX display equations mají default no-wrap; povolit horizontal scroll */
+        .preview-box .katex-display { overflow-x: auto; overflow-y: hidden; padding: 4px 0; }
 
         /* Tag editor (graph_vector) */
         .tags { display: flex; flex-wrap: wrap; gap: 6px; padding: 6px;
