@@ -56,10 +56,15 @@ def clean(s: str) -> tuple[str, bool]:
     original = s
     for pat in JUNK_PATTERNS:
         s = pat.sub("", s)
+    # Odstranit osiřelý prázdný `$$` pár, který zbyl po strippingu
+    # (např. "$Df = ...$ \clubsuit" → "$Df = ...$ $$" po strippingu \clubsuit
+    #  → chceme "$Df = ...$")
+    s = re.sub(r"\$\s*\$", "", s)
     # Redukce whitespace
     s = re.sub(r"\s+", " ", s).strip()
-    # Odstranit koncovou tečku + středník (typicky "$;" nebo "$." nechává)
-    s = re.sub(r"[.,;\s]+$", "", s).strip()
+    # Odstranit koncový středník + čárku + WS (typicky "; \vspace..." zbytek)
+    # POZOR: NE tečku — ta může být součástí věty (u logika-tasků).
+    s = re.sub(r"[,;\s]+$", "", s).strip()
     return s, s != original
 
 
