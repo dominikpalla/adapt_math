@@ -107,7 +107,7 @@
     \textbf{Pracoviště:} & Fakulta informatiky a managementu, Univerzita Hradec Králové \\[3pt]
     \textbf{Doba řešení:} & 09/2025 -- 02/2029 \\[3pt]
     \textbf{Autor dokumentace:} & Ing.~Dominik Palla, Ph.D. \\[3pt]
-    \textbf{Verze:} & 1.2 \\[3pt]
+    \textbf{Verze:} & 1.3 \\[3pt]
     \textbf{Datum:} & \today \\
   \end{tabular}
 
@@ -280,7 +280,7 @@ Schema jednoho prvku:
 U každé úlohy rozlišujeme \textbf{dvě} ortogonální věci:
 
 \begin{enumerate}
-  \item \textbf{Vektor znalostí} (\texttt{knowledge\_vector}, 64 vah) --- celý mix vlastností, typu, dovedností i kategorií SŠ/VŠ. Slovník přiřazující každé skill-komponentě procentuální váhu (0--100). Při řešení úlohy se přírůstek (úspěch) nebo úbytek (nesplnění) studentovy znalosti rozdělí mezi komponenty v poměru těchto vah. Paralelní vektor existuje i ve studentově profilu --- tam ale hodnoty $\in [0, 1]$ (IRT/BKT).
+  \item \textbf{Vektor znalostí} (\texttt{knowledge\_vector}, 65 vah) --- celý mix vlastností, typu, dovedností i kategorií SŠ/VŠ. Slovník přiřazující každé skill-komponentě procentuální váhu (0--100). Při řešení úlohy se přírůstek (úspěch) nebo úbytek (nesplnění) studentovy znalosti rozdělí mezi komponenty v poměru těchto vah. Paralelní vektor existuje i ve studentově profilu --- tam ale hodnoty $\in [0, 1]$ (IRT/BKT).
   \item \textbf{Anotace úlohy} (uložená „bokem" pro pozdější automatické předvyplnění \texttt{knowledge\_vector}):
   \begin{itemize}
     \item \texttt{category} --- \emph{jedna} primární kategorie ze 45 (jen SŠ + VŠ matematika + Výroková logika).
@@ -291,7 +291,7 @@ U každé úlohy rozlišujeme \textbf{dvě} ortogonální věci:
   Anotace nemá žádný runtime efekt v IRT/BKT --- slouží jen k tomu, aby z ní engine v další fázi vygeneroval výchozí distribuci vah v knowledge\_vectoru, kterou expert ručně doladí.
 \end{enumerate}
 
-\subsection{KNOWLEDGE\_WEIGHTS (64 vah, verze 260731)}
+\subsection{KNOWLEDGE\_WEIGHTS (65 vah, verze 260820)}
 
 Definováno v~\texttt{tasks/knowledge\_weights.py}. Seznam pochází z konzultace s dr.~Medkovou (základ \texttt{260601\_v2}, revize 2026-07-31 --- viz \emph{Změny 2026-07-31} na konci sekce). Obsahuje pouze \emph{listové} váhy --- hlavní (header) kategorie z původního excelu nejsou v seznamu. Všechny váhy jsou seskupené do 14 \emph{skupin} pro účely barevného rozlišení v UI a budoucí paušální distribuce.
 
@@ -308,7 +308,7 @@ Definováno v~\texttt{tasks/knowledge\_weights.py}. Seznam pochází z konzultac
   \endhead
   Vlastnosti              & 11 & zelená \texttt{\#2e7d32} \\
   Typ                     & 2 & tmavě oranžová \texttt{\#ef6c00} \\
-  Dovednosti              & 6 & červenooranžová \texttt{\#d84315} \\
+  Dovednosti              & 7 & červenooranžová \texttt{\#d84315} \\
   SŠ                      & 5 & olivově žlutá \texttt{\#8d6e00} \\
   Výroková logika         & 1 & blue-gray \texttt{\#607d8b} \\
   Funkce                  & 7 & modrá \texttt{\#1565c0} \\
@@ -321,7 +321,7 @@ Definováno v~\texttt{tasks/knowledge\_weights.py}. Seznam pochází z konzultac
   Primitivní funkce       & 5 & tmavě červená \texttt{\#b71c1c} \\
   Určitý integrál         & 8 & hnědá \texttt{\#4e342e} \\
   \midrule
-  \textbf{Celkem}         & \textbf{64} & \\
+  \textbf{Celkem}         & \textbf{65} & \\
   \bottomrule
 \end{longtable}
 
@@ -349,7 +349,7 @@ V další fázi (zatím \textbf{není implementováno}) bude každá kategorie +
 
 \subsection{Kompletní seznam vah}\label{sec:vahy-popis}
 
-Plný seznam 64 vah, seskupený dle prefixu. Pořadí v tabulce odpovídá pořadí ve zdrojovém kódu i v UI.
+Plný seznam 65 vah, seskupený dle prefixu. Pořadí v tabulce odpovídá pořadí ve zdrojovém kódu i v UI.
 
 \textbf{Poznámka:} tabulka níže je snapshot z revize 2026-07-31; \emph{single source of truth} je \texttt{tasks/knowledge\_weights.py} (obsahuje sanity-check assertions, které selžou, pokud spočtené počty nesouhlasí). Detailní změny oproti verzi 260601\_v2 shrnuje závěrečná subsekce.
 
@@ -372,18 +372,19 @@ Plný seznam 64 vah, seskupený dle prefixu. Pořadí v tabulce odpovídá pořa
    6 & Vlastnosti - Goniometrická              & $\sin, \cos, \mathrm{tg}, \mathrm{cotg}$ a jejich vzorce. \\
    7 & Vlasnosti - Absolutní hodnota           & $|x|$, rozklad podle znaménka. \\
    8 & Vlasnosti - Lomená lineární             & Funkce $\frac{ax+b}{cx+d}$. \\
-   9 & Vlasnosti - Zlomky                      & Operace se zlomky, společný jmenovatel, krácení. \\[4pt]
+   9 & Vlasnosti - Racionální funkce           & Racionální funkce (podíly polynomů). Přejmenováno z „Zlomky" 2026-08-20. \\[4pt]
 
   \multicolumn{3}{l}{\textit{Typ (1)}} \\[2pt]
   10 & Typ - Aplikační                         & Slovní / aplikační úlohy, modelace reálné situace. \\[4pt]
 
-  \multicolumn{3}{l}{\textit{Dovednosti (6)}} \\[2pt]
+  \multicolumn{3}{l}{\textit{Dovednosti (7)}} \\[2pt]
   11 & Dovednosti - Aplikace vzorce            & Klasické vzorce $(a\pm b)^2, a^2-b^2$, kosinová věta atd. \\
   12 & Dovednosti - Vytýkání, krácení          & Algebraické zjednodušování, faktorizace. \\
   13 & Dovednosti - Roznásobení závorky        & Distributivní zákon $a(b+c)=ab+ac$. \\
   14 & Dovednosti - Výpočet rovnic             & Manipulace s~rovnicemi (převody, substituce). \\
   15 & Dovednosti - Výpočet nerovnic           & Řešení nerovnic, znaménková analýza. \\
-  16 & Dovednosti - Derivování                 & Aplikace derivačních pravidel jako mechanická dovednost. \\[4pt]
+  16 & Dovednosti - Derivování                 & Aplikace derivačních pravidel jako mechanická dovednost. \\
+  17 & Dovednosti - Úpravy zlomků              & Úpravy racionálních výrazů (přidáno 2026-08-20). \\[4pt]
 
   \multicolumn{3}{l}{\textit{SŠ (5)}} \\[2pt]
   17 & SŠ - Algebraické výrazy                 & Úpravy, zjednodušování polynomiálních / racionálních výrazů. \\
@@ -479,6 +480,64 @@ Revize dle zpětné vazby dr.~Medkové:
 
 \paragraph{Konvence \texttt{task\_id}: zero-pad.} Zároveň s taxonomií revidováno i číslování úloh --- příklad se zapisuje \emph{dvouciferně} (\texttt{cv03\_02}, \texttt{cv11\_04}, ...) místo dřívějšího \texttt{cv03\_2} / \texttt{cv11\_4}. Sjednocení řeší seřazení v seznamu úloh (dříve \texttt{cv01\_1, cv01\_10, cv01\_11, ..., cv01\_2, cv01\_3}). Migrace přepsala 117 řádků (116 přeformátovaných + 1 recovery úlohy s prázdným \texttt{task\_id}). Backend v \texttt{/api/tasks/<id>} POST teď odmítá prázdný nebo whitespace-only \texttt{task\_id} (HTTP 400), aby se stejný incident nemohl opakovat.
 
+\subsection{Změny 2026-08-20 (v1.3)}
+
+Velká iterace: extrakce dalších úloh z UMAT skripta + Overleaf sbírky, revize taxonomie a hromadné čištění anotací.
+
+\paragraph{Nové úlohy: +508 (DB 415 $\rightarrow$ 923).}
+\begin{itemize}
+  \item \textbf{Overleaf SŠ sbírka Andrei} (172 úloh, prefix \texttt{ss01..ss07}): Analytická geometrie (55), Goniometrie (41), Množiny (9), Rovnice s abs.~hodnotou (5), Složené funkce (12), Úpravy alg.~výrazů (43), Zjednodušte výraz (7). Extraktor v jedné dávce, žádný duplikát.
+  \item \textbf{UMAT skriptum 2007-05-29} (336 úloh): první parser \texttt{scripts/extract\_umat.py} zvládl přímé \texttt{\textbackslash uloha}/\texttt{\textbackslash podul} makra --- 196 úloh (prefix \texttt{umat\_06..umat\_09}: Goniometrické rovnice, Posloupnosti, Limita funkce, Derivace). Druhý parser \texttt{scripts/extract\_umat\_v2.py} přidal rozklad \texttt{\textbackslash begin\{ul\}} bloků + Řešení odstavce + konverzi textových odpovědí na MC --- 140 úloh (prefix \texttt{e01,e03,e04,e10,e11} = extra kapitoly Logika, Rovnice, Reálné funkce, Optimalizace, Primitivní funkce). Prefix \texttt{eXX\_NN} použit záměrně, aby task\_id nekolidovalo s \texttt{umat\_06..09} (chráníme starý index pro potenciální anotace).
+  \item Skript \texttt{scripts/insert\_new\_tasks.py} pro idempotentní vkládání --- jen INSERT nových task\_id, nikdy DELETE/UPDATE existujících.
+\end{itemize}
+
+\paragraph{Taxonomie: Zlomky $\rightarrow$ Racionální funkce, +Úpravy zlomků.}
+\begin{itemize}
+  \item \emph{Vlasnosti - Zlomky} $\rightarrow$ \emph{Vlasnosti - Racionální funkce}. DB migrace přepsala 156 řádků v \texttt{properties}. Kód \texttt{knowledge\_weights.py} aktualizován.
+  \item \textbf{Přidáno}: \emph{Dovednosti - Úpravy zlomků} (prázdná, čeká na tagování týmem).
+  \item \textbf{Celkové počty}: KNOWLEDGE\_WEIGHTS 64 $\rightarrow$ 65, TASK\_SKILLS 6 $\rightarrow$ 7 (Vlastnosti bez změny počtu, jen rename), TASK\_CATEGORIES 45 (bez změny).
+\end{itemize}
+
+\paragraph{České goniometrické funkce v MathLive UI.}
+\begin{itemize}
+  \item Custom \texttt{window.mathVirtualKeyboard.layouts} v \texttt{task\_checker.html} --- přepsán default MathLive keyboard, tak aby student viděl české \texttt{tg}, \texttt{cotg}, \texttt{arctg}, \texttt{arccotg} místo anglických \texttt{tan}, \texttt{cot}, \texttt{arctan}, \texttt{arccot}. Layout \texttt{f(x)} obsahuje i další užitečná tlačítka (\texttt{lim}, \texttt{$\int$}, \texttt{d/dx}, \texttt{$\Sigma$}, \texttt{$\infty$}). Layout \texttt{$\infty\neq\in$} je také custom (bez defaultních inverse-trig tlačítek). Pořadí tabů: \texttt{123 / f(x) / $\alpha\beta\gamma$ / $\infty\neq\in$}, čísla jsou výchozí aktivní.
+  \item Registrované macros \texttt{MathfieldElement.macros}: \texttt{\textbackslash tg $\rightarrow$ \textbackslash tan}, \texttt{\textbackslash cotg $\rightarrow$ \textbackslash cot}, atd. Compute Engine tak sémanticky porovnává české a anglické zápisy jako totožné (obousměrná ekvivalence). Existující úlohy s \texttt{\textbackslash tan} v \texttt{expected} fungují bez migrace.
+  \item Bulk migrace \texttt{content\_latex} + \texttt{results[*].expected}: \texttt{\textbackslash tan/\textbackslash cot/\textbackslash arctan} $\rightarrow$ \texttt{\textbackslash tg/\textbackslash cotg/\textbackslash arctg} (word-boundary regex chrání před \texttt{\textbackslash tanh}). Přepsáno 45 řádků. Skript \texttt{scripts/migrate\_trig\_to\_czech.py}.
+\end{itemize}
+
+\paragraph{CSS: overflow fix v preview boxu.} Dlouhé LaTeX expression bez soft-breaks už nepřetéká --- \texttt{.preview-box} má \texttt{overflow-x: auto} + \texttt{max-width: 100\%}, \texttt{.katex-display} má vlastní horizontální scroll.
+
+\paragraph{Bulk čištění text-answer úloh (105 opravených).} Auditem se identifikovalo 112 e-/umat- úloh, u kterých parser nechal \texttt{expected} jako string začínající písmenem (parser to považoval za text). Skript \texttt{scripts/fix\_text\_answers\_batch.py} zpracoval 4 kategorie:
+\begin{itemize}
+  \item \textbf{PURE\_MATH} (80 úloh): expected byl math bez obalu \texttt{\$..\$} (např. \texttt{x=-2}). Wrap do \texttt{\$..\$} + expand UMAT-specific maker (\texttt{\textbackslash Ra $\rightarrow$ \textbackslash Rightarrow}). Typ zůstává \texttt{mathlive}.
+  \item \textbf{PURE\_TEXT} (11 úloh): čisté texty (negace výroků z e01, „prostá, důkaz sporem", „neex."). Konverze na \texttt{multiple\_choice} s ručně navrženými pedagogicky rozumnými distraktory.
+  \item \textbf{MIXED\_TEXT\_MATH} (4 úlohy): „není prostá: např.~\$f(x)=f(y)\$" pattern $\rightarrow$ MC.
+  \item \textbf{COMPOUND} (10 úloh): více math hodnot v jednom expected --- split na keys (a/v, k/s\_8, $a_1$/q) nebo MC pro edge cases.
+\end{itemize}
+Skipnuto: 1 úloha (\texttt{e03\_35} --- megablok 9 nerovnic v jednom, čeká na ruční rozdělení).
+
+\paragraph{Cleanup e-úloh: layout junk.} 20 e-úloh mělo v \texttt{expected} zbylé LaTeX layout artefakty (\texttt{\textbackslash clubsuit}, \texttt{\textbackslash vspace}, \texttt{\textbackslash pagebreak}, \texttt{\textbackslash section}, osiřelé \texttt{\textbackslash \textbackslash} nebo \texttt{\textbackslash ,}). Skript \texttt{scripts/cleanup\_e\_layout\_junk.py} iterativně stripoval, bez ztráty smysluplných teček (věty typu „ani Eliška." zůstávají).
+
+\paragraph{Post-audit fix (15 úloh dnes).} Systematický scan mathlive výsledků odhalil 16 zbývajících úloh s komplikovanými zápisy (Df/Hf notace, multi-value, „$X=a$ nebo $X=b$" apod.). Opraveno:
+\begin{itemize}
+  \item 5 úloh s \texttt{\$Df = ...\$} $\rightarrow$ label \texttt{$D_f =$}, expected jen interval (mathlive).
+  \item 1 úloha s \texttt{\$x=12 cm\$} $\rightarrow$ \texttt{decimal} 12 + label.
+  \item 2 úlohy se 2 čísly $\rightarrow$ split na 2 decimal keys.
+  \item 7 úloh s komplexním pattern (Df s podmínkami, slovní úlohy, 2 řešení GP/AP) $\rightarrow$ konverze na \texttt{multiple\_choice} se 4 pedagogickými distraktory.
+\end{itemize}
+
+\paragraph{Split komplexních results.} Několik iterací per-task úprav:
+\begin{itemize}
+  \item Parabola úlohy (\texttt{e04\_39..e04\_44}, 6 úloh): 1 mathlive „osa: $x=..$, $V[..,..]$" $\rightarrow$ 3 samostatné keys \texttt{osa}, $V_x$, $V_y$.
+  \item Kořeny (\texttt{e03\_04..e03\_11}, 6 úloh): 1 mathlive „$x_1=..$, $x_2=..$" $\rightarrow$ 2--3 keys \texttt{x\_i}.
+  \item F-funkce (\texttt{e04\_25..e04\_30}, 6 úloh): 1 mathlive „$F_1=..$, ..., $F_4=..$, $DF_1..=..$" $\rightarrow$ 4 mathlive keys (\texttt{F\_i}) + 1 \texttt{multiple\_choice} key (\texttt{D}) se 4 možnostmi pro definiční obory (protože komplexní compound Df zápisy jsou pro mathlive nevhodné).
+  \item Inverze funkce (\texttt{e04\_31..e04\_38}, 8 úloh): 1 mathlive „$f: y=..$; $Df^{-1}=..$; $Hf^{-1}=..$" $\rightarrow$ 3 samostatné mathlive keys \texttt{y}, \texttt{Df\_inv}, \texttt{Hf\_inv}.
+\end{itemize}
+
+\paragraph{Nové skripty.} \texttt{scripts/} obsahuje: \texttt{extract\_umat.py}, \texttt{extract\_umat\_v2.py} (UMAT extraktory), \texttt{insert\_new\_tasks.py} (idempotentní INSERT), \texttt{migrate\_trig\_to\_czech.py}, \texttt{cleanup\_e\_layout\_junk.py}, \texttt{fix\_text\_answers\_batch.py}, \texttt{llm\_generate\_mc.py} (Claude API integrace pro budoucí generování MC). Adhoc SQL migrace + Python \texttt{/tmp/*.py} skripty pro per-task fixy (parabola, kořeny, F-funkce, inverse, D-key MC, e04\_44 redesign, atd.) jsou zdokumentovány v git history commitů.
+
+\paragraph{DB zálohy: 12 snapshotů dnes.} Před každou skupinou zásahů proveden pg\_dump + JSON snapshot, stažené i lokálně (\texttt{.backups/} s SHA256 ověřením). Timestamps: \texttt{20260731\_141115, 145549, 151025}; \texttt{20260803\_131727, 144849, 151050}; \texttt{20260820\_081742, 083207, 090717, 100539, 165023, 171817}. Restore-recept: \texttt{pg\_restore -c -d \$DATABASE\_URL <path>.dump}.
+
 % =============================================================================
 \section{Webové UI: Task Checker}
 
@@ -550,7 +609,7 @@ UI je rozděleno do dvou sloupců.
   \begin{itemize}
     \item \emph{Vlastnosti} (11 položek, zelená),
     \item \emph{Typ} (2 položky --- Aplikační, Extrémy funkcí, krémová),
-    \item \emph{Dovednosti} (6 položek, oranžová).
+    \item \emph{Dovednosti} (7 položek, oranžová).
   \end{itemize}
   Hodnoty se ukládají do JSON sloupců \texttt{properties}, \texttt{task\_type}, \texttt{skills}. Serializace důsledně rozlišuje \texttt{NULL} (nikdy neanotováno) a \texttt{[]} (vědomě prázdná anotace) --- viz \emph{carry button} níže.
   \item Zadání v LaTeXu (textarea, full-width).
@@ -785,7 +844,7 @@ WantedBy=multi-user.target
 
 \begin{enumerate}
   \item \textbf{Tagování úloh experty.} Tým musí manuálně projít 415 úloh a~přiřadit \texttt{category} + nastavit \texttt{knowledge\_vector}. To je hlavní úkol Task Checkeru.
-  \item \textbf{Distribuce vah dle kategorie.} Definovat slovník \texttt{CATEGORY\_DEFAULT\_VECTOR}, který pro každou ze 45 kategorií předvyplní výchozí distribuci 64 vah. Při výběru kategorie v UI se předvyplní \texttt{knowledge\_vector}, expert pak ladí.
+  \item \textbf{Distribuce vah dle kategorie.} Definovat slovník \texttt{CATEGORY\_DEFAULT\_VECTOR}, který pro každou ze 45 kategorií předvyplní výchozí distribuci 65 vah. Při výběru kategorie v UI se předvyplní \texttt{knowledge\_vector}, expert pak ladí.
   \item \textbf{LLM vyhodnocení \texttt{open\_text}}. Aktuálně máme všechny negace převedeny na \texttt{multiple\_choice}; pro budoucí volné úlohy zavést endpoint \texttt{POST /api/eval-open-text} volající Gemini.
   \item \textbf{Alembic migrace.} Nahradit drop \& recreate řízenými migracemi.
   \item \textbf{Gunicorn pro produkci.} Nahradit Werkzeug dev server na produkci.
