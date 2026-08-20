@@ -62,10 +62,16 @@ def clean(s: str) -> tuple[str, bool]:
     s = re.sub(r"\$\s*\$", "", s)
     # Redukce whitespace
     s = re.sub(r"\s+", " ", s).strip()
-    # Odstranit koncový středník + čárku + WS (typicky "; \vspace..." zbytek)
+    # Iterativně strip koncové artefakty (thin-space, osiřelý backslash,
+    # středník, čárka, whitespace) — může jich být několik za sebou.
     # POZOR: NE tečku — ta může být součástí věty (u logika-tasků).
-    s = re.sub(r"[,;\s]+$", "", s).strip()
-    return s, s != original
+    prev = None
+    while prev != s:
+        prev = s
+        s = re.sub(r"\\,\s*$", "", s)     # \, thin space
+        s = re.sub(r"\\\s*$", "", s)      # osiřelý backslash
+        s = re.sub(r"[,;\s]+$", "", s)    # čárka, středník, whitespace
+    return s.strip(), s.strip() != original
 
 
 def main() -> int:
