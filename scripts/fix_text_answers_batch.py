@@ -327,6 +327,16 @@ def process_task(t, only_cat=None):
     exp = r.get("expected", "")
     if not isinstance(exp, str): return None, None, "expected not str"
 
+    # KLÍČOVÝ FILTR: zpracováváme JEN úlohy, u kterých expected začíná
+    # písmenem (parser tohle považoval za text-answer a nechal jak je).
+    # Úlohy s expected začínajícím $/číslicí/závorkou/\\ jsou už wellformed
+    # mathlive — neměníme je.
+    s = exp.strip()
+    if re.match(r'^[\$\d\-\+\(\[\{\\]', s):
+        return None, None, "already math-formed (skip)"
+    if not re.match(r'^[a-zA-Zá-žÁ-Ž]', s):
+        return None, None, "unknown format (skip)"
+
     cat = classify(exp)
     if only_cat and cat != only_cat:
         return None, cat, f"filtered out (only-cat={only_cat})"
