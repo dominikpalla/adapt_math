@@ -539,10 +539,8 @@
     </section>
 
     <div class="save-bar">
-        <button class="btn btn-save" id="btn-save" onclick="saveTask()">💾 Uložit změny</button>
-        <button class="btn btn-sec" onclick="revertChanges()">↶ Vrátit</button>
-        <button class="btn btn-danger" onclick="deleteTask()" style="margin-left:auto;">🗑 Smazat úlohu</button>
         <span class="save-status" id="save-status"></span>
+        <button class="btn btn-danger" onclick="deleteTask()" style="margin-left:auto;">🗑 Smazat úlohu</button>
     </div>
 </div>
 
@@ -812,7 +810,6 @@ async function saveTask(opts) {
     if (saving) return;
     saving = true;
     renderSaveStatus();
-    if (!silent) document.getElementById('btn-save').disabled = true;
     try {
         const res = await fetch(URLS.apiTask(INITIAL.task_id), {
             method: 'POST', headers: {'Content-Type':'application/json'},
@@ -823,7 +820,6 @@ async function saveTask(opts) {
         savedState = clone(state);
         lastSavedAt = new Date();
         if (data.renamed_to) {
-            // task_id se změnilo — přesměrujeme na novou URL
             saving = false;
             renderSaveStatus();
             setTimeout(() => location.href = URLS.task(data.renamed_to), 600);
@@ -837,7 +833,6 @@ async function saveTask(opts) {
         throw e;
     } finally {
         saving = false;
-        document.getElementById('btn-save').disabled = false;
         renderSaveStatus();
     }
 }
@@ -849,12 +844,6 @@ window.addEventListener('beforeunload', e => {
         e.returnValue = '';
     }
 });
-
-function revertChanges() {
-    if (!confirm('Vrátit poslední uložený stav? Neuložené změny se ztratí.')) return;
-    state = clone(savedState);
-    loadStateToForm();
-}
 
 async function deleteTask() {
     if (!confirm(`Opravdu smazat úlohu ${state.task_id}? Akce je nevratná.`)) return;

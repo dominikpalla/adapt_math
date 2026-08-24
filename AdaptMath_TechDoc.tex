@@ -563,6 +563,8 @@ Po migraci ověřeno: $\text{diff\_null} = 0$, $\text{disc\_null} = 0$, všechny
 
 \paragraph{Dopad na adaptivní selekci.} Selektor podle $|b - (\theta + \Delta_{\text{Vygotsky}})|$ nyní dostává reálné hodnoty místo \texttt{NULL} a může začít cílit obtížnost úloh podle BKT profilu studenta. Do doby empirické rekalibrace zůstává selekce ,,hrubozrnná" (tři vrstvy obtížnosti), což je pro pilot dostatečné.
 
+\paragraph{UI úklid.} Odstraněna redundantní tlačítka ,,\emph{Uložit změny}" a ,,\emph{Vrátit}" ze save-baru. Autosave s 800ms debounce pokrývá všechna pole (task\_id, content\_latex, cognitive\_load, category, irt\_difficulty, properties, task\_type, skills, knowledge\_vector, results), takže tlačítka byla nadbytečná. Zůstává jen status indikátor (,,Ukládám\ldots" / ,,Uloženo v \ldots" / ,,chyba") a ,,Smazat úlohu".
+
 % =============================================================================
 \section{Webové UI: Task Checker}
 
