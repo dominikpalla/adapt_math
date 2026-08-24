@@ -274,6 +274,21 @@ def api_task_save(task_id):
                 }), 400
             payload["task_id"] = raw.strip()  # normalizovaně bez whitespace
 
+        # IRT obtížnost — pilotní fáze má jen 3 hodnoty: -2 / 0 / +2.
+        # Discriminace se přes API needituje (uživatel v UI ji nevidí);
+        # v pipeline zůstává fixně 1.0 do empirické rekalibrace.
+        if "irt_difficulty" in payload:
+            v = payload["irt_difficulty"]
+            try:
+                v = float(v)
+            except (TypeError, ValueError):
+                return jsonify({"error": "irt_difficulty musí být číslo."}), 400
+            if v not in (-2.0, 0.0, 2.0):
+                return jsonify({
+                    "error": "irt_difficulty musí být -2, 0, nebo 2 (Lehká / Střední / Těžká)."
+                }), 400
+            payload["irt_difficulty"] = v
+
         new_id = payload.get("task_id")
         renamed = new_id and new_id != task.task_id
         if renamed:

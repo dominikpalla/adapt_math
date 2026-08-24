@@ -425,6 +425,15 @@
                     </div>
                 </div>
                 <div class="row">
+                    <label>IRT obtížnost</label>
+                    <select id="f-irt_difficulty" data-bind="irt_difficulty">
+                        <option value="-2">Lehká (b = −2)</option>
+                        <option value="0" selected>Střední (b = 0)</option>
+                        <option value="2">Těžká (b = +2)</option>
+                    </select>
+                    <p class="hint-text">Expertní odhad obtížnosti pro pilotní fázi. Po nasbírání dat od studentů se přepočítá empiricky. Diskriminaci (parametr <code>a</code>) zatím neřešíme, je fixně 1.0.</p>
+                </div>
+                <div class="row">
                     <label>Kategorie úlohy</label>
                     <select id="f-category" data-bind="category">
                         <option value="">— vyber kategorii —</option>
@@ -921,6 +930,11 @@ function loadStateToForm() {
     document.getElementById('f-content_latex').value = state.content_latex || '';
     document.getElementById('f-cognitive_load').value = state.cognitive_load || '';
     document.getElementById('f-category').value = state.category || '';
+    /* IRT obtížnost: default 0 (Střední) když je NULL, jinak nejbližší z {-2,0,2}. */
+    let diff = state.irt_difficulty;
+    if (diff === null || diff === undefined) diff = 0;
+    const closest = [-2, 0, 2].reduce((best, v) => Math.abs(v - diff) < Math.abs(best - diff) ? v : best, 0);
+    document.getElementById('f-irt_difficulty').value = String(closest);
     loadTagFieldsToForm();
     loadKnowledgeVectorToForm();
     buildResultsEditor();
@@ -943,6 +957,10 @@ function attachBindings() {
     });
     document.getElementById('f-category').addEventListener('change', e => {
         state.category = e.target.value || null;
+        setDirty();
+    });
+    document.getElementById('f-irt_difficulty').addEventListener('change', e => {
+        state.irt_difficulty = parseFloat(e.target.value);
         setDirty();
     });
     attachTagFieldBindings();

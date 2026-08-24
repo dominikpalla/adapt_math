@@ -23,9 +23,19 @@ BKT (Bayesian Knowledge Tracing) v našem systému dynamicky upravuje pravděpod
 
 Zatímco BKT modeluje studenta, IRT modeluje kvalitu a náročnost samotných úloh. V databázi (tabulka `math_tasks`) aktuálně uchováváme dvě expertně odhadnuté hodnoty pro každou úlohu:
 * **`irt_difficulty` ($b$):** Obtížnost úlohy (typicky v rozsahu -3.0 až +3.0).
-* **`irt_discrimination` ($a$):** Jak dobře úloha rozlišuje silné a slabé studenty (typicky -2.5 až +2.5).
+* **`irt_discrimination` ($a$):** Jak dobře úloha rozlišuje silné a slabé studenty (v adaptivních systémech kladná hodnota, typicky 0.5 až 2.5).
 
-V aktuální (počáteční) fázi projektu jsou tyto hodnoty **stanoveny expertním odhadem** při tvorbě úlohy (tzv. *expert seeding*).
+### Pilotní seed (od 2026-08-24)
+
+V počáteční pilotní fázi jsou hodnoty zjednodušené:
+
+* **`irt_difficulty`** nastavuje **lektor v editoru úlohy** pomocí selectu se třemi předdefinovanými hodnotami:
+    * **Lehká** → $b = -2$
+    * **Střední** → $b = 0$ (výchozí)
+    * **Těžká** → $b = +2$
+* **`irt_discrimination`** je pro všechny úlohy fixně **1.0** (standardní 2PL default, „úloha rozlišuje neutrálně"). V UI ji lektor nevidí ani nemění. Ruční nastavení `a = 0` by celý model degradovalo — pravděpodobnost správné odpovědi by pak byla vždy $0.5$ nezávisle na obtížnosti i schopnosti studenta.
+
+Backfill provedený 2026-08-24: všech 923 úloh v DB s dříve `NULL` hodnotami dostalo `b = 0`, `a = 1.0`. Backend validuje, že POST na `/api/tasks/<id>` přijímá `irt_difficulty` jen z množiny `{-2.0, 0.0, 2.0}`.
 
 ---
 

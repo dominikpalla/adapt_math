@@ -107,7 +107,7 @@
     \textbf{Pracoviště:} & Fakulta informatiky a managementu, Univerzita Hradec Králové \\[3pt]
     \textbf{Doba řešení:} & 09/2025 -- 02/2029 \\[3pt]
     \textbf{Autor dokumentace:} & Ing.~Dominik Palla, Ph.D. \\[3pt]
-    \textbf{Verze:} & 1.3 \\[3pt]
+    \textbf{Verze:} & 1.4 \\[3pt]
     \textbf{Datum:} & \today \\
   \end{tabular}
 
@@ -537,6 +537,31 @@ Skipnuto: 1 úloha (\texttt{e03\_35} --- megablok 9 nerovnic v jednom, čeká na
 \paragraph{Nové skripty.} \texttt{scripts/} obsahuje: \texttt{extract\_umat.py}, \texttt{extract\_umat\_v2.py} (UMAT extraktory), \texttt{insert\_new\_tasks.py} (idempotentní INSERT), \texttt{migrate\_trig\_to\_czech.py}, \texttt{cleanup\_e\_layout\_junk.py}, \texttt{fix\_text\_answers\_batch.py}, \texttt{llm\_generate\_mc.py} (Claude API integrace pro budoucí generování MC). Adhoc SQL migrace + Python \texttt{/tmp/*.py} skripty pro per-task fixy (parabola, kořeny, F-funkce, inverse, D-key MC, e04\_44 redesign, atd.) jsou zdokumentovány v git history commitů.
 
 \paragraph{DB zálohy: 12 snapshotů dnes.} Před každou skupinou zásahů proveden pg\_dump + JSON snapshot, stažené i lokálně (\texttt{.backups/} s SHA256 ověřením). Timestamps: \texttt{20260731\_141115, 145549, 151025}; \texttt{20260803\_131727, 144849, 151050}; \texttt{20260820\_081742, 083207, 090717, 100539, 165023, 171817}. Restore-recept: \texttt{pg\_restore -c -d \$DATABASE\_URL <path>.dump}.
+
+\subsection{Změny 2026-08-24 (v1.4): Pilotní IRT seed}
+
+Otevřeno lektorům ruční nastavování IRT obtížnosti přes UI, aby se dala rozjet adaptivní selekce úloh v pilotu.
+
+\paragraph{UI: select IRT obtížnost v editoru úlohy.} V \texttt{templates/task\_checker.html} přibyl v sekci ,,Identifikace \& klasifikace" nový \texttt{<select>} \emph{IRT obtížnost} se třemi předdefinovanými hodnotami:
+\begin{itemize}
+  \item \textbf{Lehká} $\rightarrow$ $b = -2$
+  \item \textbf{Střední} $\rightarrow$ $b = 0$ (výchozí)
+  \item \textbf{Těžká} $\rightarrow$ $b = +2$
+\end{itemize}
+Two-way binding do \texttt{state.irt\_difficulty} (jako \texttt{float}), autosave přes stejný POST endpoint jako ostatní pole úlohy. Když je v DB \texttt{NULL} nebo jiná hodnota, UI mapuje na nejbližší z \texttt{\{-2, 0, +2\}}.
+
+\paragraph{Backend validace v \texttt{app.py}.} Endpoint \texttt{POST /api/tasks/<id>} nyní pro klíč \texttt{irt\_difficulty} přijímá jen tři povolené hodnoty (\texttt{-2.0}, \texttt{0.0}, \texttt{+2.0}); jiná hodnota vrátí HTTP 400. Diskriminaci (\texttt{irt\_dis\-cri\-mi\-na\-tion}) přes UI needitujeme.
+
+\paragraph{DB backfill.} Před migrací fresh backup \texttt{adaptmath\_20260824\_135958.dump} + JSON snapshot (staženo lokálně, SHA256 ověřeno). Transakční migrace:
+\begin{itemize}
+  \item \texttt{UPDATE math\_tasks SET irt\_difficulty = 0.0 WHERE irt\_difficulty IS NULL} $\rightarrow$ 923 úloh.
+  \item \texttt{UPDATE math\_tasks SET irt\_discrimination = 1.0 WHERE irt\_discrimination IS NULL} $\rightarrow$ 923 úloh.
+\end{itemize}
+Po migraci ověřeno: $\text{diff\_null} = 0$, $\text{disc\_null} = 0$, všechny hodnoty v očekávaných mantinelech.
+
+\paragraph{Proč $a = 1.0$, ne $a = 0$?} V 2PL modelu $P(\text{správně}) = \sigma(a(\theta - b))$ je $a = 0$ degenerace: pravděpodobnost správné odpovědi je pak vždy $0{,}5$ bez ohledu na $\theta$ i $b$. Úloha ,,nediskriminuje" a $b$ ztrácí smysl. Hodnota $a = 1.0$ je standardní Rasch/2PL default (,,úloha rozlišuje neutrálně") a je vhodný startovní bod pro empirickou rekalibraci přes \texttt{py-irt} po nasbírání dat od studentů (viz \texttt{IRT.md}, kapitola 4).
+
+\paragraph{Dopad na adaptivní selekci.} Selektor podle $|b - (\theta + \Delta_{\text{Vygotsky}})|$ nyní dostává reálné hodnoty místo \texttt{NULL} a může začít cílit obtížnost úloh podle BKT profilu studenta. Do doby empirické rekalibrace zůstává selekce ,,hrubozrnná" (tři vrstvy obtížnosti), což je pro pilot dostatečné.
 
 % =============================================================================
 \section{Webové UI: Task Checker}
