@@ -1,62 +1,78 @@
 """
 Definice vektoru vah (skill-komponent) pro AdaptMath.
 
-KNOWLEDGE_WEIGHTS — plochý seznam **65** všech vah znalostního vektoru
+KNOWLEDGE_WEIGHTS — plochý seznam **75** všech vah znalostního vektoru
 úlohy. Při editaci expert nastavuje pro každou váhu procentuální hodnotu
 (0–100), která vyjadřuje, jak moc daný skill úloha trénuje. Pro IRT/BKT
 engine pak ve studentově profilu existuje paralelní vektor stejných vah
 s hodnotami 0–1 (úroveň znalosti studenta v daném skillu).
 
-Aktuální seznam navazuje na verzi 260601_v2 s revizemi dr. Medkové
-(2026-07-31: merge Monotonie → „Monotonie a extrémy", přejmenování
-Typová limita → Limita složené funkce, Parciální zlomky → Racionální
-funkce v PF i UI, Výroková logika vyňata ze SŠ).
-Aktuálně 14 logických skupin (Vlasnosti, Typ, Dovednosti, SŠ, Výroková
+Aktuální seznam navazuje na verzi 260820 s revizí dr. Medkové 2026-08-24:
+sjednocení pravopisu prefixu ,,Vlastnosti - `` (dřív 10× překlep
+,,Vlasnosti - ''), přidány 4 nové vlastnosti (Polynomy, Lomená
+kvadratická, Podíl funkcí ostatních, Cyklometrická), přidáno 7 nových
+dovedností (Substituce, Práce s množinami, Dělení polynomů/Horner,
+Integrování, Aritmetika funkcí, Skládání/rozklad funkcí, Ověření/využití
+vlastností), přejmenováno ,,Výpočet rovnic/nerovnic'' -> ,,Řešení
+rovnic/nerovnic'', sloučeno ,,Vytýkání, krácení'' + ,,Roznásobení
+závorky'' -> jedna položka ,,Vytýkání/roznásobení výrazu v závorce''.
+
+Aktuálně 14 logických skupin (Vlastnosti, Typ, Dovednosti, SŠ, Výroková
 logika, Funkce, Monotonie a extrémy, Konvexnost/konkávnost, Spojitost,
 Limita, Derivace, Průběh funkce, Primitivní funkce, Určitý integrál).
 
 V UI rozlišujeme **dvě věci**:
 
-  1) Vektor znalostí (`KNOWLEDGE_WEIGHTS`, 65) — celý mix vlastností,
+  1) Vektor znalostí (`KNOWLEDGE_WEIGHTS`, 75) — celý mix vlastností,
      typu, dovedností i kategorií SŠ/VŠ. Edituje se sliderami.
 
   2) Anotace úlohy (ukládá se „bokem" pro pozdější automatické
      předvyplnění vektoru znalostí):
        - Kategorie (`TASK_CATEGORIES`, 45) — JEDNA primární kategorie
          úlohy. Jen SŠ + VŠ matematika (bez vlastností/typu/dovedností).
-       - Vlastnosti (`TASK_PROPERTIES`, 11) — multi-select (checkboxy).
+       - Vlastnosti (`TASK_PROPERTIES`, 15) — multi-select (checkboxy).
        - Typ (`TASK_TYPES`, 2) — multi-select (checkboxy).
-       - Dovednosti (`TASK_SKILLS`, 7) — multi-select (checkboxy).
+       - Dovednosti (`TASK_SKILLS`, 13) — multi-select (checkboxy).
 
 WEIGHT_GROUPS — mapping name → group key pro barevné rozlišení v UI.
 """
 
 KNOWLEDGE_WEIGHTS = [
-    # Vlastnosti (zelená) — 9 položek
-    "Vlasnosti - Lineární",
-    "Vlasnosti - Kvadratická",
-    "Vlasnosti - Mocninná",
-    "Vlasnosti - Odmocninová",
-    "Vlasnosti - Logaritmická",
-    "Vlasnosti - Exponenciální",
-    "Vlastnosti - Goniometrická",  # zachováváme dle zdroje (varianta „Vlastnosti")
-    "Vlasnosti - Absolutní hodnota",
-    "Vlasnosti - Lomená lineární",
-    "Vlasnosti - Racionální funkce",   # 2026-08-20: přejmenováno z „Zlomky" per dr. Medková
-    "Vlasnosti - S parametrem",
+    # Vlastnosti (zelená) — 15 položek
+    "Vlastnosti - Lineární",
+    "Vlastnosti - Kvadratická",
+    "Vlastnosti - Mocninná",
+    "Vlastnosti - Polynomy",               # 2026-08-24: nová
+    "Vlastnosti - Lomená lineární",
+    "Vlastnosti - Lomená kvadratická",     # 2026-08-24: nová
+    "Vlastnosti - Racionální funkce",
+    "Vlastnosti - Podíl funkcí ostatních", # 2026-08-24: nová
+    "Vlastnosti - Logaritmická",
+    "Vlastnosti - Exponenciální",
+    "Vlastnosti - Odmocninová",
+    "Vlastnosti - Absolutní hodnota",
+    "Vlastnosti - Goniometrická",
+    "Vlastnosti - Cyklometrická",          # 2026-08-24: nová
+    "Vlastnosti - S parametrem",
 
     # Typ (krémová) — 2 položky
     "Typ - Aplikační",
     "Typ - Extrémy funkcí",
 
-    # Dovednosti (oranžová) — 7 položek
+    # Dovednosti (oranžová) — 13 položek
+    "Dovednosti - Vytýkání/roznásobení výrazu v závorce",  # 2026-08-24: merge
+    "Dovednosti - Úpravy zlomků",
+    "Dovednosti - Substituce",             # 2026-08-24: nová
+    "Dovednosti - Práce s množinami",      # 2026-08-24: nová
+    "Dovednosti - Dělení polynomů/Horner", # 2026-08-24: nová
     "Dovednosti - Aplikace vzorce",
-    "Dovednosti - Vytýkání, krácení",
-    "Dovednosti - Roznásobení závorky",
-    "Dovednosti - Výpočet rovnic",
-    "Dovednosti - Výpočet nerovnic",
+    "Dovednosti - Řešení rovnic",          # 2026-08-24: rename z Výpočet rovnic
+    "Dovednosti - Řešení nerovnic",        # 2026-08-24: rename z Výpočet nerovnic
     "Dovednosti - Derivování",
-    "Dovednosti - Úpravy zlomků",       # 2026-08-20: nová položka per dr. Medková
+    "Dovednosti - Integrování",            # 2026-08-24: nová
+    "Dovednosti - Aritmetika funkcí",      # 2026-08-24: nová
+    "Dovednosti - Skládání/rozklad funkcí",# 2026-08-24: nová
+    "Dovednosti - Ověření/využití vlastností", # 2026-08-24: nová
 
     # SŠ (žlutá) — 5 položek
     "SŠ - Algebraické výrazy",
@@ -130,8 +146,7 @@ KNOWLEDGE_WEIGHTS = [
 # Pořadí je zde důležité — delší prefixy musí být první, aby
 # např. „Primitivní funkce -" matchovalo dřív než nic.
 _GROUP_PREFIXES = [
-    ("Vlasnosti - ",          "vlasnosti"),
-    ("Vlastnosti - ",         "vlasnosti"),   # alias pro „Vlastnosti" (zdrojová odlišnost)
+    ("Vlastnosti - ",         "vlasnosti"),
     ("Typ - ",                "typ"),
     ("Dovednosti - ",         "dovednosti"),
     ("SŠ - ",                 "ss"),
@@ -202,13 +217,13 @@ TASK_SKILLS     = [w for w in KNOWLEDGE_WEIGHTS if weight_group(w) == "dovednost
 
 
 # Sanity checky při importu
-assert len(KNOWLEDGE_WEIGHTS) == 65, f"Očekáváno 65 vah, je {len(KNOWLEDGE_WEIGHTS)}"
+assert len(KNOWLEDGE_WEIGHTS) == 75, f"Očekáváno 75 vah, je {len(KNOWLEDGE_WEIGHTS)}"
 assert len(set(KNOWLEDGE_WEIGHTS)) == len(KNOWLEDGE_WEIGHTS), "Duplicitní názvy vah!"
 assert all(weight_group(w) != "default" for w in KNOWLEDGE_WEIGHTS), \
     f"Některá váha bez skupiny: {[w for w in KNOWLEDGE_WEIGHTS if weight_group(w) == 'default']}"
 assert len(TASK_CATEGORIES) == 45, f"Očekáváno 45 kategorií, je {len(TASK_CATEGORIES)}"
-assert len(TASK_PROPERTIES) == 11, f"Očekáváno 11 vlastností, je {len(TASK_PROPERTIES)}"
+assert len(TASK_PROPERTIES) == 15, f"Očekáváno 15 vlastností, je {len(TASK_PROPERTIES)}"
 assert len(TASK_TYPES) == 2, f"Očekávány 2 typy, je {len(TASK_TYPES)}"
-assert len(TASK_SKILLS) == 7, f"Očekáváno 7 dovedností, je {len(TASK_SKILLS)}"
+assert len(TASK_SKILLS) == 13, f"Očekáváno 13 dovedností, je {len(TASK_SKILLS)}"
 assert len(TASK_CATEGORIES) + len(TASK_PROPERTIES) + len(TASK_TYPES) + len(TASK_SKILLS) \
-       == len(KNOWLEDGE_WEIGHTS), "Suma anotačních podmnožin != 65"
+       == len(KNOWLEDGE_WEIGHTS), "Suma anotačních podmnožin != 75"

@@ -107,7 +107,7 @@
     \textbf{Pracoviště:} & Fakulta informatiky a managementu, Univerzita Hradec Králové \\[3pt]
     \textbf{Doba řešení:} & 09/2025 -- 02/2029 \\[3pt]
     \textbf{Autor dokumentace:} & Ing.~Dominik Palla, Ph.D. \\[3pt]
-    \textbf{Verze:} & 1.4 \\[3pt]
+    \textbf{Verze:} & 1.5 \\[3pt]
     \textbf{Datum:} & \today \\
   \end{tabular}
 
@@ -280,7 +280,7 @@ Schema jednoho prvku:
 U každé úlohy rozlišujeme \textbf{dvě} ortogonální věci:
 
 \begin{enumerate}
-  \item \textbf{Vektor znalostí} (\texttt{knowledge\_vector}, 65 vah) --- celý mix vlastností, typu, dovedností i kategorií SŠ/VŠ. Slovník přiřazující každé skill-komponentě procentuální váhu (0--100). Při řešení úlohy se přírůstek (úspěch) nebo úbytek (nesplnění) studentovy znalosti rozdělí mezi komponenty v poměru těchto vah. Paralelní vektor existuje i ve studentově profilu --- tam ale hodnoty $\in [0, 1]$ (IRT/BKT).
+  \item \textbf{Vektor znalostí} (\texttt{knowledge\_vector}, 75 vah) --- celý mix vlastností, typu, dovedností i kategorií SŠ/VŠ. Slovník přiřazující každé skill-komponentě procentuální váhu (0--100). Při řešení úlohy se přírůstek (úspěch) nebo úbytek (nesplnění) studentovy znalosti rozdělí mezi komponenty v poměru těchto vah. Paralelní vektor existuje i ve studentově profilu --- tam ale hodnoty $\in [0, 1]$ (IRT/BKT).
   \item \textbf{Anotace úlohy} (uložená „bokem" pro pozdější automatické předvyplnění \texttt{knowledge\_vector}):
   \begin{itemize}
     \item \texttt{category} --- \emph{jedna} primární kategorie ze 45 (jen SŠ + VŠ matematika + Výroková logika).
@@ -291,7 +291,7 @@ U každé úlohy rozlišujeme \textbf{dvě} ortogonální věci:
   Anotace nemá žádný runtime efekt v IRT/BKT --- slouží jen k tomu, aby z ní engine v další fázi vygeneroval výchozí distribuci vah v knowledge\_vectoru, kterou expert ručně doladí.
 \end{enumerate}
 
-\subsection{KNOWLEDGE\_WEIGHTS (65 vah, verze 260820)}
+\subsection{KNOWLEDGE\_WEIGHTS (75 vah, verze 260824)}
 
 Definováno v~\texttt{tasks/knowledge\_weights.py}. Seznam pochází z konzultace s dr.~Medkovou (základ \texttt{260601\_v2}, revize 2026-07-31 --- viz \emph{Změny 2026-07-31} na konci sekce). Obsahuje pouze \emph{listové} váhy --- hlavní (header) kategorie z původního excelu nejsou v seznamu. Všechny váhy jsou seskupené do 14 \emph{skupin} pro účely barevného rozlišení v UI a budoucí paušální distribuce.
 
@@ -306,7 +306,7 @@ Definováno v~\texttt{tasks/knowledge\_weights.py}. Seznam pochází z konzultac
   \textbf{Skupina} & \textbf{\#} & \textbf{Barva v UI (CSS hex)} \\
   \midrule
   \endhead
-  Vlastnosti              & 11 & zelená \texttt{\#2e7d32} \\
+  Vlastnosti              & 15 & zelená \texttt{\#2e7d32} \\
   Typ                     & 2 & tmavě oranžová \texttt{\#ef6c00} \\
   Dovednosti              & 7 & červenooranžová \texttt{\#d84315} \\
   SŠ                      & 5 & olivově žlutá \texttt{\#8d6e00} \\
@@ -338,9 +338,9 @@ Barvy odpovídají třídám \texttt{.grp-*} v \texttt{templates/task\_checker.h
 
 \begin{itemize}
   \item \texttt{TASK\_CATEGORIES} (45) --- SŠ + Výroková logika + Funkce + Monotonie a extrémy + Konvexnost + Spojitost + Limita + Derivace + Průběh funkce + Primitivní funkce + Určitý integrál. Použito jako \emph{single-select} v UI: jedna primární kategorie úlohy.
-  \item \texttt{TASK\_PROPERTIES} (11) --- skupina \emph{Vlastnosti}. \emph{Multi-select} (checkboxy).
+  \item \texttt{TASK\_PROPERTIES} (15) --- skupina \emph{Vlastnosti}. \emph{Multi-select} (checkboxy).
   \item \texttt{TASK\_TYPES} (2) --- skupina \emph{Typ} (\emph{Aplikační}, \emph{Extrémy funkcí}). \emph{Multi-select}.
-  \item \texttt{TASK\_SKILLS} (6) --- skupina \emph{Dovednosti}. \emph{Multi-select}.
+  \item \texttt{TASK\_SKILLS} (13) --- skupina \emph{Dovednosti}. \emph{Multi-select}.
 \end{itemize}
 
 Součet $45 + 11 + 2 + 6 = 64$ pokrývá celý \texttt{KNOWLEDGE\_WEIGHTS} (sanity-check při importu modulu).
@@ -349,7 +349,7 @@ V další fázi (zatím \textbf{není implementováno}) bude každá kategorie +
 
 \subsection{Kompletní seznam vah}\label{sec:vahy-popis}
 
-Plný seznam 65 vah, seskupený dle prefixu. Pořadí v tabulce odpovídá pořadí ve zdrojovém kódu i v UI.
+Plný seznam 75 vah, seskupený dle prefixu. Pořadí v tabulce odpovídá pořadí ve zdrojovém kódu i v UI.
 
 \textbf{Poznámka:} tabulka níže je snapshot z revize 2026-07-31; \emph{single source of truth} je \texttt{tasks/knowledge\_weights.py} (obsahuje sanity-check assertions, které selžou, pokud spočtené počty nesouhlasí). Detailní změny oproti verzi 260601\_v2 shrnuje závěrečná subsekce.
 
@@ -363,97 +363,112 @@ Plný seznam 65 vah, seskupený dle prefixu. Pořadí v tabulce odpovídá pořa
   \midrule
   \endhead
 
-  \multicolumn{3}{l}{\textit{Vlastnosti (9)}} \\[2pt]
-   1 & Vlasnosti - Lineární                    & Manipulace s~lineárními výrazy a funkcemi $ax + b$. \\
-   2 & Vlasnosti - Kvadratická                 & Kvadratické výrazy $ax^2+bx+c$, kořeny, vrchol. \\
-   3 & Vlasnosti - Mocninná                    & Mocninné funkce $x^n$, pravidla pro mocniny. \\
-   4 & Vlasnosti - Logaritmická                & Logaritmy a jejich vlastnosti. \\
-   5 & Vlasnosti - Exponenciální               & Exponenciální funkce $a^x, e^x$, vzorce. \\
-   6 & Vlastnosti - Goniometrická              & $\sin, \cos, \mathrm{tg}, \mathrm{cotg}$ a jejich vzorce. \\
-   7 & Vlasnosti - Absolutní hodnota           & $|x|$, rozklad podle znaménka. \\
-   8 & Vlasnosti - Lomená lineární             & Funkce $\frac{ax+b}{cx+d}$. \\
-   9 & Vlasnosti - Racionální funkce           & Racionální funkce (podíly polynomů). Přejmenováno z „Zlomky" 2026-08-20. \\[4pt]
+  \multicolumn{3}{l}{\textit{Vlastnosti (15)}} \\[2pt]
+   1 & Vlastnosti - Lineární                   & Manipulace s~lineárními výrazy a funkcemi $ax + b$ (vč. konstantní). \\
+   2 & Vlastnosti - Kvadratická                & Kvadratické výrazy $ax^2+bx+c$, kořeny, vrchol. \\
+   3 & Vlastnosti - Mocninná                   & Mocninné funkce $x^n$, pravidla pro mocniny (vč. záporných). \\
+   4 & Vlastnosti - Polynomy                   & Polynomy vyšších stupňů, kořeny, faktorizace (2026-08-24). \\
+   5 & Vlastnosti - Lomená lineární            & Funkce $\frac{ax+b}{cx+d}$. \\
+   6 & Vlastnosti - Lomená kvadratická         & Podíl s~kvadratickým členem, souvisí s~derivací $\arctg$ (2026-08-24). \\
+   7 & Vlastnosti - Racionální funkce          & Racionální funkce (podíly polynomů). Přejm. z „Zlomky" 2026-08-20. \\
+   8 & Vlastnosti - Podíl funkcí ostatních     & Podíl neelementárních / smíšených funkcí (2026-08-24). \\
+   9 & Vlastnosti - Logaritmická               & Logaritmy a jejich vlastnosti. \\
+  10 & Vlastnosti - Exponenciální              & Exponenciální funkce $a^x, e^x$, vzorce. \\
+  11 & Vlastnosti - Odmocninová                & Odmocniny, racionální exponent. \\
+  12 & Vlastnosti - Absolutní hodnota          & $|x|$, rozklad podle znaménka. \\
+  13 & Vlastnosti - Goniometrická              & $\sin, \cos, \mathrm{tg}, \mathrm{cotg}$ a jejich vzorce. \\
+  14 & Vlastnosti - Cyklometrická              & $\arcsin, \arccos, \arctg, \arccotg$ (2026-08-24). \\
+  15 & Vlastnosti - S parametrem               & Úlohy s~parametrem (typicky rovnice/nerovnice). \\[4pt]
 
-  \multicolumn{3}{l}{\textit{Typ (1)}} \\[2pt]
-  10 & Typ - Aplikační                         & Slovní / aplikační úlohy, modelace reálné situace. \\[4pt]
+  \multicolumn{3}{l}{\textit{Typ (2)}} \\[2pt]
+  16 & Typ - Aplikační                         & Slovní / aplikační úlohy, modelace reálné situace. \\
+  17 & Typ - Extrémy funkcí                    & Úlohy na hledání minim / maxim funkce. \\[4pt]
 
-  \multicolumn{3}{l}{\textit{Dovednosti (7)}} \\[2pt]
-  11 & Dovednosti - Aplikace vzorce            & Klasické vzorce $(a\pm b)^2, a^2-b^2$, kosinová věta atd. \\
-  12 & Dovednosti - Vytýkání, krácení          & Algebraické zjednodušování, faktorizace. \\
-  13 & Dovednosti - Roznásobení závorky        & Distributivní zákon $a(b+c)=ab+ac$. \\
-  14 & Dovednosti - Výpočet rovnic             & Manipulace s~rovnicemi (převody, substituce). \\
-  15 & Dovednosti - Výpočet nerovnic           & Řešení nerovnic, znaménková analýza. \\
-  16 & Dovednosti - Derivování                 & Aplikace derivačních pravidel jako mechanická dovednost. \\
-  17 & Dovednosti - Úpravy zlomků              & Úpravy racionálních výrazů (přidáno 2026-08-20). \\[4pt]
+  \multicolumn{3}{l}{\textit{Dovednosti (13)}} \\[2pt]
+  18 & Dovednosti - Vytýkání/roznásobení výrazu v závorce & Distributivita $a(b+c)=ab+ac$, faktorizace (merge 2026-08-24). \\
+  19 & Dovednosti - Úpravy zlomků              & Sčítání, odčítání, násobení, usměrnění, krácení. \\
+  20 & Dovednosti - Substituce                 & Nahrazení výrazu novou proměnnou (2026-08-24). \\
+  21 & Dovednosti - Práce s množinami          & Sjednocení, průnik, rozdíl (2026-08-24). \\
+  22 & Dovednosti - Dělení polynomů/Horner     & Dělení polynomů, Hornerovo schéma (2026-08-24). \\
+  23 & Dovednosti - Aplikace vzorce            & Algebraické, doplnění na úplný čtverec, goniometrické, log/exp. \\
+  24 & Dovednosti - Řešení rovnic              & Manipulace s~rovnicemi, převody (přejm. 2026-08-24). \\
+  25 & Dovednosti - Řešení nerovnic            & Znaménková analýza, mono\-tonie (přejm. 2026-08-24). \\
+  26 & Dovednosti - Derivování                 & Aplikace derivačních pravidel jako mechanická dovednost. \\
+  27 & Dovednosti - Integrování                & Aplikace integračních pravidel jako mechanická dovednost (2026-08-24). \\
+  28 & Dovednosti - Aritmetika funkcí          & Sčítání, odčítání, násobení, dělení funkcí (2026-08-24). \\
+  29 & Dovednosti - Skládání/rozklad funkcí    & $(f \circ g)(x)$, dekompozice (2026-08-24). \\
+  30 & Dovednosti - Ověření/využití vlastností & Sudost/lichost, injektivita, monotonie, konvexnost (2026-08-24). \\[4pt]
 
   \multicolumn{3}{l}{\textit{SŠ (5)}} \\[2pt]
-  17 & SŠ - Algebraické výrazy                 & Úpravy, zjednodušování polynomiálních / racionálních výrazů. \\
-  18 & SŠ - Elementární funkce                 & Vlastnosti základních funkcí bez derivace. \\
-  19 & SŠ - Rovnice                            & Řešení rovnic vč. exp., log., goniometrických. \\
-  20 & SŠ - Nerovnice                          & Řešení nerovnic s~jednou neznámou. \\
-  21 & SŠ - Soustavy rovnic                    & Lineární soustavy 2--3 neznámých (dosazovací / sčítací). \\[4pt]
+  31 & SŠ - Algebraické výrazy                 & Úpravy, zjednodušování polynomiálních / racionálních výrazů. \\
+  32 & SŠ - Elementární funkce                 & Vlastnosti základních funkcí bez derivace. \\
+  33 & SŠ - Rovnice                            & Řešení rovnic vč. exp., log., goniometrických. \\
+  34 & SŠ - Nerovnice                          & Řešení nerovnic s~jednou neznámou. \\
+  35 & SŠ - Soustavy rovnic                    & Lineární soustavy 2--3 neznámých (dosazovací / sčítací). \\[4pt]
+
+  \multicolumn{3}{l}{\textit{Výroková logika (1)}} \\[2pt]
+  36 & Výroková logika                         & Negace výroků, kvantifikátory, důkazové techniky. \\[4pt]
 
   \multicolumn{3}{l}{\textit{Funkce (7)}} \\[2pt]
-  22 & Funkce - Definiční obor                 & Stanovení $D_f$ (odmocniny, jmenovatele, log, $\arcsin$). \\
-  23 & Funkce - Aritmetika                     & Operace $f+g, f\cdot g, f/g$ a jejich def.~obory. \\
-  24 & Funkce - Skládání/rozkládání            & $f \circ g$, určení vnitřní / vnější funkce, iterace. \\
-  25 & Funkce - Sudá/lichá                     & Symetrie funkce vzhledem k~ose $y$ resp.~k počátku. \\
-  26 & Funkce - Inverzní funkce                & Stanovení $f^{-1}$, def.~obor a obor hodnot. \\
-  27 & Funkce - Tečna ke grafu                 & Rovnice tečny / normály v daném bodě. \\
-  28 & Funkce - Asymptota                      & Vertikální, horizontální a šikmé asymptoty. \\[4pt]
+  37 & Funkce - Definiční obor                 & Stanovení $D_f$ (odmocniny, jmenovatele, log, $\arcsin$). \\
+  38 & Funkce - Aritmetika                     & Operace $f+g, f\cdot g, f/g$ a jejich def.~obory. \\
+  39 & Funkce - Skládání/rozkládání            & $f \circ g$, určení vnitřní / vnější funkce, iterace. \\
+  40 & Funkce - Sudá/lichá                     & Symetrie funkce vzhledem k~ose $y$ resp.~k počátku. \\
+  41 & Funkce - Inverzní funkce                & Stanovení $f^{-1}$, def.~obor a obor hodnot. \\
+  42 & Funkce - Tečna ke grafu                 & Rovnice tečny / normály v daném bodě. \\
+  43 & Funkce - Asymptota                      & Vertikální, horizontální a šikmé asymptoty. \\[4pt]
 
-  \multicolumn{3}{l}{\textit{Monotonie (2)}} \\[2pt]
-  29 & Monotonie - Absolutní extrémy na intervalu & Globální max/min na uzavřeném intervalu. \\
-  30 & Monotonie - Určování lokálních extrémů  & Lokální max/min z první (a druhé) derivace. \\[4pt]
+  \multicolumn{3}{l}{\textit{Monotonie a extrémy (1)}} \\[2pt]
+  44 & Monotonie a extrémy                     & Globální max/min a lokální extrémy (sloučeno 2026-07-31). \\[4pt]
 
   \multicolumn{3}{l}{\textit{Konvexnost/konkávnost (1)}} \\[2pt]
-  31 & Konvexnost/konkávnost                   & Intervaly konvexity, konkávity z~$f''$, inflexní body. \\[4pt]
+  45 & Konvexnost/konkávnost                   & Intervaly konvexity, konkávity z~$f''$, inflexní body. \\[4pt]
 
   \multicolumn{3}{l}{\textit{Spojitost (2)}} \\[2pt]
-  32 & Spojitost - Spojitost                   & Spojitost v~bodě, na intervalu; dodefinování. \\
-  33 & Spojitost - Bolzanova věta              & Existence kořene v~uzavřeném intervalu. \\[4pt]
+  46 & Spojitost - Spojitost                   & Spojitost v~bodě, na intervalu; dodefinování. \\
+  47 & Spojitost - Bolzanova věta              & Existence kořene v~uzavřeném intervalu. \\[4pt]
 
   \multicolumn{3}{l}{\textit{Limita (7)}} \\[2pt]
-  34 & Limita - VOAL (dosazení)                & Věta o~aritmetice limit --- dosazení do spojité funkce. \\
-  35 & Limita - LVL (krácení)                  & Typ $0/0$ řešený krácením společného činitele. \\
-  36 & Limita - S odmocninou                   & Typ $0/0$ řešený rozšířením odmocninou. \\
-  37 & Limita - Vytknutí nejvyšší mocniny      & Typ $\infty/\infty$ v~$\pm\infty$. \\
-  38 & Limita - Jednostranné limity            & $\lim_{x \to a^\pm}$, neexistence dvoustranné limity. \\
-  39 & Limita - Typová limita                  & Tabulkové limity ($\sin x/x$, $(e^x-1)/x$, …). \\
-  40 & Limita - Lhopitalovo pravidlo           & L'Hospitalovo pravidlo pro $0/0$ a $\infty/\infty$. \\[4pt]
+  48 & Limita - VOAL (dosazení)                & Věta o~aritmetice limit --- dosazení do spojité funkce. \\
+  49 & Limita - LVL (krácení)                  & Typ $0/0$ řešený krácením společného činitele. \\
+  50 & Limita - S odmocninou                   & Typ $0/0$ řešený rozšířením odmocninou. \\
+  51 & Limita - Vytknutí nejvyšší mocniny      & Typ $\infty/\infty$ v~$\pm\infty$. \\
+  52 & Limita - Jednostranné limity            & $\lim_{x \to a^\pm}$, neexistence dvoustranné limity. \\
+  53 & Limita - Limita složené funkce          & Přejm. z „Typová limita" 2026-07-31. \\
+  54 & Limita - Lhopitalovo pravidlo           & L'Hospitalovo pravidlo pro $0/0$ a $\infty/\infty$. \\[4pt]
 
   \multicolumn{3}{l}{\textit{Derivace (7)}} \\[2pt]
-  41 & Derivace - Sčítání                      & Pravidlo $(f+g)' = f'+g'$. \\
-  42 & Derivace - Součin                       & Pravidlo $(fg)' = f'g + fg'$. \\
-  43 & Derivace - Podíl                        & Pravidlo $(f/g)' = (f'g-fg')/g^2$. \\
-  44 & Derivace - Složená funkce               & Řetízkové pravidlo $(f \circ g)' = f'(g) \cdot g'$. \\
-  45 & Derivace - Diferenciál                  & $df(x,h) = f'(x)\cdot h$; aproximace, odhady chyb. \\
-  46 & Derivace - Taylorův polynom             & Taylorův / Maclaurinův polynom řádu $n$. \\
-  47 & Derivace - Vyšší řády                   & $f^{(n)}$ a jejich výpočet. \\[4pt]
+  55 & Derivace - Sčítání                      & Pravidlo $(f+g)' = f'+g'$. \\
+  56 & Derivace - Součin                       & Pravidlo $(fg)' = f'g + fg'$. \\
+  57 & Derivace - Podíl                        & Pravidlo $(f/g)' = (f'g-fg')/g^2$. \\
+  58 & Derivace - Složená funkce               & Řetízkové pravidlo $(f \circ g)' = f'(g) \cdot g'$. \\
+  59 & Derivace - Diferenciál                  & $df(x,h) = f'(x)\cdot h$; aproximace, odhady chyb. \\
+  60 & Derivace - Taylorův polynom             & Taylorův / Maclaurinův polynom řádu $n$. \\
+  61 & Derivace - Vyšší řády                   & $f^{(n)}$ a jejich výpočet. \\[4pt]
 
   \multicolumn{3}{l}{\textit{Průběh funkce (1)}} \\[2pt]
-  48 & Průběh funkce                           & Komplexní vyšetření průběhu (D, parita, monotonie, …). \\[4pt]
+  62 & Průběh funkce                           & Komplexní vyšetření průběhu (D, parita, monotonie, …). \\[4pt]
 
   \multicolumn{3}{l}{\textit{Primitivní funkce (5)}} \\[2pt]
-  49 & Primitivní funkce - Sčítání             & Linearita integrálu. \\
-  50 & Primitivní funkce - Per partes          & $\int u\, dv = uv - \int v\, du$ pro neurčitý integrál. \\
-  51 & Primitivní funkce - 1.věta o subustituci & $\int f(g(x)) g'(x)\, dx = \int f(t)\, dt$. \\
-  52 & Primitivní funkce - 2.věta o substituci & Substituce $x = \varphi(t)$ (typicky s~odmocninou nebo exp.). \\
-  53 & Primitivní funkce - Parciální zlomky    & Rozklad racionální funkce, integrace. \\[4pt]
+  63 & Primitivní funkce - Sčítání             & Linearita integrálu. \\
+  64 & Primitivní funkce - Per partes          & $\int u\, dv = uv - \int v\, du$ pro neurčitý integrál. \\
+  65 & Primitivní funkce - 1.věta o subustituci & $\int f(g(x)) g'(x)\, dx = \int f(t)\, dt$. \\
+  66 & Primitivní funkce - 2.věta o substituci & Substituce $x = \varphi(t)$ (typicky s~odmocninou nebo exp.). \\
+  67 & Primitivní funkce - Racionální funkce   & Rozklad racionální funkce, integrace (přejm. 2026-07-31). \\[4pt]
 
   \multicolumn{3}{l}{\textit{Určitý integrál (8)}} \\[2pt]
-  54 & Určitý integrál - Sčítání               & Linearita určitého integrálu. \\
-  55 & Určitý integrál - Aditivita             & $\int_a^c f = \int_a^b f + \int_b^c f$ pro $a<b<c$. \\
-  56 & Určitý integrál - Per partes            & Per partes pro určitý integrál (s mezemi). \\
-  57 & Určitý integrál - 1.věta o substituci   & První věta s úpravou mezí. \\
-  58 & Určitý integrál - 2.věta o substituci   & Druhá věta s úpravou mezí. \\
-  59 & Určitý integrál - Parciální zlomky      & Parciální zlomky v určitém integrálu. \\
-  60 & Určitý integrál - Nevlastní             & Integrály s~nekonečnými mezemi nebo neomezenou funkcí. \\
-  61 & Určitý integrál - Obsah plochy          & Výpočet obsahu rovinné oblasti ohraničené grafy funkcí. \\
+  68 & Určitý integrál - Sčítání               & Linearita určitého integrálu. \\
+  69 & Určitý integrál - Aditivita             & $\int_a^c f = \int_a^b f + \int_b^c f$ pro $a<b<c$. \\
+  70 & Určitý integrál - Per partes            & Per partes pro určitý integrál (s mezemi). \\
+  71 & Určitý integrál - 1.věta o substituci   & První věta s úpravou mezí. \\
+  72 & Určitý integrál - 2.věta o substituci   & Druhá věta s úpravou mezí. \\
+  73 & Určitý integrál - Racionální funkce     & Racionální funkce v určitém integrálu (přejm. 2026-07-31). \\
+  74 & Určitý integrál - Nevlastní             & Integrály s~nekonečnými mezemi nebo neomezenou funkcí. \\
+  75 & Určitý integrál - Obsah plochy          & Výpočet obsahu rovinné oblasti ohraničené grafy funkcí. \\
   \bottomrule
 \end{longtable}
 
-\paragraph{Pozn. k drobným typografickým odchylkám.} V seznamu se opakovaně objevuje „Vlasnosti" (1×~„Vlastnosti" pro Goniometrickou) a „subustituci" místo „substituci" --- ponecháno přesně dle excelu dr.~Medkové, ať se interní názvy nerozcházejí mezi zdroji.
+\paragraph{Pozn. k drobným typografickým odchylkám.} V názvu \emph{Primitivní funkce - 1.věta o subustituci} zůstává překlep „subustituci" místo „substituci" --- ponecháno přesně dle excelu dr.~Medkové, ať se interní názvy nerozcházejí mezi zdroji. Pravopisný překlep „Vlasnosti" (bez „t") v ostatních 10 vlastnostech byl odstraněn 2026-08-24 (viz sekce Změny v1.5).
 
 \subsection{Změny 2026-07-31 (v1.2)}
 
@@ -470,8 +485,8 @@ Revize dle zpětné vazby dr.~Medkové:
   \end{itemize}
   \item \textbf{Přidané položky} (během roku 2026):
   \begin{itemize}
-    \item \emph{Vlasnosti - S parametrem}
-    \item \emph{Vlasnosti - Odmocninová}
+    \item \emph{Vlastnosti - S parametrem}
+    \item \emph{Vlastnosti - Odmocninová}
     \item \emph{Typ - Extrémy funkcí}
   \end{itemize}
   \item \textbf{Celkové počty}: KNOWLEDGE\_WEIGHTS 61 $\rightarrow$ 64, TASK\_CATEGORIES 45 (bez změny, ale s jiným složením), TASK\_PROPERTIES 9 $\rightarrow$ 11, TASK\_TYPES 1 $\rightarrow$ 2, skupin 13 $\rightarrow$ 14.
@@ -493,7 +508,7 @@ Velká iterace: extrakce dalších úloh z UMAT skripta + Overleaf sbírky, revi
 
 \paragraph{Taxonomie: Zlomky $\rightarrow$ Racionální funkce, +Úpravy zlomků.}
 \begin{itemize}
-  \item \emph{Vlasnosti - Zlomky} $\rightarrow$ \emph{Vlasnosti - Racionální funkce}. DB migrace přepsala 156 řádků v \texttt{properties}. Kód \texttt{knowledge\_weights.py} aktualizován.
+  \item \emph{Vlastnosti - Zlomky} $\rightarrow$ \emph{Vlastnosti - Racionální funkce}. DB migrace přepsala 156 řádků v \texttt{properties}. Kód \texttt{knowledge\_weights.py} aktualizován.
   \item \textbf{Přidáno}: \emph{Dovednosti - Úpravy zlomků} (prázdná, čeká na tagování týmem).
   \item \textbf{Celkové počty}: KNOWLEDGE\_WEIGHTS 64 $\rightarrow$ 65, TASK\_SKILLS 6 $\rightarrow$ 7 (Vlastnosti bez změny počtu, jen rename), TASK\_CATEGORIES 45 (bez změny).
 \end{itemize}
@@ -565,6 +580,44 @@ Po migraci ověřeno: $\text{diff\_null} = 0$, $\text{disc\_null} = 0$, všechny
 
 \paragraph{UI úklid.} Odstraněna redundantní tlačítka ,,\emph{Uložit změny}" a ,,\emph{Vrátit}" ze save-baru. Autosave s 800ms debounce pokrývá všechna pole (task\_id, content\_latex, cognitive\_load, category, irt\_difficulty, properties, task\_type, skills, knowledge\_vector, results), takže tlačítka byla nadbytečná. Zůstává jen status indikátor (,,Ukládám\ldots" / ,,Uloženo v \ldots" / ,,chyba") a ,,Smazat úlohu".
 
+\subsection{Změny 2026-08-24 (v1.5): Taxonomy refactor}
+
+Rozsáhlá revize slovníku vlastností a dovedností dle finálního seznamu dr.~Medkové. Sjednocení pravopisu, rozšíření o jemnější kategorie, sloučení / přejmenování dřívějších dovedností.
+
+\paragraph{Prefix \texttt{Vlasnosti - } $\rightarrow$ \texttt{Vlastnosti - }.} Historická pravopisná chyba: 10 z 11 vlastností mělo v prefixu překlep ,,\texttt{Vlasnosti}" (bez ,,t"), jediná ,,\texttt{Vlastnosti - Goniometrická}" byla správně. Sjednoceno na správný pravopis \texttt{Vlastnosti - } u všech 15 položek. DB migrace přepsala 363 řádků v \texttt{properties}. Alias \texttt{Vlasnosti - } odstraněn z \texttt{\_GROUP\_PREFIXES}.
+
+\paragraph{Vlastnosti: +4 nové.}
+\begin{itemize}
+  \item \emph{Vlastnosti - Polynomy} --- polynomy vyšších stupňů (dosud spadaly do \emph{Racionální funkce}, lektoři postupně přeznačí).
+  \item \emph{Vlastnosti - Lomená kvadratická} --- funkce s~kvadratickým jmenovatelem, souvisí s~derivací $\arctg$.
+  \item \emph{Vlastnosti - Podíl funkcí ostatních} --- podíl neelementárních / smíšených funkcí (např.~$\frac{\sin x}{e^x}$).
+  \item \emph{Vlastnosti - Cyklometrická} --- $\arcsin, \arccos, \arctg, \arccotg$.
+\end{itemize}
+Nové položky v DB startují prázdné (0 úloh), 156 stávajících úloh označených \emph{Racionální funkce} zůstává beze změny --- lektoři je při procházení případně přeznačí do jemnějších kategorií (Polynomy / Podíl funkcí ostatních). Celkově: 11 $\rightarrow$ 15 vlastností.
+
+\paragraph{Dovednosti: rename + merge + 7 nových.}
+\begin{itemize}
+  \item \textbf{Rename:} \emph{Výpočet rovnic} $\rightarrow$ \emph{Řešení rovnic} (227 řádků: 59 rovnic + 168 nerovnic --- viz merge níže se překrývá). Konkrétně \emph{Výpočet rovnic} $\rightarrow$ \emph{Řešení rovnic} u 59 úloh, \emph{Výpočet nerovnic} $\rightarrow$ \emph{Řešení nerovnic} u 28 úloh (celkem 87 rename hitů v 227 řádcích, které měly aspoň jeden z tagů).
+  \item \textbf{Merge:} \emph{Vytýkání, krácení} $+$ \emph{Roznásobení závorky} $\rightarrow$ \emph{Vytýkání/roznásobení výrazu v závorce} (168 řádků; úloha s jedním, druhým nebo oběma tagy dostane jeden nový, dedup). Krácení jako samostatná pod-informace ,,se ztrácí" (lektoři při procházení případně přidají \emph{Úpravy zlomků} tam, kde je úloha reálně o krácení zlomků).
+  \item \textbf{7 nových:} \emph{Substituce}, \emph{Práce s množinami} (sjednocení, průnik), \emph{Dělení polynomů/Horner}, \emph{Integrování}, \emph{Aritmetika funkcí}, \emph{Skládání/rozklad funkcí}, \emph{Ověření/využití vlastností} (sudost, lichost, injektivita, monotonie, konvexnost).
+\end{itemize}
+Celkově: 7 $\rightarrow$ 13 dovedností (--2 merge, +1 nová po merge, +7 zbrusu nových, +2 rename bez změny počtu).
+
+\paragraph{Celkové počty.} KNOWLEDGE\_WEIGHTS 65 $\rightarrow$ 75. TASK\_PROPERTIES 11 $\rightarrow$ 15. TASK\_SKILLS 7 $\rightarrow$ 13. TASK\_CATEGORIES 45 (bez změny). TASK\_TYPES 2 (bez změny). Kontrolní součet: 15+13+45+2 = 75 ✓.
+
+\paragraph{DB migrace.} Skript \texttt{scripts/migrate\_taxonomy\_20260824.py} (idempotentní, transakce, dry-run + \texttt{--commit}). Před migrací fresh backup \texttt{adaptmath\_20260824\_153823.dump} + JSON snapshot (SHA256 ověřeno lokálně). Po commitu ověřeno: v \texttt{properties} zbývá 0 řádků se starým překlepem, v \texttt{skills} zbývá 0 řádků se starými dovednostmi. Distribuce nových skills:
+\begin{itemize}
+  \item \emph{Aplikace vzorce}: 179 úloh
+  \item \emph{Vytýkání/roznásobení výrazu v závorce}: 168 úloh (merge)
+  \item \emph{Derivování}: 140 úloh
+  \item \emph{Řešení rovnic}: 59 úloh
+  \item \emph{Řešení nerovnic}: 28 úloh
+  \item \emph{Úpravy zlomků}: 11 úloh
+  \item nové (Substituce, Práce s množinami, Dělení polynomů/Horner, Integrování, Aritmetika, Skládání/rozklad, Ověření/využití): 0 úloh (na startu prázdné).
+\end{itemize}
+
+\paragraph{Dopad na kód.} \texttt{tasks/knowledge\_weights.py} přepsáno komplet (nové seznamy, upravené asserts). Grep přes \texttt{tasks/*.py} seedy neodhalil žádné hard-coded odkazy na staré názvy --- seedy pracují jen s obecným API pro vkládání úloh, konkrétní tagy jde přes UI. UI (task\_checker.html) i backend (\texttt{app.py}) používají \texttt{TASK\_PROPERTIES} / \texttt{TASK\_SKILLS} import, takže žádný další rename není potřeba.
+
 % =============================================================================
 \section{Webové UI: Task Checker}
 
@@ -634,7 +687,7 @@ UI je rozděleno do dvou sloupců.
   \item \emph{Kategorie úlohy} --- single-select 45 položek (SŠ + Výroková logika + VŠ matematika), text barevně rozlišený podle příslušné skupiny.
   \item Pod selektem 3 \emph{multi-select} sekce s checkboxy --- jsou barevně sladěné se skupinou:
   \begin{itemize}
-    \item \emph{Vlastnosti} (11 položek, zelená),
+    \item \emph{Vlastnosti} (15 položek, zelená),
     \item \emph{Typ} (2 položky --- Aplikační, Extrémy funkcí, krémová),
     \item \emph{Dovednosti} (7 položek, oranžová).
   \end{itemize}
@@ -871,7 +924,7 @@ WantedBy=multi-user.target
 
 \begin{enumerate}
   \item \textbf{Tagování úloh experty.} Tým musí manuálně projít 415 úloh a~přiřadit \texttt{category} + nastavit \texttt{knowledge\_vector}. To je hlavní úkol Task Checkeru.
-  \item \textbf{Distribuce vah dle kategorie.} Definovat slovník \texttt{CATEGORY\_DEFAULT\_VECTOR}, který pro každou ze 45 kategorií předvyplní výchozí distribuci 65 vah. Při výběru kategorie v UI se předvyplní \texttt{knowledge\_vector}, expert pak ladí.
+  \item \textbf{Distribuce vah dle kategorie.} Definovat slovník \texttt{CATEGORY\_DEFAULT\_VECTOR}, který pro každou ze 45 kategorií předvyplní výchozí distribuci 75 vah. Při výběru kategorie v UI se předvyplní \texttt{knowledge\_vector}, expert pak ladí.
   \item \textbf{LLM vyhodnocení \texttt{open\_text}}. Aktuálně máme všechny negace převedeny na \texttt{multiple\_choice}; pro budoucí volné úlohy zavést endpoint \texttt{POST /api/eval-open-text} volající Gemini.
   \item \textbf{Alembic migrace.} Nahradit drop \& recreate řízenými migracemi.
   \item \textbf{Gunicorn pro produkci.} Nahradit Werkzeug dev server na produkci.
