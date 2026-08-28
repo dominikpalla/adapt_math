@@ -280,7 +280,7 @@ Schema jednoho prvku:
 U každé úlohy rozlišujeme \textbf{dvě} ortogonální věci:
 
 \begin{enumerate}
-  \item \textbf{Vektor znalostí} (\texttt{knowledge\_vector}, 77 vah) --- celý mix vlastností, typu, dovedností i kategorií SŠ/VŠ. Slovník přiřazující každé skill-komponentě procentuální váhu (0--100). Při řešení úlohy se přírůstek (úspěch) nebo úbytek (nesplnění) studentovy znalosti rozdělí mezi komponenty v poměru těchto vah. Paralelní vektor existuje i ve studentově profilu --- tam ale hodnoty $\in [0, 1]$ (IRT/BKT).
+  \item \textbf{Vektor znalostí} (\texttt{knowledge\_vector}, 78 vah) --- celý mix vlastností, typu, dovedností i kategorií SŠ/VŠ. Slovník přiřazující každé skill-komponentě procentuální váhu (0--100). Při řešení úlohy se přírůstek (úspěch) nebo úbytek (nesplnění) studentovy znalosti rozdělí mezi komponenty v poměru těchto vah. Paralelní vektor existuje i ve studentově profilu --- tam ale hodnoty $\in [0, 1]$ (IRT/BKT).
   \item \textbf{Anotace úlohy} (uložená „bokem" pro pozdější automatické předvyplnění \texttt{knowledge\_vector}):
   \begin{itemize}
     \item \texttt{category} --- \emph{jedna} primární kategorie ze 45 (jen SŠ + VŠ matematika + Výroková logika).
@@ -291,7 +291,7 @@ U každé úlohy rozlišujeme \textbf{dvě} ortogonální věci:
   Anotace nemá žádný runtime efekt v IRT/BKT --- slouží jen k tomu, aby z ní engine v další fázi vygeneroval výchozí distribuci vah v knowledge\_vectoru, kterou expert ručně doladí.
 \end{enumerate}
 
-\subsection{KNOWLEDGE\_WEIGHTS (77 vah, verze 260824)}
+\subsection{KNOWLEDGE\_WEIGHTS (78 vah, verze 260824)}
 
 Definováno v~\texttt{tasks/knowledge\_weights.py}. Seznam pochází z konzultace s dr.~Medkovou (základ \texttt{260601\_v2}, revize 2026-07-31 --- viz \emph{Změny 2026-07-31} na konci sekce). Obsahuje pouze \emph{listové} váhy --- hlavní (header) kategorie z původního excelu nejsou v seznamu. Všechny váhy jsou seskupené do 14 \emph{skupin} pro účely barevného rozlišení v UI a budoucí paušální distribuce.
 
@@ -309,7 +309,7 @@ Definováno v~\texttt{tasks/knowledge\_weights.py}. Seznam pochází z konzultac
   Vlastnosti              & 15 & zelená \texttt{\#2e7d32} \\
   Typ                     & 2 & tmavě oranžová \texttt{\#ef6c00} \\
   Dovednosti              & 7 & červenooranžová \texttt{\#d84315} \\
-  SŠ                      & 7 & olivově žlutá \texttt{\#8d6e00} \\
+  SŠ                      & 8 & olivově žlutá \texttt{\#8d6e00} \\
   Výroková logika         & 1 & blue-gray \texttt{\#607d8b} \\
   Funkce                  & 7 & modrá \texttt{\#1565c0} \\
   Monotonie a extrémy     & 1 & fialová \texttt{\#6a1b9a} \\
@@ -337,7 +337,7 @@ Barvy odpovídají třídám \texttt{.grp-*} v \texttt{templates/task\_checker.h
 \texttt{KNOWLEDGE\_WEIGHTS} (64) je v \texttt{tasks/knowledge\_weights.py} rozdělen do čtyř disjunktních anotačních podmnožin:
 
 \begin{itemize}
-  \item \texttt{TASK\_CATEGORIES} (47) --- SŠ + Výroková logika + Funkce + Monotonie a extrémy + Konvexnost + Spojitost + Limita + Derivace + Průběh funkce + Primitivní funkce + Určitý integrál. Použito jako \emph{single-select} v UI: jedna primární kategorie úlohy.
+  \item \texttt{TASK\_CATEGORIES} (48) --- SŠ + Výroková logika + Funkce + Monotonie a extrémy + Konvexnost + Spojitost + Limita + Derivace + Průběh funkce + Primitivní funkce + Určitý integrál. Použito jako \emph{single-select} v UI: jedna primární kategorie úlohy.
   \item \texttt{TASK\_PROPERTIES} (15) --- skupina \emph{Vlastnosti}. \emph{Multi-select} (checkboxy).
   \item \texttt{TASK\_TYPES} (2) --- skupina \emph{Typ} (\emph{Aplikační}, \emph{Extrémy funkcí}). \emph{Multi-select}.
   \item \texttt{TASK\_SKILLS} (13) --- skupina \emph{Dovednosti}. \emph{Multi-select}.
@@ -349,7 +349,7 @@ V další fázi (zatím \textbf{není implementováno}) bude každá kategorie +
 
 \subsection{Kompletní seznam vah}\label{sec:vahy-popis}
 
-Plný seznam 77 vah, seskupený dle prefixu. Pořadí v tabulce odpovídá pořadí ve zdrojovém kódu i v UI.
+Plný seznam 78 vah, seskupený dle prefixu. Pořadí v tabulce odpovídá pořadí ve zdrojovém kódu i v UI.
 
 \textbf{Poznámka:} tabulka níže je snapshot z revize 2026-07-31; \emph{single source of truth} je \texttt{tasks/knowledge\_weights.py} (obsahuje sanity-check assertions, které selžou, pokud spočtené počty nesouhlasí). Detailní změny oproti verzi 260601\_v2 shrnuje závěrečná subsekce.
 
@@ -399,14 +399,15 @@ Plný seznam 77 vah, seskupený dle prefixu. Pořadí v tabulce odpovídá pořa
   29 & Dovednosti - Skládání/rozklad funkcí    & $(f \circ g)(x)$, dekompozice (2026-08-24). \\
   30 & Dovednosti - Ověření/využití vlastností & Sudost/lichost, injektivita, monotonie, konvexnost (2026-08-24). \\[4pt]
 
-  \multicolumn{3}{l}{\textit{SŠ (7)}} \\[2pt]
+  \multicolumn{3}{l}{\textit{SŠ (8)}} \\[2pt]
   31 & SŠ - Algebraické výrazy                 & Úpravy, zjednodušování polynomiálních / racionálních výrazů. \\
   32 & SŠ - Elementární funkce                 & Vlastnosti základních funkcí bez derivace. \\
   33 & SŠ - Rovnice                            & Řešení rovnic vč. exp., log., goniometrických. \\
   34 & SŠ - Nerovnice                          & Řešení nerovnic s~jednou neznámou. \\
   35 & SŠ - Soustavy rovnic                    & Lineární soustavy 2--3 neznámých (dosazovací / sčítací). \\
   36 & SŠ - Posloupnosti                       & Aritmetická / geometrická posloupnost, součty (2026-08-24). \\
-  37 & SŠ - Množiny a relace                   & Operace s množinami, kartézský součin, relace, zobrazení (2026-08-24). \\[4pt]
+  37 & SŠ - Množiny a relace                   & Operace s množinami, kartézský součin, relace, zobrazení (2026-08-24). \\
+  38 & SŠ - Analytická geometrie               & Vektory, přímky, kuželosečky, vzdálenosti v $\mathbb{R}^2$ (2026-08-24). \\[4pt]
 
   \multicolumn{3}{l}{\textit{Výroková logika (1)}} \\[2pt]
   36 & Výroková logika                         & Negace výroků, kvantifikátory, důkazové techniky. \\[4pt]
@@ -620,7 +621,7 @@ Celkově: 7 $\rightarrow$ 13 dovedností (--2 merge, +1 nová po merge, +7 zbrus
 
 \paragraph{Dopad na kód.} \texttt{tasks/knowledge\_weights.py} přepsáno komplet (nové seznamy, upravené asserts). Grep přes \texttt{tasks/*.py} seedy neodhalil žádné hard-coded odkazy na staré názvy --- seedy pracují jen s obecným API pro vkládání úloh, konkrétní tagy jde přes UI. UI (task\_checker.html) i backend (\texttt{app.py}) používají \texttt{TASK\_PROPERTIES} / \texttt{TASK\_SKILLS} import, takže žádný další rename není potřeba.
 
-\paragraph{Dodatek 2026-08-24: +SŠ - Posloupnosti, +SŠ - Množiny a relace.} Krátce po v1.5 doplněny další dvě kategorie: \emph{SŠ - Posloupnosti} (aritmetická / geometrická posloupnost, součty) a \emph{SŠ - Množiny a relace} (operace s množinami, kartézský součin, relace, zobrazení). Skupina SŠ tak roste z 5 na 7 položek, KNOWLEDGE\_WEIGHTS z 75 na 77, TASK\_CATEGORIES z 45 na 47. DB migrace není potřeba: jde jen o nové položky v dropdownu, žádná existující úloha se nepřepisuje.
+\paragraph{Dodatek 2026-08-24: +3 SŠ kategorie.} Krátce po v1.5 doplněny další tři kategorie: \emph{SŠ - Posloupnosti} (aritmetická / geometrická posloupnost, součty), \emph{SŠ - Množiny a relace} (operace s množinami, kartézský součin, relace, zobrazení) a \emph{SŠ - Analytická geometrie} (vektory, přímky, kuželosečky, vzdálenosti v~$\mathbb{R}^2$). Skupina SŠ tak roste z 5 na 8 položek, KNOWLEDGE\_WEIGHTS z 75 na 78, TASK\_CATEGORIES z 45 na 48. DB migrace není potřeba: jde jen o nové položky v dropdownu, žádná existující úloha se nepřepisuje.
 
 % =============================================================================
 \section{Webové UI: Task Checker}
@@ -928,7 +929,7 @@ WantedBy=multi-user.target
 
 \begin{enumerate}
   \item \textbf{Tagování úloh experty.} Tým musí manuálně projít 415 úloh a~přiřadit \texttt{category} + nastavit \texttt{knowledge\_vector}. To je hlavní úkol Task Checkeru.
-  \item \textbf{Distribuce vah dle kategorie.} Definovat slovník \texttt{CATEGORY\_DEFAULT\_VECTOR}, který pro každou ze 45 kategorií předvyplní výchozí distribuci 77 vah. Při výběru kategorie v UI se předvyplní \texttt{knowledge\_vector}, expert pak ladí.
+  \item \textbf{Distribuce vah dle kategorie.} Definovat slovník \texttt{CATEGORY\_DEFAULT\_VECTOR}, který pro každou ze 45 kategorií předvyplní výchozí distribuci 78 vah. Při výběru kategorie v UI se předvyplní \texttt{knowledge\_vector}, expert pak ladí.
   \item \textbf{LLM vyhodnocení \texttt{open\_text}}. Aktuálně máme všechny negace převedeny na \texttt{multiple\_choice}; pro budoucí volné úlohy zavést endpoint \texttt{POST /api/eval-open-text} volající Gemini.
   \item \textbf{Alembic migrace.} Nahradit drop \& recreate řízenými migracemi.
   \item \textbf{Gunicorn pro produkci.} Nahradit Werkzeug dev server na produkci.
