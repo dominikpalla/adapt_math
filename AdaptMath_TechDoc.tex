@@ -280,7 +280,7 @@ Schema jednoho prvku:
 U každé úlohy rozlišujeme \textbf{dvě} ortogonální věci:
 
 \begin{enumerate}
-  \item \textbf{Vektor znalostí} (\texttt{knowledge\_vector}, 78 vah) --- celý mix vlastností, typu, dovedností i kategorií SŠ/VŠ. Slovník přiřazující každé skill-komponentě procentuální váhu (0--100). Při řešení úlohy se přírůstek (úspěch) nebo úbytek (nesplnění) studentovy znalosti rozdělí mezi komponenty v poměru těchto vah. Paralelní vektor existuje i ve studentově profilu --- tam ale hodnoty $\in [0, 1]$ (IRT/BKT).
+  \item \textbf{Vektor znalostí} (\texttt{knowledge\_vector}, 79 vah) --- celý mix vlastností, typu, dovedností i kategorií SŠ/VŠ. Slovník přiřazující každé skill-komponentě procentuální váhu (0--100). Při řešení úlohy se přírůstek (úspěch) nebo úbytek (nesplnění) studentovy znalosti rozdělí mezi komponenty v poměru těchto vah. Paralelní vektor existuje i ve studentově profilu --- tam ale hodnoty $\in [0, 1]$ (IRT/BKT).
   \item \textbf{Anotace úlohy} (uložená „bokem" pro pozdější automatické předvyplnění \texttt{knowledge\_vector}):
   \begin{itemize}
     \item \texttt{category} --- \emph{jedna} primární kategorie ze 45 (jen SŠ + VŠ matematika + Výroková logika).
@@ -291,7 +291,7 @@ U každé úlohy rozlišujeme \textbf{dvě} ortogonální věci:
   Anotace nemá žádný runtime efekt v IRT/BKT --- slouží jen k tomu, aby z ní engine v další fázi vygeneroval výchozí distribuci vah v knowledge\_vectoru, kterou expert ručně doladí.
 \end{enumerate}
 
-\subsection{KNOWLEDGE\_WEIGHTS (78 vah, verze 260824)}
+\subsection{KNOWLEDGE\_WEIGHTS (79 vah, verze 260824)}
 
 Definováno v~\texttt{tasks/knowledge\_weights.py}. Seznam pochází z konzultace s dr.~Medkovou (základ \texttt{260601\_v2}, revize 2026-07-31 --- viz \emph{Změny 2026-07-31} na konci sekce). Obsahuje pouze \emph{listové} váhy --- hlavní (header) kategorie z původního excelu nejsou v seznamu. Všechny váhy jsou seskupené do 14 \emph{skupin} pro účely barevného rozlišení v UI a budoucí paušální distribuce.
 
@@ -316,7 +316,7 @@ Definováno v~\texttt{tasks/knowledge\_weights.py}. Seznam pochází z konzultac
   Konvexnost/konkávnost   & 1 & břidlicová \texttt{\#455a64} \\
   Spojitost               & 2 & tyrkysová \texttt{\#00695c} \\
   Limita                  & 7 & růžová \texttt{\#c2185b} \\
-  Derivace                & 7 & tmavě modrá \texttt{\#283593} \\
+  Derivace                & 8 & tmavě modrá \texttt{\#283593} \\
   Průběh funkce           & 1 & uhlově šedá \texttt{\#424242} \\
   Primitivní funkce       & 5 & tmavě červená \texttt{\#b71c1c} \\
   Určitý integrál         & 8 & hnědá \texttt{\#4e342e} \\
@@ -337,7 +337,7 @@ Barvy odpovídají třídám \texttt{.grp-*} v \texttt{templates/task\_checker.h
 \texttt{KNOWLEDGE\_WEIGHTS} (64) je v \texttt{tasks/knowledge\_weights.py} rozdělen do čtyř disjunktních anotačních podmnožin:
 
 \begin{itemize}
-  \item \texttt{TASK\_CATEGORIES} (48) --- SŠ + Výroková logika + Funkce + Monotonie a extrémy + Konvexnost + Spojitost + Limita + Derivace + Průběh funkce + Primitivní funkce + Určitý integrál. Použito jako \emph{single-select} v UI: jedna primární kategorie úlohy.
+  \item \texttt{TASK\_CATEGORIES} (49) --- SŠ + Výroková logika + Funkce + Monotonie a extrémy + Konvexnost + Spojitost + Limita + Derivace + Průběh funkce + Primitivní funkce + Určitý integrál. Použito jako \emph{single-select} v UI: jedna primární kategorie úlohy.
   \item \texttt{TASK\_PROPERTIES} (15) --- skupina \emph{Vlastnosti}. \emph{Multi-select} (checkboxy).
   \item \texttt{TASK\_TYPES} (2) --- skupina \emph{Typ} (\emph{Aplikační}, \emph{Extrémy funkcí}). \emph{Multi-select}.
   \item \texttt{TASK\_SKILLS} (13) --- skupina \emph{Dovednosti}. \emph{Multi-select}.
@@ -349,7 +349,7 @@ V další fázi (zatím \textbf{není implementováno}) bude každá kategorie +
 
 \subsection{Kompletní seznam vah}\label{sec:vahy-popis}
 
-Plný seznam 78 vah, seskupený dle prefixu. Pořadí v tabulce odpovídá pořadí ve zdrojovém kódu i v UI.
+Plný seznam 79 vah, seskupený dle prefixu. Pořadí v tabulce odpovídá pořadí ve zdrojovém kódu i v UI.
 
 \textbf{Poznámka:} tabulka níže je snapshot z revize 2026-07-31; \emph{single source of truth} je \texttt{tasks/knowledge\_weights.py} (obsahuje sanity-check assertions, které selžou, pokud spočtené počty nesouhlasí). Detailní změny oproti verzi 260601\_v2 shrnuje závěrečná subsekce.
 
@@ -440,34 +440,35 @@ Plný seznam 78 vah, seskupený dle prefixu. Pořadí v tabulce odpovídá pořa
   53 & Limita - Limita složené funkce          & Přejm. z „Typová limita" 2026-07-31. \\
   54 & Limita - Lhopitalovo pravidlo           & L'Hospitalovo pravidlo pro $0/0$ a $\infty/\infty$. \\[4pt]
 
-  \multicolumn{3}{l}{\textit{Derivace (7)}} \\[2pt]
-  55 & Derivace - Sčítání                      & Pravidlo $(f+g)' = f'+g'$. \\
-  56 & Derivace - Součin                       & Pravidlo $(fg)' = f'g + fg'$. \\
-  57 & Derivace - Podíl                        & Pravidlo $(f/g)' = (f'g-fg')/g^2$. \\
-  58 & Derivace - Složená funkce               & Řetízkové pravidlo $(f \circ g)' = f'(g) \cdot g'$. \\
-  59 & Derivace - Diferenciál                  & $df(x,h) = f'(x)\cdot h$; aproximace, odhady chyb. \\
-  60 & Derivace - Taylorův polynom             & Taylorův / Maclaurinův polynom řádu $n$. \\
-  61 & Derivace - Vyšší řády                   & $f^{(n)}$ a jejich výpočet. \\[4pt]
+  \multicolumn{3}{l}{\textit{Derivace (8)}} \\[2pt]
+  55 & Derivace - Definice                     & Použití definice derivace v bodě $f'(x_0) = \lim_{h \to 0}\frac{f(x_0+h)-f(x_0)}{h}$ (2026-09-03). \\
+  56 & Derivace - Sčítání                      & Pravidlo $(f+g)' = f'+g'$. \\
+  57 & Derivace - Součin                       & Pravidlo $(fg)' = f'g + fg'$. \\
+  58 & Derivace - Podíl                        & Pravidlo $(f/g)' = (f'g-fg')/g^2$. \\
+  59 & Derivace - Složená funkce               & Řetízkové pravidlo $(f \circ g)' = f'(g) \cdot g'$. \\
+  60 & Derivace - Diferenciál                  & $df(x,h) = f'(x)\cdot h$; aproximace, odhady chyb. \\
+  61 & Derivace - Taylorův polynom             & Taylorův / Maclaurinův polynom řádu $n$. \\
+  62 & Derivace - Vyšší řády                   & $f^{(n)}$ a jejich výpočet. \\[4pt]
 
   \multicolumn{3}{l}{\textit{Průběh funkce (1)}} \\[2pt]
-  62 & Průběh funkce                           & Komplexní vyšetření průběhu (D, parita, monotonie, …). \\[4pt]
+  63 & Průběh funkce                           & Komplexní vyšetření průběhu (D, parita, monotonie, …). \\[4pt]
 
   \multicolumn{3}{l}{\textit{Primitivní funkce (5)}} \\[2pt]
-  63 & Primitivní funkce - Sčítání             & Linearita integrálu. \\
-  64 & Primitivní funkce - Per partes          & $\int u\, dv = uv - \int v\, du$ pro neurčitý integrál. \\
-  65 & Primitivní funkce - 1.věta o subustituci & $\int f(g(x)) g'(x)\, dx = \int f(t)\, dt$. \\
-  66 & Primitivní funkce - 2.věta o substituci & Substituce $x = \varphi(t)$ (typicky s~odmocninou nebo exp.). \\
-  67 & Primitivní funkce - Racionální funkce   & Rozklad racionální funkce, integrace (přejm. 2026-07-31). \\[4pt]
+  64 & Primitivní funkce - Sčítání             & Linearita integrálu. \\
+  65 & Primitivní funkce - Per partes          & $\int u\, dv = uv - \int v\, du$ pro neurčitý integrál. \\
+  66 & Primitivní funkce - 1.věta o subustituci & $\int f(g(x)) g'(x)\, dx = \int f(t)\, dt$. \\
+  67 & Primitivní funkce - 2.věta o substituci & Substituce $x = \varphi(t)$ (typicky s~odmocninou nebo exp.). \\
+  68 & Primitivní funkce - Racionální funkce   & Rozklad racionální funkce, integrace (přejm. 2026-07-31). \\[4pt]
 
   \multicolumn{3}{l}{\textit{Určitý integrál (8)}} \\[2pt]
-  68 & Určitý integrál - Sčítání               & Linearita určitého integrálu. \\
-  69 & Určitý integrál - Aditivita             & $\int_a^c f = \int_a^b f + \int_b^c f$ pro $a<b<c$. \\
-  70 & Určitý integrál - Per partes            & Per partes pro určitý integrál (s mezemi). \\
-  71 & Určitý integrál - 1.věta o substituci   & První věta s úpravou mezí. \\
-  72 & Určitý integrál - 2.věta o substituci   & Druhá věta s úpravou mezí. \\
-  73 & Určitý integrál - Racionální funkce     & Racionální funkce v určitém integrálu (přejm. 2026-07-31). \\
-  74 & Určitý integrál - Nevlastní             & Integrály s~nekonečnými mezemi nebo neomezenou funkcí. \\
-  75 & Určitý integrál - Obsah plochy          & Výpočet obsahu rovinné oblasti ohraničené grafy funkcí. \\
+  69 & Určitý integrál - Sčítání               & Linearita určitého integrálu. \\
+  70 & Určitý integrál - Aditivita             & $\int_a^c f = \int_a^b f + \int_b^c f$ pro $a<b<c$. \\
+  71 & Určitý integrál - Per partes            & Per partes pro určitý integrál (s mezemi). \\
+  72 & Určitý integrál - 1.věta o substituci   & První věta s úpravou mezí. \\
+  73 & Určitý integrál - 2.věta o substituci   & Druhá věta s úpravou mezí. \\
+  74 & Určitý integrál - Racionální funkce     & Racionální funkce v určitém integrálu (přejm. 2026-07-31). \\
+  75 & Určitý integrál - Nevlastní             & Integrály s~nekonečnými mezemi nebo neomezenou funkcí. \\
+  76 & Určitý integrál - Obsah plochy          & Výpočet obsahu rovinné oblasti ohraničené grafy funkcí. \\
   \bottomrule
 \end{longtable}
 
@@ -622,6 +623,8 @@ Celkově: 7 $\rightarrow$ 13 dovedností (--2 merge, +1 nová po merge, +7 zbrus
 \paragraph{Dopad na kód.} \texttt{tasks/knowledge\_weights.py} přepsáno komplet (nové seznamy, upravené asserts). Grep přes \texttt{tasks/*.py} seedy neodhalil žádné hard-coded odkazy na staré názvy --- seedy pracují jen s obecným API pro vkládání úloh, konkrétní tagy jde přes UI. UI (task\_checker.html) i backend (\texttt{app.py}) používají \texttt{TASK\_PROPERTIES} / \texttt{TASK\_SKILLS} import, takže žádný další rename není potřeba.
 
 \paragraph{Dodatek 2026-08-24: +3 SŠ kategorie.} Krátce po v1.5 doplněny další tři kategorie: \emph{SŠ - Posloupnosti} (aritmetická / geometrická posloupnost, součty), \emph{SŠ - Množiny a relace} (operace s množinami, kartézský součin, relace, zobrazení) a \emph{SŠ - Analytická geometrie} (vektory, přímky, kuželosečky, vzdálenosti v~$\mathbb{R}^2$). Skupina SŠ tak roste z 5 na 8 položek, KNOWLEDGE\_WEIGHTS z 75 na 78, TASK\_CATEGORIES z 45 na 48. DB migrace není potřeba: jde jen o nové položky v dropdownu, žádná existující úloha se nepřepisuje.
+
+\paragraph{Dodatek 2026-09-03: +Derivace - Definice.} Doplněna 49.~kategorie \emph{Derivace - Definice} pro úlohy typu ,,použijte definici derivace v bodě $f'(x_0) = \lim_{h \to 0}\frac{f(x_0+h)-f(x_0)}{h}$'' (viz \texttt{umat\_09\_01..05}, které jsou dnes anotovány jako \emph{Derivace - Sčítání}, ale konceptuálně patří k definici). Skupina Derivace roste ze 7 na 8 položek, KNOWLEDGE\_WEIGHTS 78 $\rightarrow$ 79, TASK\_CATEGORIES 48 $\rightarrow$ 49. DB migrace není potřeba.
 
 % =============================================================================
 \section{Webové UI: Task Checker}
@@ -929,7 +932,7 @@ WantedBy=multi-user.target
 
 \begin{enumerate}
   \item \textbf{Tagování úloh experty.} Tým musí manuálně projít 415 úloh a~přiřadit \texttt{category} + nastavit \texttt{knowledge\_vector}. To je hlavní úkol Task Checkeru.
-  \item \textbf{Distribuce vah dle kategorie.} Definovat slovník \texttt{CATEGORY\_DEFAULT\_VECTOR}, který pro každou ze 45 kategorií předvyplní výchozí distribuci 78 vah. Při výběru kategorie v UI se předvyplní \texttt{knowledge\_vector}, expert pak ladí.
+  \item \textbf{Distribuce vah dle kategorie.} Definovat slovník \texttt{CATEGORY\_DEFAULT\_VECTOR}, který pro každou ze 45 kategorií předvyplní výchozí distribuci 79 vah. Při výběru kategorie v UI se předvyplní \texttt{knowledge\_vector}, expert pak ladí.
   \item \textbf{LLM vyhodnocení \texttt{open\_text}}. Aktuálně máme všechny negace převedeny na \texttt{multiple\_choice}; pro budoucí volné úlohy zavést endpoint \texttt{POST /api/eval-open-text} volající Gemini.
   \item \textbf{Alembic migrace.} Nahradit drop \& recreate řízenými migracemi.
   \item \textbf{Gunicorn pro produkci.} Nahradit Werkzeug dev server na produkci.
