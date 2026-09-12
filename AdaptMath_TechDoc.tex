@@ -626,6 +626,22 @@ Celkově: 7 $\rightarrow$ 13 dovedností (--2 merge, +1 nová po merge, +7 zbrus
 
 \paragraph{Dodatek 2026-09-03: +Derivace - Definice.} Doplněna 49.~kategorie \emph{Derivace - Definice} pro úlohy typu ,,použijte definici derivace v bodě $f'(x_0) = \lim_{h \to 0}\frac{f(x_0+h)-f(x_0)}{h}$'' (viz \texttt{umat\_09\_01..05}, které jsou dnes anotovány jako \emph{Derivace - Sčítání}, ale konceptuálně patří k definici). Skupina Derivace roste ze 7 na 8 položek, KNOWLEDGE\_WEIGHTS 78 $\rightarrow$ 79, TASK\_CATEGORIES 48 $\rightarrow$ 49. DB migrace není potřeba.
 
+\paragraph{Dodatek 2026-09-03: fix \texttt{umat\_09\_36..39} (chybějící zadání).} Při extrakci UMAT skripta se ztratilo společné zadání LaTeX bloku \texttt{\textbackslash begin\{ul\}\{...\}}: úlohy \texttt{umat\_09\_36..39} zůstaly jen s fragmenty (,,tečna v bodě $T$ měla směrnici $k_t=1$;'' atd.) bez úvodní věty s funkcí. Doplněno kompletní zadání ,,Je dána funkce $y = x \cdot \ln x$. Určete bod $T$ grafu funkce tak, aby ..." + specifická podmínka. Fresh backup \texttt{adaptmath\_20260903\_114450.dump} před akcí.
+
+\paragraph{Dodatek 2026-09-03: mazání 29 duplicit.} Detekce ve třech krocích: exact match na normalizovaném content\_latex + expected (\texttt{scripts/find\_umat\_duplicates.py} pro uvnitř zdrojů, \texttt{scripts/find\_cross\_source\_duplicates.py} pro cross-source), plán mazání s výběrem lépe anotovaného kandidáta (\texttt{scripts/plan\_delete\_duplicates.py}), side-by-side srovnání anotací (\texttt{scripts/compare\_duplicate\_annotations.py}). Cíl: mazat jen skutečně identické úlohy s jiným formátováním, ne stylistické série.
+
+Nalezeno 27 EXACT skupin (56 úloh, obvykle po 2). U 26 z 27 měly obě strany kompletně vyplněné anotace, jen občas se rozcházely ve volbě \emph{Limita - VOAL (dosazení)} vs \emph{Limita - LVL (krácení)} u stejných úloh (dva různí anotátoři, různá klasifikace). Po konzultaci se rozhodlo ponechat UMAT verze (celé sekvence, konzistentní číslování) a smazat \texttt{cv} fragmenty.
+
+Konkrétně smazáno 29 úloh (930 $\rightarrow$ 901):
+\begin{itemize}
+  \item Limity (24): \texttt{cv04\_08, cv04\_09, cv04\_16, cv04\_17}; \texttt{cv05\_05..09, cv05\_12..16, cv05\_19..25, cv05\_27..29}
+  \item Integrál (1): \texttt{cv12\_30}
+  \item Výroková logika (3): \texttt{e01\_12, e01\_13, e01\_15} (skupina 4 identických, zůstává \texttt{e01\_11})
+  \item Elementární funkce (1): \texttt{ss07\_07}
+\end{itemize}
+
+Fuzzy match $\ge 0{,}97$ nalezl 13 dalších párů, ale 12 z nich byly \emph{stylistické série} (stejný template zadání s jinou funkcí, např.~\texttt{cv09\_07..20} pro monotonii $x^2 e^x, x e^{-x}, x^2 \ln x, ...$). Ty NEmazány. Backup \texttt{adaptmath\_20260903\_120845.dump} před akcí.
+
 % =============================================================================
 \section{Webové UI: Task Checker}
 
