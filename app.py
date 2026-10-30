@@ -178,6 +178,64 @@ def logout():
     return redirect(url_for("login"))
 
 
+@app.route("/demo", methods=["GET"])
+@app.route("/demo/<path:subpath>", methods=["GET"])
+def demo(subpath=""):
+    """Demo pro integraci Moodle → AdaptMath (iframe / plugin).
+
+    Vypíše všechny GET parametry, path segment za `/demo/`, Referer
+    a User-Agent. Bez login ochrany, aby šel odkaz sdílet rovnou.
+    POST není podporován (XSS politika školního serveru).
+    """
+    from html import escape
+
+    rows_get = "".join(
+        f"<tr><td><code>{escape(k)}</code></td><td><code>{escape(v)}</code></td></tr>"
+        for k, v in request.args.items()
+    ) or "<tr><td colspan=2 style='color:#888'>žádné GET parametry</td></tr>"
+
+    moodle_url = request.args.get("return") or request.args.get("returnurl") or ""
+
+    return (
+        "<!DOCTYPE html><html lang='cs'><head><meta charset='utf-8'>"
+        "<title>AdaptMath — demo GET parametrů</title>"
+        "<style>"
+        "body{font-family:system-ui,-apple-system,sans-serif;max-width:860px;"
+        "margin:2em auto;padding:0 1em;color:#222;line-height:1.5}"
+        "h1{font-size:1.4em}h2{font-size:1.1em;margin-top:1.8em;color:#555}"
+        "table{border-collapse:collapse;width:100%;margin-top:.4em}"
+        "td,th{border:1px solid #ddd;padding:6px 10px;vertical-align:top;"
+        "font-size:.95em;word-break:break-all}"
+        "th{background:#f3f3f3;text-align:left}"
+        "code{background:#f6f6f6;padding:1px 4px;border-radius:3px;"
+        "font-family:ui-monospace,Menlo,Consolas,monospace}"
+        ".muted{color:#888;font-size:.9em}"
+        "</style></head><body>"
+        f"<h1>AdaptMath — demo integračního endpointu</h1>"
+        f"<p class='muted'>Endpoint vypisuje všechno, co přišlo v požadavku. "
+        f"Slouží pro ověření předání identifikátoru studenta z Moodlu "
+        f"(iframe / plugin, GET only — POST je na školním serveru blokován).</p>"
+        f"<h2>Celá URL</h2><p><code>{escape(request.url)}</code></p>"
+        f"<h2>Path segment za <code>/demo/</code></h2>"
+        f"<p><code>{escape(subpath) or '<em>(prázdný)</em>'}</code></p>"
+        f"<h2>GET parametry</h2>"
+        f"<table><tr><th>Klíč</th><th>Hodnota</th></tr>{rows_get}</table>"
+        f"<h2>Hlavičky</h2><table>"
+        f"<tr><th>Referer</th><td><code>{escape(request.headers.get('Referer') or '-')}</code></td></tr>"
+        f"<tr><th>User-Agent</th><td><code>{escape(request.headers.get('User-Agent') or '-')}</code></td></tr>"
+        f"<tr><th>Host</th><td><code>{escape(request.host)}</code></td></tr>"
+        f"<tr><th>X-Forwarded-For</th><td><code>{escape(request.headers.get('X-Forwarded-For') or '-')}</code></td></tr>"
+        f"</table>"
+        f"<h2>Vzor volání z Moodlu</h2>"
+        f"<p>Předání ID studenta jako path segment:<br>"
+        f"<code>https://moodlefim.uhk.cz/adaptmath/demo/&lt;id_studenta&gt;</code></p>"
+        f"<p>Předání ID a dalších polí jako GET parametry:<br>"
+        f"<code>https://moodlefim.uhk.cz/adaptmath/demo?user_id=12345&amp;course_id=42&amp;role=student</code></p>"
+        f"{'<h2>Návrat do Moodlu</h2><p><a href=' + repr(escape(moodle_url)) + '>' + escape(moodle_url) + '</a></p>' if moodle_url else ''}"
+        "</body></html>"
+    )
+
+
 @app.route("/")
 @require_login
 def index():
